@@ -134,13 +134,27 @@ export default function Home() {
       <main className="dashboard-content">
         {/* Hero Section */}
         <section className="hero-section">
-          <div className="hero-header">
-            <span className="date-badge">{formattedDate}</span>
-            <div className="greeting-row">
-              <h1 className="main-greeting">Good {greeting}, <span className="user-name">{userName}</span></h1>
-              <Sparkles className="sparkle-icon" size={20} />
+          <div className="hero-banner" style={{ backgroundImage: userProfile?.backgroundImage ? `url(${userProfile.backgroundImage})` : undefined }}>
+            <div className="banner-overlay" />
+            <div className="banner-content">
+              <div className="profile-container">
+                {userProfile?.profileImage ? (
+                  <img src={userProfile.profileImage} alt="Profile" className="profile-avatar-img" />
+                ) : (
+                  <div className="profile-avatar-placeholder">
+                    {userName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="hero-header">
+                <span className="date-badge">{formattedDate}</span>
+                <div className="greeting-row">
+                  <h1 className="main-greeting">Good {greeting}, <span className="user-name">{userName}</span></h1>
+                  <Sparkles className="sparkle-icon" size={20} />
+                </div>
+                <p className="hero-intro">Focus on what matters today. Your mind is clear.</p>
+              </div>
             </div>
-            <p className="hero-intro">Focus on what matters today. Your mind is clear.</p>
           </div>
 
           <div className="stats-strip">
@@ -285,10 +299,69 @@ export default function Home() {
         /* Hero Styling */
         .hero-section {
           margin-bottom: 3.5rem;
+          border-radius: 32px;
+          overflow: hidden;
+          background: rgba(255,255,255,0.01);
+          border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .hero-banner {
+          height: 320px;
+          background: #111;
+          background-size: cover;
+          background-position: center;
+          position: relative;
+          display: flex;
+          align-items: flex-end;
+          padding: 3rem;
+        }
+
+        .banner-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+          z-index: 1;
+        }
+
+        .banner-content {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          align-items: center;
+          gap: 2.5rem;
+          width: 100%;
+        }
+
+        .profile-container {
+          flex-shrink: 0;
+        }
+
+        .profile-avatar-img {
+          width: 120px;
+          height: 120px;
+          border-radius: 35%;
+          border: 4px solid #000;
+          object-fit: cover;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .profile-avatar-placeholder {
+          width: 120px;
+          height: 120px;
+          border-radius: 35%;
+          border: 4px solid #000;
+          background: #080808;
+          color: #222;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 3rem;
+          font-weight: 800;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
 
         .hero-header {
-          margin-bottom: 2.5rem;
+          flex: 1;
         }
 
         .date-badge {
@@ -297,8 +370,8 @@ export default function Home() {
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.15em;
-          color: #666;
-          margin-bottom: 1rem;
+          color: #888;
+          margin-bottom: 0.5rem;
         }
 
         .greeting-row {
@@ -673,6 +746,21 @@ export default function Home() {
             grid-template-columns: 1fr;
           }
           .main-greeting {
+            font-size: 2rem;
+          }
+          .hero-banner {
+            height: auto;
+            min-height: 400px;
+            padding: 2rem;
+          }
+          .banner-content {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.5rem;
+          }
+          .profile-avatar-img, .profile-avatar-placeholder {
+            width: 80px;
+            height: 80px;
             font-size: 2rem;
           }
         }
