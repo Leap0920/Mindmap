@@ -297,8 +297,9 @@ export default function Home() {
         .dashboard-content {
           position: relative;
           z-index: 1;
-          max-width: 1100px;
+          max-width: 1400px;
           margin: 0 auto;
+          padding: 3rem 4rem;
           animation: pageReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
@@ -309,7 +310,7 @@ export default function Home() {
 
         /* Hero Styling */
         .hero-section {
-          margin-bottom: 3.5rem;
+          margin-bottom: 4rem;
           border-radius: 32px;
           overflow: hidden;
           background: rgba(255,255,255,0.01);
@@ -317,14 +318,14 @@ export default function Home() {
         }
 
         .hero-banner {
-          height: 320px;
+          height: 360px;
           background: #111;
           background-size: cover;
           background-position: center;
           position: relative;
           display: flex;
           align-items: flex-end;
-          padding: 3rem;
+          padding: 3.5rem;
         }
 
         .banner-overlay {
@@ -426,11 +427,11 @@ export default function Home() {
         .stats-strip {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 1.5rem;
+          gap: 2.5rem;
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.05);
-          border-radius: 20px;
-          padding: 1.5rem;
+          border-radius: 24px;
+          padding: 2rem 2.5rem;
         }
 
         .stat-item {
@@ -488,16 +489,16 @@ export default function Home() {
         /* Main Grid Layout */
         .main-grid {
           display: grid;
-          grid-template-columns: 1fr 320px;
-          gap: 3rem;
+          grid-template-columns: 1fr 360px;
+          gap: 4rem;
         }
 
         /* Quick Access */
         .section-title-row {
           display: flex;
           align-items: center;
-          gap: 1rem;
-          margin-bottom: 2rem;
+          gap: 1.5rem;
+          margin-bottom: 2.5rem;
         }
 
         .section-label {
@@ -518,14 +519,14 @@ export default function Home() {
         .quick-access-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 1rem;
+          gap: 1.5rem;
         }
 
         .modern-quick-card {
           background: #0a0a0a;
           border: 1px solid #1a1a1a;
-          border-radius: 16px;
-          padding: 1.25rem;
+          border-radius: 20px;
+          padding: 1.75rem;
           transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
           position: relative;
           overflow: hidden;
@@ -594,14 +595,14 @@ export default function Home() {
         .perspective-aside {
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: 2rem;
         }
 
         .sidebar-card {
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.05);
-          border-radius: 20px;
-          padding: 1.5rem;
+          border-radius: 24px;
+          padding: 2rem;
         }
 
         .sidebar-header {
