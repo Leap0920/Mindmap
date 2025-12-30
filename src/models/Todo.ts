@@ -8,6 +8,12 @@ const TodoSchema = new mongoose.Schema({
     dueDate: { type: Date },
     completed: { type: Boolean, default: false },
     order: { type: Number, default: 0 },
+    description: { type: String },
+    attachments: [{
+        name: { type: String },
+        url: { type: String },
+        fileType: { type: String }
+    }]
 }, { timestamps: true });
 
 TodoSchema.index({ userId: 1, completed: 1 });

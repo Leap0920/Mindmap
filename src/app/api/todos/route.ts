@@ -73,11 +73,22 @@ export async function PATCH(request: NextRequest) {
 
         await dbConnect();
         const userId = (session.user as any).id;
-        const { id, ...updates } = await request.json();
+        const body = await request.json();
+        const { id, action, oldName, newName } = body;
+
+        if (action === "renameCategory") {
+            await Todo.updateMany({ userId, category: oldName }, { category: newName });
+            return NextResponse.json({ message: "Category renamed" });
+        }
+
+        if (action === "deleteCategory") {
+            await Todo.updateMany({ userId, category: oldName }, { category: "General" });
+            return NextResponse.json({ message: "Category deleted" });
+        }
 
         const todo = await Todo.findOneAndUpdate(
             { _id: id, userId },
-            updates,
+            { ...body },
             { new: true }
         );
 

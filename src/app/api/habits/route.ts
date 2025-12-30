@@ -65,6 +65,16 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ definition }, { status: 201 });
         }
 
+        if (action === "updateDefinition") {
+            const { habitId, name, icon, color } = body;
+            const definition = await HabitDefinition.findOneAndUpdate(
+                { _id: habitId, userId },
+                { name, icon, color },
+                { new: true }
+            );
+            return NextResponse.json({ definition });
+        }
+
         if (action === "toggleHabit") {
             const { date, habitId, completed } = body;
             const dateObj = new Date(date);

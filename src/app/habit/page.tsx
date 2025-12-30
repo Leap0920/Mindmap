@@ -18,7 +18,8 @@ import {
     Search,
     Maximize2,
     CheckCircle2,
-    CalendarDays
+    CalendarDays,
+    PenTool
 } from 'lucide-react';
 
 interface HabitDefinition {
@@ -51,6 +52,7 @@ export default function HabitPage() {
     const [selectedDay, setSelectedDay] = useState<Date | null>(null);
     const [newHabitName, setNewHabitName] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [editingDef, setEditingDef] = useState<HabitDefinition | null>(null);
 
     const monthName = currentDate.toLocaleDateString('en-US', { month: 'long' });
     const currentYear = currentDate.getFullYear();
@@ -116,27 +118,34 @@ export default function HabitPage() {
         }
     };
 
-    const addHabitDefinition = async () => {
+    const saveHabitDefinition = async () => {
         if (!newHabitName.trim()) return;
         setIsSaving(true);
         try {
+            const action = editingDef ? 'updateDefinition' : 'createDefinition';
+            const body = editingDef
+                ? { action, habitId: editingDef._id, name: newHabitName }
+                : { action, name: newHabitName };
+
             const res = await fetch('/api/habits', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'createDefinition',
-                    name: newHabitName,
-                }),
+                body: JSON.stringify(body),
             });
 
             if (res.ok) {
                 const data = await res.json();
-                setDefinitions(prev => [...prev, data.definition]);
+                if (editingDef) {
+                    setDefinitions(prev => prev.map(d => d._id === editingDef._id ? data.definition : d));
+                } else {
+                    setDefinitions(prev => [...prev, data.definition]);
+                }
                 setNewHabitName('');
+                setEditingDef(null);
                 setShowDefModal(false);
             }
         } catch (error) {
-            console.error('Error adding habit:', error);
+            console.error('Error saving habit:', error);
         } finally {
             setIsSaving(false);
         }
@@ -351,32 +360,36 @@ export default function HabitPage() {
 
             {/* New Habit Definition Modal */}
             {showDefModal && (
-                <div className="modal-overlay" onClick={() => setShowDefModal(false)}>
+                <div className="modal-overlay" onClick={() => { setShowDefModal(false); setEditingDef(null); setNewHabitName(''); }}>
                     <div className="definition-modal" onClick={e => e.stopPropagation()}>
-                        <h2>New Habit Definition</h2>
-                        <p className="modal-sub">This will add a new habit to your daily list.</p>
+                        <h2>{editingDef ? 'Edit Habit' : 'New Habit Definition'}</h2>
+                        <p className="modal-sub">{editingDef ? 'Modify the habit name.' : 'This will add a new habit to your daily list.'}</p>
                         <input
                             type="text"
                             placeholder="What's the habit?"
                             value={newHabitName}
                             onChange={e => setNewHabitName(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && saveHabitDefinition()}
                             autoFocus
                         />
                         <div className="modal-actions">
-                            <button className="secondary-btn" onClick={() => setShowDefModal(false)}>Cancel</button>
-                            <button className="primary-btn" onClick={addHabitDefinition} disabled={isSaving}>
-                                {isSaving ? <Loader2 size={16} className="spinner" /> : 'Create Habit'}
+                            <button className="secondary-btn" onClick={() => { setShowDefModal(false); setEditingDef(null); setNewHabitName(''); }}>Cancel</button>
+                            <button className="primary-btn" onClick={saveHabitDefinition} disabled={isSaving}>
+                                {isSaving ? <Loader2 size={16} className="spinner" /> : (editingDef ? 'Update Habit' : 'Create Habit')}
                             </button>
                         </div>
 
-                        {definitions.length > 0 && (
+                        {!editingDef && definitions.length > 0 && (
                             <div className="existing-defs">
                                 <h3>Active Habits</h3>
                                 <div className="def-list">
                                     {definitions.map(def => (
                                         <div key={def._id} className="def-item">
                                             <span>{def.name}</span>
-                                            <button onClick={() => deleteHabitDefinition(def._id)}><X size={14} /></button>
+                                            <div className="def-actions">
+                                                <button onClick={() => { setEditingDef(def); setNewHabitName(def.name); }} title="Edit"><PenTool size={14} /></button>
+                                                <button onClick={() => deleteHabitDefinition(def._id)} title="Delete"><X size={14} /></button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -662,7 +675,7 @@ export default function HabitPage() {
                     display: flex;
                     align-items: center;
                     gap: 8px;
-                    color: #777;
+                    color: #888;
                     font-size: 14px;
                     width: 100px;
                 }
@@ -693,7 +706,7 @@ export default function HabitPage() {
                 }
 
                 .item-icon {
-                    color: #555;
+                    color: #888;
                 }
 
                 .item-checkbox {
@@ -768,33 +781,48 @@ export default function HabitPage() {
                 }
 
                 .existing-defs {
-                    margin-top: 32px;
-                    border-top: 1px solid #333;
-                    padding-top: 24px;
+                    margin-top: 48px;
+                    border-top: 1px solid #151515;
+                    padding-top: 32px;
                 }
 
-                .existing-defs h3 {
-                    font-size: 12px;
-                    color: #555;
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-                    margin-bottom: 12px;
+                .def-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
                 }
 
                 .def-item {
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    padding: 8px 12px;
-                    background: #111;
-                    border: 1px solid #222;
-                    border-radius: 6px;
-                    margin-bottom: 6px;
-                    font-size: 14px;
+                    padding: 12px 16px;
+                    background: #0a0a0a;
+                    border: 1px solid #151515;
+                    border-radius: 10px;
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    color: #888;
+                }
+
+                .existing-defs h3 {
+                    font-size: 12px;
+                    color: #888;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    margin-bottom: 12px;
+                }
+
+                .def-actions {
+                    display: flex;
+                    gap: 8px;
                 }
 
                 .def-item button {
-                    color: #444;
+                    color: #666;
+                    transition: all 0.2s;
+                    padding: 6px;
+                    border-radius: 8px;
                 }
 
                 .def-item button:hover {
