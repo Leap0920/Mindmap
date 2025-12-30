@@ -796,11 +796,57 @@ export default function BooksPage() {
                 .spin { animation: spin 1s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-                @media (max-width: 900px) {
-                    .detail-modal { width: 95vw; height: 95vh; }
-                    .detail-layout { grid-template-columns: 1fr; }
-                    .detail-sidebar { padding: 32px; flex-direction: row; flex-wrap: wrap; height: auto; }
-                    .detail-content { padding: 32px; }
+                @media (max-width: 1024px) {
+                    .header { flex-wrap: wrap; gap: 16px; }
+                    .header-left { width: 100%; justify-content: space-between; }
+                    .view-switcher { order: 2; }
+                    .kanban-board { grid-template-columns: 1fr; gap: 24px; }
+                    .kanban-column { min-height: auto; }
+                }
+
+                @media (max-width: 768px) {
+                    .page { padding: 20px 16px; }
+                    .header { margin-bottom: 24px; gap: 12px; }
+                    .header-title { font-size: 1.1rem; }
+                    .view-switcher { width: 100%; justify-content: center; }
+                    .view-btn { flex: 1; justify-content: center; padding: 10px 12px; font-size: 0.8rem; }
+                    .header-right { width: 100%; }
+                    .search-bar { flex: 1; }
+                    .search-bar input { width: 100%; }
+                    .dashboard-grid-top { grid-template-columns: 1fr; }
+                    .dashboard-grid-bottom { grid-template-columns: 1fr; }
+                    .current-grid { grid-template-columns: 1fr; }
+                    .stats-row { flex-wrap: wrap; gap: 20px; }
+                    .stat-unit { min-width: 80px; }
+                    .unit-value { font-size: 2rem; }
+                    .book-card { padding: 12px 14px; }
+                    .card-title { font-size: 0.85rem; }
+                    .detail-modal { width: 100vw; height: 100vh; border-radius: 0; }
+                    .detail-layout { grid-template-columns: 1fr; max-height: none; }
+                    .detail-sidebar { padding: 24px; height: auto; max-height: none; }
+                    .detail-content { padding: 24px; }
+                    .meta-info { gap: 16px; }
+                    .info-grid { grid-template-columns: 1fr; }
+                    .sidebar-header { flex-wrap: wrap; gap: 12px; }
+                    .modal-quick-actions { width: 100%; justify-content: flex-end; margin-top: 8px; }
+                    .status-selector-modern { flex-wrap: wrap; }
+                    .quotes-stack { grid-template-columns: 1fr; }
+                }
+
+                @media (max-width: 480px) {
+                    .page { padding: 16px 12px; }
+                    .header-title { font-size: 1rem; }
+                    .view-btn { padding: 8px 10px; font-size: 0.75rem; }
+                    .main-stats-card { padding: 20px; }
+                    .unit-value { font-size: 1.75rem; }
+                    .book-card-lite { padding: 14px; gap: 12px; }
+                    .icon-circle { width: 32px; height: 32px; }
+                    .detail-sidebar { padding: 16px; }
+                    .detail-content { padding: 16px; gap: 24px; }
+                    .modal-title { font-size: 1.1rem; }
+                    .notes-section-modern { padding: 16px; }
+                    .quote-modal { width: 95vw; padding: 20px; }
+                    .quote-fields-modern { grid-template-columns: 1fr; }
                 }
             `}</style>
         </div>

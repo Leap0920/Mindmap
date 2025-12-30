@@ -589,11 +589,40 @@ export default function RoutinePage() {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
 
+        @media (max-width: 1024px) {
+            .routine-page { padding: 40px 24px; }
+            .page-header h1 { font-size: 2rem; }
+            .header-actions { flex-wrap: wrap; gap: 10px; }
+        }
+
         @media (max-width: 768px) {
-            .routine-page { padding: 32px 20px; }
-            .page-header { flex-direction: column; align-items: flex-start; gap: 32px; }
-            .header-date { margin-bottom: 8px; }
-            .progress-ring { width: 80px; height: 80px; }
+            .routine-page { padding: 24px 16px; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 24px; }
+            .page-header h1 { font-size: 1.75rem; }
+            .header-date { margin-bottom: 4px; }
+            .progress-ring { width: 80px; height: 80px; order: -1; }
+            .header-actions { width: 100%; }
+            .add-btn, .reset-btn { flex: 1; justify-content: center; }
+            .routine-item { padding: 14px 16px; }
+            .item-time { min-width: 50px; font-size: 0.65rem; padding: 3px 6px; }
+            .item-title { font-size: 0.875rem; }
+            .modal-box { width: 95vw; padding: 28px; }
+            .modal-header h3 { font-size: 1.1rem; }
+            .form-row { grid-template-columns: 1fr; gap: 20px; }
+        }
+
+        @media (max-width: 480px) {
+            .routine-page { padding: 20px 12px; }
+            .page-header h1 { font-size: 1.5rem; }
+            .page-badge { font-size: 0.65rem; }
+            .period-header h2 { font-size: 1rem; }
+            .routine-item { padding: 12px 14px; gap: 12px; }
+            .check-btn svg { width: 20px; height: 20px; }
+            .item-content { gap: 12px; flex-wrap: wrap; }
+            .item-time { font-size: 0.6rem; }
+            .item-title { font-size: 0.8rem; }
+            .modal-box { padding: 20px; border-radius: 16px; }
+            .primary-btn, .secondary-btn { padding: 10px 18px; font-size: 0.8rem; }
         }
       `}</style>
         </div>

@@ -244,6 +244,17 @@ export default function LoginPage() {
         .login-footer a:hover {
           text-decoration: underline;
         }
+
+        @media (max-width: 480px) {
+          .login-content { padding: 16px; }
+          .login-box { padding: 32px 24px; border-radius: 20px; }
+          .login-header h1 { font-size: 1.75rem; }
+          .login-header p { font-size: 0.875rem; }
+          .login-header { margin-bottom: 32px; }
+          .field input { padding: 12px 16px; font-size: 0.875rem; }
+          .login-btn { padding: 14px; font-size: 0.875rem; }
+          .login-footer { margin-top: 24px; font-size: 0.8rem; }
+        }
       `}</style>
     </div>
   );

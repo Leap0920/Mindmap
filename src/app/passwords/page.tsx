@@ -559,10 +559,47 @@ export default function PasswordsPage() {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
 
-        @media (max-width: 900px) {
-            .vault-row { grid-template-columns: 1fr; gap: 16px; }
-            .identity-cell { margin-bottom: 8px; }
-            .page-header { flex-direction: column; align-items: flex-start; gap: 32px; }
+        @media (max-width: 1024px) {
+            .vault-page { padding: 40px 24px; }
+            .vault-container { padding: 24px; }
+            .vault-row { grid-template-columns: 2fr 1fr 1.5fr auto; gap: 16px; padding: 14px 20px; }
+        }
+
+        @media (max-width: 768px) {
+            .vault-page { padding: 24px 16px; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+            .title-group h1 { font-size: 1.75rem; }
+            .title-group p { font-size: 0.9rem; }
+            .primary-btn { width: 100%; justify-content: center; }
+            .vault-container { padding: 20px; border-radius: 16px; }
+            .vault-toolbar { flex-direction: column; gap: 16px; padding-bottom: 20px; margin-bottom: 24px; }
+            .search-box { max-width: none; width: 100%; }
+            .vault-stats { width: 100%; justify-content: center; }
+            .vault-row { grid-template-columns: 1fr; gap: 16px; padding: 16px; }
+            .identity-cell { margin-bottom: 4px; }
+            .account-cell { flex-wrap: wrap; }
+            .credential-cell { margin: 8px 0; }
+            .delete-btn { position: absolute; top: 12px; right: 12px; }
+            .vault-row { position: relative; padding-right: 48px; }
+            .modal-box { width: 95vw; padding: 24px; border-radius: 16px; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .vault-page { padding: 16px 12px; }
+            .page-header { margin-bottom: 32px; }
+            .title-group h1 { font-size: 1.5rem; }
+            .security-badge { font-size: 0.6rem; padding: 3px 8px; }
+            .vault-container { padding: 16px; }
+            .search-box { padding: 10px 14px; }
+            .search-box input { font-size: 0.875rem; }
+            .vault-row { padding: 14px; border-radius: 12px; }
+            .site-avatar { width: 36px; height: 36px; }
+            .site-name { font-size: 0.9rem; }
+            .password-display { font-size: 0.8rem; }
+            .modal-box { padding: 20px; }
+            .modal-header h3 { font-size: 1.1rem; }
+            .primary-btn, .secondary-btn { padding: 10px 18px; font-size: 0.8rem; }
         }
       `}</style>
         </div>

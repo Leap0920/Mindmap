@@ -275,27 +275,30 @@ export default function HabitPage() {
                                 </div>
 
                                 {hasCompleted && day.currentMonth && (
-                                    <div className="habit-card">
-                                        <div className="habit-card-header">
-                                            <div className="status-box">
-                                                <CheckCircle2 size={12} strokeWidth={3} />
-                                            </div>
-                                            <span className="card-title">Daily Habits</span>
-                                        </div>
-                                        <div className="habit-mini-list">
-                                            {habitDay?.entries.filter(e => e.completed).slice(0, 3).map(entry => (
-                                                <div key={entry.habitId} className="mini-item">
-                                                    <div className="mini-check checked">
-                                                        <Check size={8} strokeWidth={4} />
-                                                    </div>
-                                                    <span>{entry.name}</span>
+                                    <>
+                                        <div className="habit-card">
+                                            <div className="habit-card-header">
+                                                <div className="status-box">
+                                                    <CheckCircle2 size={12} strokeWidth={3} />
                                                 </div>
-                                            ))}
-                                            {(habitDay?.entries.filter(e => e.completed).length || 0) > 3 && (
-                                                <div className="more-count">+{(habitDay?.entries.filter(e => e.completed).length || 0) - 3} more</div>
-                                            )}
+                                                <span className="card-title">Daily Habits</span>
+                                            </div>
+                                            <div className="habit-mini-list">
+                                                {habitDay?.entries.filter(e => e.completed).slice(0, 3).map(entry => (
+                                                    <div key={entry.habitId} className="mini-item">
+                                                        <div className="mini-check checked">
+                                                            <Check size={8} strokeWidth={4} />
+                                                        </div>
+                                                        <span>{entry.name}</span>
+                                                    </div>
+                                                ))}
+                                                {(habitDay?.entries.filter(e => e.completed).length || 0) > 3 && (
+                                                    <div className="more-count">+{(habitDay?.entries.filter(e => e.completed).length || 0) - 3} more</div>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
+                                        <div className="habit-dot-indicator" />
+                                    </>
                                 )}
                             </div>
                         );
@@ -668,6 +671,16 @@ export default function HabitPage() {
                     margin-top: 0.5rem;
                 }
 
+                .habit-dot-indicator {
+                    display: none;
+                    width: 6px;
+                    height: 6px;
+                    background: #fff;
+                    border-radius: 50%;
+                    margin-top: 4px;
+                    box-shadow: 0 0 8px rgba(255,255,255,0.4);
+                }
+
                 /* Modal Unified Design */
                 .modal-overlay {
                     position: fixed;
@@ -790,22 +803,85 @@ export default function HabitPage() {
                 }
 
                 @media (max-width: 768px) {
-                    .grid-body { grid-template-columns: 1fr; gap: 1rem; }
-                    .grid-header { display: none; }
-                    .calendar-cell { min-height: auto; }
-                    .detail-modal { border-radius: 24px; }
-                    .modal-header { padding: 2rem 2rem 1rem; }
-                    .modal-content { padding: 0 2rem 2rem; }
-                    .editable-title { font-size: 1.75rem; }
-                    .habit-grid { grid-template-columns: 1fr; }
+                    .calendar-nav { padding: 1.5rem 1rem 1rem; gap: 1rem; }
+                    .month-display h2 { font-size: 1.5rem; }
+                    .calendar-board { padding: 0 1rem 1rem; }
+                    .grid-header { display: grid; grid-template-columns: repeat(7, 1fr); }
+                    .header-cell { padding: 0.5rem 0.25rem; font-size: 0.5rem; letter-spacing: 0.1em; }
+                    .header-cell:nth-child(n+1) { display: block; }
+                    .grid-body { grid-template-columns: repeat(7, 1fr); grid-auto-rows: minmax(50px, auto); gap: 4px; }
+                    .calendar-cell { 
+                        padding: 0.5rem 0.25rem; 
+                        min-height: 50px; 
+                        border-radius: 8px; 
+                        border-width: 1px;
+                        align-items: center;
+                        justify-content: flex-start;
+                    }
+                    .calendar-cell:hover { transform: none; box-shadow: none; }
+                    .day-number { font-size: 0.75rem; text-align: center; width: 100%; }
+                    .habit-card { display: none; }
+                    .habit-dot-indicator { display: block; }
+                    .calendar-cell.is-today .day-number { 
+                        background: #fff; 
+                        color: #000; 
+                        width: 24px; 
+                        height: 24px; 
+                        border-radius: 50%; 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                    }
+                    .off-month { opacity: 0.15; }
+                    .nav-actions { width: 100%; flex-direction: row; gap: 0.75rem; }
+                    .step-controls { flex: 1; justify-content: center; padding: 0.375rem; border-radius: 10px; }
+                    .nav-btn { padding: 6px; }
+                    .today-txt { font-size: 0.6rem; margin: 0 0.25rem; }
+                    .new-btn { padding: 0.5rem 1rem; font-size: 0.7rem; }
+                    .detail-modal { width: 95vw; max-width: none; border-radius: 20px; }
+                    .modal-header { padding: 1.5rem 1.5rem 1rem; }
+                    .modal-content { padding: 0 1.5rem 1.5rem; }
+                    .editable-title { font-size: 1.5rem; margin-bottom: 1.5rem; }
+                    .habit-grid { grid-template-columns: 1fr; gap: 1rem; }
+                    .entry-card { padding: 1.25rem; border-radius: 16px; }
+                    .entry-name { font-size: 0.875rem; }
                 }
 
                 @media (max-width: 480px) {
-                    .calendar-nav { padding: 2rem 1rem 1rem; }
-                    .nav-actions { flex-direction: column; align-items: stretch; }
-                    .step-controls { justify-content: center; }
-                    .new-btn { justify-content: center; }
-                    .calendar-board { padding: 0 1rem 1rem; }
+                    .calendar-nav { padding: 1rem 0.75rem 0.75rem; }
+                    .month-display h2 { font-size: 1.25rem; }
+                    .calendar-board { padding: 0 0.75rem 0.75rem; }
+                    .header-cell { font-size: 0.45rem; padding: 0.375rem 0; }
+                    .grid-body { grid-auto-rows: minmax(44px, auto); gap: 3px; }
+                    .calendar-cell { 
+                        padding: 0.375rem 0.125rem; 
+                        min-height: 44px; 
+                        border-radius: 6px;
+                    }
+                    .day-number { font-size: 0.65rem; }
+                    .calendar-cell.is-today .day-number { 
+                        width: 22px; 
+                        height: 22px; 
+                        font-size: 0.6rem;
+                    }
+                    .step-controls { padding: 0.25rem; border-radius: 8px; }
+                    .nav-btn { padding: 4px; }
+                    .nav-btn svg { width: 16px; height: 16px; }
+                    .today-txt { font-size: 0.55rem; }
+                    .new-btn { padding: 0.4rem 0.875rem; font-size: 0.65rem; border-radius: 10px; }
+                    .new-btn svg { width: 12px; height: 12px; }
+                    .detail-modal { width: 100vw; height: 90vh; border-radius: 20px 20px 0 0; max-height: 90vh; }
+                    .modal-header { padding: 1.25rem 1.25rem 0.75rem; }
+                    .status-box { width: 40px !important; height: 40px !important; border-radius: 12px !important; }
+                    .status-box svg { width: 20px !important; height: 20px !important; }
+                    .modal-content { padding: 0 1.25rem 1.25rem; overflow-y: auto; }
+                    .editable-title { font-size: 1.25rem; margin-bottom: 1rem; }
+                    .habit-grid { gap: 0.75rem; margin-top: 1rem; }
+                    .entry-card { padding: 1rem; border-radius: 14px; }
+                    .entry-info { gap: 0.75rem; }
+                    .entry-info svg { width: 16px; height: 16px; }
+                    .entry-name { font-size: 0.8rem; }
+                    .mini-check { width: 18px; height: 18px; }
                 }
             `}</style>
         </div>

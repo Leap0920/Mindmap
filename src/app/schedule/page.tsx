@@ -588,8 +588,51 @@ export default function SchedulePage() {
 
         .save-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        @media (max-width: 1200px) { .schedule-page { padding: 2rem; } }
-        @media (max-width: 800px) { .page-header { flex-direction: column; align-items: flex-start; gap: 24px; } }
+        @media (max-width: 1024px) {
+            .schedule-page { padding: 1.5rem; }
+            .page-header { margin-bottom: 2rem; }
+            .page-header h1 { font-size: 1.75rem; }
+            .grid-table { min-width: 800px; }
+        }
+
+        @media (max-width: 768px) {
+            .schedule-page { padding: 1.25rem 1rem; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+            .page-header h1 { font-size: 1.5rem; }
+            .breadcrumb { font-size: 0.65rem; }
+            .add-btn { width: 100%; justify-content: center; padding: 12px 20px; }
+            .schedule-workspace { border-radius: 10px; }
+            .grid-header-row { grid-template-columns: 70px repeat(6, 1fr); }
+            .grid-row { grid-template-columns: 70px repeat(6, 1fr); min-height: 60px; }
+            .time-label-cell { padding: 0.25rem; }
+            .time-range { font-size: 0.45rem; }
+            .day-header-cell { font-size: 0.5rem; padding: 0.5rem 0.25rem; letter-spacing: 0.1em; }
+            .grid-cell { padding: 0.2rem; }
+            .grid-class-card { padding: 0.4rem; border-radius: 6px; }
+            .class-title { font-size: 0.6rem; }
+            .exact-time { font-size: 0.4rem; }
+            .m-tag { font-size: 0.4rem; }
+            .modal-box { width: 95vw; padding: 24px; border-radius: 16px; }
+            .modal-box h3 { font-size: 1.1rem; margin-bottom: 24px; }
+            .fields { gap: 16px; }
+            .row { grid-template-columns: 1fr; }
+            .chip { padding: 10px 16px; font-size: 0.75rem; }
+        }
+
+        @media (max-width: 480px) {
+            .schedule-page { padding: 1rem 0.75rem; }
+            .page-header h1 { font-size: 1.25rem; }
+            .page-header p { font-size: 0.8rem; }
+            .add-btn { font-size: 0.8rem; padding: 10px 16px; }
+            .grid-table { min-width: 600px; }
+            .grid-header-row { grid-template-columns: 50px repeat(6, 1fr); }
+            .grid-row { grid-template-columns: 50px repeat(6, 1fr); min-height: 50px; }
+            .day-header-cell { font-size: 0.45rem; padding: 0.4rem 0.15rem; }
+            .time-range { font-size: 0.4rem; }
+            .class-title { font-size: 0.55rem; }
+            .modal-box { padding: 20px; }
+            .fields input { padding: 10px 12px; font-size: 0.875rem; }
+        }
       `}</style>
         </div>
     );

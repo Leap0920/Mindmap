@@ -773,14 +773,44 @@ export default function ProfilePage() {
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
                 :global(.animate-spin) { animation: spin 1s linear infinite; }
 
+                @media (max-width: 1024px) {
+                    .profile-page { max-width: 700px; }
+                    .section { padding: 28px; }
+                }
+
                 @media (max-width: 768px) {
                     .profile-page { padding-bottom: 40px; }
-                    .profile-content { padding: 0 16px; }
-                    .section { padding: 24px; }
-                    .profile-header { height: 160px; border-radius: 0 0 24px 24px; }
+                    .profile-content { padding: 0 16px; gap: 24px; }
+                    .section { padding: 24px; border-radius: 16px; }
+                    .profile-header { height: 180px; border-radius: 0 0 24px 24px; margin-bottom: 70px; }
                     .header-overlay { border-radius: 0 0 24px 24px; }
-                    .profile-avatar, .profile-avatar-img { width: 100px; height: 100px; border-radius: 35%; }
+                    .profile-avatar-container { bottom: -50px; }
+                    .profile-avatar, .profile-avatar-img { width: 110px; height: 110px; border-radius: 35%; border-width: 5px; }
+                    .profile-avatar { font-size: 2.5rem; }
+                    .section-header h2 { font-size: 1rem; }
+                    .upload-preview-row { flex-wrap: wrap; }
+                    .upload-btn { width: 100%; justify-content: center; }
+                    .btn-group { flex-wrap: wrap; }
+                    .btn-group .btn { flex: 1; min-width: 120px; }
+                    .toast { top: 12px; right: 12px; left: 12px; }
+                }
+
+                @media (max-width: 480px) {
+                    .profile-content { padding: 0 12px; gap: 20px; }
+                    .section { padding: 20px; }
+                    .profile-header { height: 140px; margin-bottom: 60px; }
+                    .profile-avatar-container { bottom: -40px; }
+                    .profile-avatar, .profile-avatar-img { width: 90px; height: 90px; border-width: 4px; }
                     .profile-avatar { font-size: 2rem; }
+                    .section-header { margin-bottom: 20px; }
+                    .section-header h2 { font-size: 0.9rem; }
+                    .form-group label { font-size: 0.7rem; }
+                    .form-group input { padding: 10px 14px; font-size: 0.875rem; }
+                    .readonly-field { padding: 10px 14px; font-size: 0.875rem; }
+                    .btn { padding: 10px 18px; font-size: 0.8rem; }
+                    .warning-text { font-size: 0.875rem; }
+                    .password-form { padding: 16px; }
+                    .delete-confirm { padding: 16px; }
                 }
             `}</style>
         </div>

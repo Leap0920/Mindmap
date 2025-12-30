@@ -292,6 +292,18 @@ export default function SignUpPage() {
         .signup-footer a:hover {
           text-decoration: underline;
         }
+
+        @media (max-width: 480px) {
+          .signup-content { padding: 16px; }
+          .signup-box { padding: 32px 24px; border-radius: 20px; }
+          .signup-header h1 { font-size: 1.75rem; }
+          .signup-header p { font-size: 0.875rem; }
+          .signup-header { margin-bottom: 32px; }
+          .row-fields { grid-template-columns: 1fr; }
+          .input-field input { padding: 12px 16px; font-size: 0.875rem; }
+          .signup-btn { padding: 14px; font-size: 0.875rem; }
+          .signup-footer { margin-top: 24px; font-size: 0.8rem; }
+        }
       `}</style>
     </div>
   );

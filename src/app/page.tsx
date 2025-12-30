@@ -737,43 +737,112 @@ export default function Home() {
 
         /* Responsive */
         @media (max-width: 1024px) {
+          .dashboard-content {
+            padding: 2rem;
+          }
           .main-grid {
             grid-template-columns: 1fr;
-            gap: 2rem;
+            gap: 2.5rem;
           }
           .main-greeting {
             font-size: 2.5rem;
           }
+          .perspective-aside {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+          }
         }
 
         @media (max-width: 768px) {
-          .dashboard-container {
+          .dashboard-content {
             padding: 1.5rem 1rem;
           }
           .stats-strip {
             grid-template-columns: 1fr;
-            gap: 1rem;
+            gap: 1.25rem;
+            padding: 1.5rem;
+          }
+          .stat-body {
+            gap: 0.75rem;
+          }
+          .stat-value {
+            font-size: 1.5rem;
           }
           .quick-access-grid {
             grid-template-columns: 1fr;
+            gap: 1rem;
+          }
+          .modern-quick-card {
+            padding: 1.25rem;
           }
           .main-greeting {
-            font-size: 2rem;
+            font-size: 1.75rem;
+          }
+          .hero-section {
+            border-radius: 20px;
+            margin-bottom: 2rem;
           }
           .hero-banner {
             height: auto;
-            min-height: 400px;
-            padding: 2rem;
+            min-height: 300px;
+            padding: 1.5rem;
           }
           .banner-content {
             flex-direction: column;
             align-items: flex-start;
-            gap: 1.5rem;
+            gap: 1.25rem;
           }
           .profile-avatar-img, .profile-avatar-placeholder {
-            width: 80px;
-            height: 80px;
-            font-size: 2rem;
+            width: 72px;
+            height: 72px;
+            font-size: 1.75rem;
+            border-radius: 30%;
+          }
+          .perspective-aside {
+            grid-template-columns: 1fr;
+          }
+          .sidebar-card {
+            padding: 1.5rem;
+            border-radius: 18px;
+          }
+          .hero-intro {
+            font-size: 0.95rem;
+          }
+          .section-title-row {
+            margin-bottom: 1.5rem;
+          }
+          .icon-box {
+            width: 40px;
+            height: 40px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .dashboard-content {
+            padding: 1rem 0.75rem;
+          }
+          .main-greeting {
+            font-size: 1.5rem;
+          }
+          .date-badge {
+            font-size: 0.65rem;
+          }
+          .hero-banner {
+            min-height: 260px;
+            padding: 1.25rem;
+          }
+          .profile-avatar-img, .profile-avatar-placeholder {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+          }
+          .stats-strip {
+            padding: 1.25rem;
+            border-radius: 16px;
+          }
+          .sidebar-card {
+            padding: 1.25rem;
           }
         }
       `}</style>

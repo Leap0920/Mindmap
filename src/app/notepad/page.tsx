@@ -698,11 +698,55 @@ export default function NotepadPage() {
         .animate-spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        @media (max-width: 768px) { 
-            .notes-sidebar { width: 100%; position: absolute; inset: 0; z-index: 10; } 
-            .notepad-container { position: relative; margin: 10px; height: calc(100vh - 20px); } 
-            .editor-header { padding: 20px; }
-            .content-area { padding: 20px; }
+        @media (max-width: 1024px) {
+            .notepad-container { margin: 16px; height: calc(100vh - 32px); }
+            .notes-sidebar { width: 280px; }
+            .sidebar-header { padding: 20px; }
+            .editor-header { padding: 20px 30px; }
+            .content-area { padding: 30px; }
+        }
+
+        @media (max-width: 768px) {
+            .notepad-container { 
+                margin: 12px; 
+                height: calc(100vh - 24px); 
+                flex-direction: column; 
+                border-radius: 16px;
+            }
+            .notes-sidebar { 
+                width: 100%; 
+                max-height: 45vh; 
+                border-right: none; 
+                border-bottom: 1px solid #151515; 
+            }
+            .sidebar-header { padding: 16px; }
+            .search-box { padding: 8px 12px; }
+            .notes-list { padding: 8px; }
+            .note-item { padding: 12px 16px; }
+            .note-item h4 { font-size: 0.8rem; }
+            .note-editor { flex: 1; }
+            .editor-header { padding: 16px 20px; flex-wrap: wrap; gap: 12px; }
+            .title-input { font-size: 1.25rem; width: 100%; }
+            .editor-actions { width: 100%; justify-content: flex-end; }
+            .content-area { padding: 20px; font-size: 1rem; }
+            .modal-box { width: 95vw; padding: 24px; border-radius: 16px; }
+            .modal-header { margin-bottom: 24px; }
+            .save-btn { padding: 8px 16px; font-size: 0.8rem; }
+            .save-btn span { display: none; }
+        }
+
+        @media (max-width: 480px) {
+            .notepad-container { margin: 8px; height: calc(100vh - 16px); border-radius: 12px; }
+            .notes-sidebar { max-height: 40vh; }
+            .sidebar-header { padding: 12px; gap: 8px; }
+            .add-note-btn { width: 36px; height: 36px; }
+            .note-item { padding: 10px 12px; }
+            .editor-header { padding: 12px 16px; }
+            .title-input { font-size: 1.1rem; }
+            .content-area { padding: 16px; font-size: 0.9375rem; line-height: 1.8; }
+            .empty-state p { font-size: 0.8rem; letter-spacing: 0.1em; }
+            .empty-state button { padding: 10px 20px; font-size: 0.8rem; }
+            .modal-box { padding: 20px; }
         }
       `}</style>
         </div>

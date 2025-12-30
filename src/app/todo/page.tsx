@@ -787,13 +787,38 @@ export default function TodoPage() {
         }
 
         @media (max-width: 768px) {
-          .todo-page { padding: 2.5rem 1.5rem; }
-          .page-header h1 { font-size: 2.25rem; }
-          .main-layout { gap: 3rem; }
+          .todo-page { padding: 2rem 1.25rem; }
+          .page-header h1 { font-size: 2rem; }
+          .breadcrumb { letter-spacing: 0.2rem; }
+          .main-layout { gap: 2.5rem; }
           .todo-item { padding: 1.25rem; gap: 1rem; }
-          .todo-body h4 { font-size: 1rem; }
-          .modal-box { width: 95%; padding: 2.5rem 1.5rem; }
+          .todo-body h4 { font-size: 0.95rem; }
+          .modal-box { width: 95%; padding: 2.5rem 1.5rem; border-radius: 24px; }
           .grid-fields { grid-template-columns: 1fr; }
+          .detail-sidebar { width: 100%; right: 0; left: 0; bottom: 0; top: auto; height: 85vh; border-radius: 24px 24px 0 0; }
+          .detail-header { padding: 2rem 2rem 1rem; }
+          .detail-content { padding: 0 2rem 2rem; }
+          .detail-title-input { font-size: 1.5rem; }
+          .add-btn { width: 100%; justify-content: center; }
+        }
+
+        @media (max-width: 480px) {
+          .todo-page { padding: 1.5rem 1rem; }
+          .page-header h1 { font-size: 1.75rem; }
+          .page-header p { font-size: 0.75rem; }
+          .breadcrumb { font-size: 0.5rem; letter-spacing: 0.15rem; }
+          .todo-item { padding: 1rem; border-radius: 12px; }
+          .todo-body h4 { font-size: 0.9rem; margin-bottom: 0.375rem; }
+          .tag { font-size: 0.55rem; padding: 0.3rem 0.6rem; }
+          .check-btn svg { width: 18px; height: 18px; }
+          .modal-box { padding: 2rem 1.25rem; border-radius: 20px; }
+          .modal-header h3 { font-size: 1.5rem; }
+          .input-field input, .input-field select { padding: 0.875rem 1rem; font-size: 0.9375rem; }
+          .save-btn { padding: 1rem 2.5rem; font-size: 1rem; }
+          .filter-link { padding: 0.5rem 0.75rem; font-size: 0.75rem; }
+          .detail-sidebar { height: 90vh; }
+          .detail-title-input { font-size: 1.25rem; }
+          .description-area { height: 150px; padding: 1.25rem; }
         }
       `}</style>
         </div>

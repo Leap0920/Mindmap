@@ -393,10 +393,36 @@ export default function JournalPage() {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
 
+        @media (max-width: 1024px) {
+            .journal-page { padding: 40px 24px; }
+            .editor-container { padding: 32px; }
+        }
+
         @media (max-width: 768px) {
-            .journal-header { flex-direction: column; align-items: flex-start; gap: 32px; }
-            .header-left h1 { font-size: 2rem; }
-            .editor-container { padding: 24px; }
+            .journal-page { padding: 24px 16px; }
+            .journal-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+            .header-left h1 { font-size: 1.75rem; }
+            .type-badge { font-size: 0.65rem; }
+            .date-controller { width: 100%; justify-content: center; }
+            .header-actions { width: 100%; }
+            .save-btn { width: 100%; justify-content: center; }
+            .editor-container { padding: 20px; min-height: 450px; border-radius: 16px; }
+            .editor-top { flex-direction: column; gap: 16px; align-items: stretch; }
+            .mood-selector { justify-content: center; }
+            .mood-selector select { width: 100%; }
+            .word-count { text-align: center; }
+            .journal-field { font-size: 1rem; }
+            .editor-footer { flex-direction: column; gap: 16px; text-align: center; }
+        }
+
+        @media (max-width: 480px) {
+            .journal-page { padding: 16px 12px; }
+            .header-left h1 { font-size: 1.5rem; }
+            .current-date span { font-size: 0.75rem; }
+            .nav-btn { width: 32px; height: 32px; }
+            .editor-container { padding: 16px; min-height: 400px; }
+            .journal-field { font-size: 0.9375rem; line-height: 1.8; }
+            .save-btn { padding: 10px 20px; font-size: 0.8rem; }
         }
       `}</style>
         </div>
