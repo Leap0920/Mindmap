@@ -3,72 +3,110 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Book, Search, Plus, Star, Trash2, Loader2, X, BookOpen } from 'lucide-react';
+import {
+    Book, Search, Plus, Trash2, Loader2, X, BookOpen, Heart,
+    Quote, BookMarked, CheckCircle, Eye, FileText, Sparkles, MessageSquare,
+    LayoutDashboard, Library, TrendingUp, Calendar, Trophy, ArrowRight
+} from 'lucide-react';
+
+interface QuoteItem {
+    _id: string;
+    text: string;
+    page?: number;
+    chapter?: string;
+    createdAt?: string;
+}
 
 interface BookItem {
     _id: string;
     title: string;
     author: string;
     category: string;
-    progress: number;
-    rating: number;
     status: 'wishlist' | 'reading' | 'completed';
+    isFavorite: boolean;
+    quotes: QuoteItem[];
+    notes: string;
+    totalPages: number;
+    currentPage: number;
+    updatedAt: string;
 }
 
-const CATEGORIES = ['Fiction', 'Non-Fiction', 'Self-Help', 'Business', 'Science', 'Biography', 'Other'];
-const STATUSES = [
-    { key: 'all', label: 'All' },
-    { key: 'reading', label: 'Reading' },
-    { key: 'wishlist', label: 'Wishlist' },
-    { key: 'completed', label: 'Completed' }
+interface Stats {
+    total: number;
+    reading: number;
+    completed: number;
+    wishlist: number;
+    favorites: number;
+    totalQuotes: number;
+}
+
+const COLUMNS: { key: 'wishlist' | 'reading' | 'completed'; label: string; color: string; bg: string }[] = [
+    { key: 'wishlist', label: 'Not started', color: '#888', bg: 'rgba(136, 136, 136, 0.1)' },
+    { key: 'reading', label: 'In progress', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)' },
+    { key: 'completed', label: 'Done', color: '#22c55e', bg: 'rgba(34, 197, 94, 0.1)' },
 ];
 
 export default function BooksPage() {
     const { data: session, status: authStatus } = useSession();
     const router = useRouter();
     const [books, setBooks] = useState<BookItem[]>([]);
+    const [stats, setStats] = useState<Stats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [showModal, setShowModal] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-    const [filter, setFilter] = useState('all');
+    const [activeView, setActiveView] = useState<'dashboard' | 'board'>('dashboard');
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [showQuoteModal, setShowQuoteModal] = useState(false);
+    const [selectedBook, setSelectedBook] = useState<BookItem | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [newBook, setNewBook] = useState({
-        title: '', author: '', category: 'Non-Fiction', status: 'wishlist' as const, progress: 0, rating: 0,
-    });
+    const [showFavorites, setShowFavorites] = useState(false);
+
+    // Quick Add state
+    const [activeAddingColumn, setActiveAddingColumn] = useState<'wishlist' | 'reading' | 'completed' | null>(null);
+    const [quickTitle, setQuickTitle] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+
+    const [newQuote, setNewQuote] = useState({ text: '', page: '', chapter: '' });
 
     const fetchBooks = useCallback(async () => {
         if (!session) return;
         setIsLoading(true);
         try {
-            const res = await fetch('/api/books');
+            const url = showFavorites ? '/api/books?favorite=true' : '/api/books';
+            const res = await fetch(url);
             const data = await res.json();
             setBooks(data.books || []);
+            setStats(data.stats || null);
         } catch (error) {
             console.error('Error fetching books:', error);
         } finally {
             setIsLoading(false);
         }
-    }, [session]);
+    }, [session, showFavorites]);
 
     useEffect(() => {
         if (authStatus === 'unauthenticated') router.push('/login');
         else if (authStatus === 'authenticated') fetchBooks();
     }, [authStatus, router, fetchBooks]);
 
-    const addBook = async () => {
-        if (!newBook.title.trim() || !newBook.author.trim()) return;
+    const handleAddBook = async (status: 'wishlist' | 'reading' | 'completed') => {
+        if (!quickTitle.trim()) {
+            setActiveAddingColumn(null);
+            return;
+        }
         setIsSaving(true);
         try {
             const res = await fetch('/api/books', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newBook),
+                body: JSON.stringify({
+                    title: quickTitle,
+                    status,
+                    category: 'Other'
+                }),
             });
-            const data = await res.json();
             if (res.ok) {
-                setBooks(prev => [data.book, ...prev]);
-                setNewBook({ title: '', author: '', category: 'Non-Fiction', status: 'wishlist', progress: 0, rating: 0 });
-                setShowModal(false);
+                await fetchBooks();
+                setQuickTitle('');
+                setActiveAddingColumn(null);
             }
         } catch (error) {
             console.error('Error adding book:', error);
@@ -77,471 +115,1126 @@ export default function BooksPage() {
         }
     };
 
-    const updateProgress = async (id: string, progress: number) => {
+    const updateBookStatus = async (id: string, newStatus: 'wishlist' | 'reading' | 'completed') => {
+        setBooks(prev => prev.map(b => b._id === id ? { ...b, status: newStatus } : b));
         try {
             await fetch('/api/books', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, progress, status: progress >= 100 ? 'completed' : 'reading' }),
+                body: JSON.stringify({ id, status: newStatus }),
             });
-            setBooks(prev => prev.map(b => b._id === id ? { ...b, progress, status: progress >= 100 ? 'completed' : 'reading' } : b));
-        } catch (error) { console.error('Error:', error); }
+            await fetchBooks();
+        } catch (error) {
+            console.error('Error updating status:', error);
+            fetchBooks();
+        }
     };
 
-    const updateRating = async (id: string, rating: number) => {
+    const updateBook = async (id: string, updates: Record<string, unknown>, action?: string) => {
         try {
-            await fetch('/api/books', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, rating }) });
-            setBooks(prev => prev.map(b => b._id === id ? { ...b, rating } : b));
-        } catch (error) { console.error('Error:', error); }
+            const res = await fetch('/api/books', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, action, ...updates }),
+            });
+            if (res.ok) {
+                await fetchBooks();
+                if (selectedBook && selectedBook._id === id) {
+                    const data = await res.json();
+                    setSelectedBook(data.book);
+                }
+            }
+        } catch (error) {
+            console.error('Error updating book:', error);
+        }
+    };
+
+    const toggleFavorite = async (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        await updateBook(id, {}, 'toggleFavorite');
     };
 
     const deleteBook = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this book?')) return;
         try {
-            await fetch('/api/books', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-            setBooks(prev => prev.filter(b => b._id !== id));
-        } catch (error) { console.error('Error:', error); }
+            const res = await fetch('/api/books', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            if (res.ok) {
+                setBooks(prev => prev.filter(b => b._id !== id));
+                setShowDetailsModal(false);
+                setSelectedBook(null);
+            }
+        } catch (error) {
+            console.error('Error deleting book:', error);
+        }
+    };
+
+    const addQuote = async () => {
+        if (!selectedBook || !newQuote.text.trim()) return;
+        await updateBook(selectedBook._id, {
+            quote: {
+                text: newQuote.text,
+                page: newQuote.page ? parseInt(newQuote.page) : undefined,
+                chapter: newQuote.chapter || undefined
+            }
+        }, 'addQuote');
+        setNewQuote({ text: '', page: '', chapter: '' });
+        setShowQuoteModal(false);
+    };
+
+    const removeQuote = async (quoteId: string) => {
+        if (!selectedBook) return;
+        if (!confirm('Remove this quote?')) return;
+        await updateBook(selectedBook._id, { quoteId }, 'removeQuote');
+    };
+
+    // Drag and Drop Logic
+    const onDragStart = (e: React.DragEvent, bookId: string) => {
+        e.dataTransfer.setData('bookId', bookId);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const onDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const onDrop = (e: React.DragEvent, status: 'wishlist' | 'reading' | 'completed') => {
+        e.preventDefault();
+        const bookId = e.dataTransfer.getData('bookId');
+        const book = books.find(b => b._id === bookId);
+        if (book && book.status !== status) {
+            updateBookStatus(bookId, status);
+        }
     };
 
     const filteredBooks = books.filter(b => {
-        const matchesFilter = filter === 'all' || b.status === filter;
-        const matchesSearch = b.title.toLowerCase().includes(searchQuery.toLowerCase()) || b.author.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesFilter && matchesSearch;
+        const matchesSearch = b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (b.author?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
+        return matchesSearch;
     });
 
-    const stats = { reading: books.filter(b => b.status === 'reading').length, completed: books.filter(b => b.status === 'completed').length };
+    // Dashboard Helpers
+    const currentReads = books.filter(b => b.status === 'reading').slice(0, 3);
+    const recentQuotes = books.flatMap(b => (b.quotes || []).map(q => ({ ...q, bookTitle: b.title, bookId: b._id }))).sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime()).slice(0, 4);
+    const wishlistPeek = books.filter(b => b.status === 'wishlist').slice(0, 5);
 
     if (authStatus === 'loading' || isLoading) {
-        return <div className="loading-screen"><Loader2 size={24} className="animate-spin" /><style jsx>{`.loading-screen { display: flex; align-items: center; justify-content: center; min-height: 60vh; color: #555; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .animate-spin { animation: spin 1s linear infinite; }`}</style></div>;
+        return (
+            <div className="loading-screen">
+                <Loader2 size={32} className="spin" />
+                <style jsx>{`
+                    .loading-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #080808; color: #333; }
+                    .spin { animation: spin 1s linear infinite; }
+                    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                `}</style>
+            </div>
+        );
     }
 
     return (
-        <div className="page animate-slide">
+        <div className="page">
             <header className="header">
-                <div>
-                    <h1 className="title">Book Hub</h1>
-                    <p className="subtitle">{stats.reading} reading · {stats.completed} completed</p>
+                <div className="header-left">
+                    <h1 className="header-title">Mindmap Books</h1>
+                    <div className="view-switcher">
+                        <button className={`view-btn ${activeView === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveView('dashboard')}>
+                            <LayoutDashboard size={18} /> Dashboard
+                        </button>
+                        <button className={`view-btn ${activeView === 'board' ? 'active' : ''}`} onClick={() => setActiveView('board')}>
+                            <Library size={18} /> Library
+                        </button>
+                    </div>
                 </div>
-                <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-                    <Plus size={16} /> Add Book
-                </button>
+                <div className="header-right">
+                    <div className="search-bar">
+                        <Search size={16} />
+                        <input placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                    </div>
+                    <button className={`fav-toggle ${showFavorites ? 'active' : ''}`} onClick={() => setShowFavorites(!showFavorites)}>
+                        <Heart size={18} fill={showFavorites ? 'currentColor' : 'none'} />
+                    </button>
+                </div>
             </header>
 
-            <div className="toolbar">
-                <div className="tabs">
-                    {STATUSES.map(s => (
-                        <button key={s.key} className={`tab ${filter === s.key ? 'active' : ''}`} onClick={() => setFilter(s.key)}>
-                            {s.label}
-                        </button>
-                    ))}
-                </div>
-                <div className="search">
-                    <Search size={16} />
-                    <input placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-                </div>
-            </div>
+            {activeView === 'dashboard' ? (
+                <div className="dashboard-content animate-fade-in">
+                    {/* Hero Stats */}
+                    <div className="dashboard-grid-top">
+                        <div className="main-stats-card glass">
+                            <div className="stat-header">
+                                <Trophy size={24} className="icon-gold" />
+                                <h3>Reading Summary</h3>
+                            </div>
+                            <div className="stats-row">
+                                <div className="stat-unit">
+                                    <span className="unit-value">{stats?.total || 0}</span>
+                                    <span className="unit-label">Total Books</span>
+                                </div>
+                                <div className="stat-unit">
+                                    <span className="unit-value">{stats?.completed || 0}</span>
+                                    <span className="unit-label">Completed</span>
+                                </div>
+                                <div className="stat-unit">
+                                    <span className="unit-value">{stats?.totalQuotes || 0}</span>
+                                    <span className="unit-label">Quotes Saved</span>
+                                </div>
+                            </div>
+                            <div className="progress-mini">
+                                <div className="bar">
+                                    <div className="fill" style={{ width: `${(stats?.completed || 0) / (stats?.total || 1) * 100}%` }} />
+                                </div>
+                                <span className="label">{(stats?.completed || 0)} / {(stats?.total || 0)} books finished</span>
+                            </div>
+                        </div>
 
-            {filteredBooks.length === 0 ? (
-                <div className="empty-state">
-                    <Book size={40} strokeWidth={1} />
-                    <p>No books found</p>
-                    <button className="btn btn-secondary" onClick={() => setShowModal(true)}>Add your first book</button>
+                        <div className="current-reads-section">
+                            <div className="section-header">
+                                <h3>Active Reads</h3>
+                                <button className="text-btn" onClick={() => setActiveView('board')}>View all <ArrowRight size={14} /></button>
+                            </div>
+                            <div className="current-grid">
+                                {currentReads.length > 0 ? currentReads.map(book => (
+                                    <div key={book._id} className="book-card-lite glass" onClick={() => { setSelectedBook(book); setShowDetailsModal(true); }}>
+                                        <div className="icon-circle reading"><BookOpen size={16} /></div>
+                                        <div className="content">
+                                            <h4>{book.title}</h4>
+                                            <p>{book.author || 'Unknown'}</p>
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <div className="empty-current glass">
+                                        <BookOpen size={24} color="#333" />
+                                        <p>No active books</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="dashboard-grid-bottom">
+                        {/* Quotes Feed */}
+                        <div className="quotes-feed glass">
+                            <div className="section-header">
+                                <h3>Saved Passages</h3>
+                                <Sparkles size={18} className="icon-sparkle" />
+                            </div>
+                            <div className="quotes-stack">
+                                {recentQuotes.length > 0 ? recentQuotes.map((q, i) => (
+                                    <div key={q._id || i} className="dashboard-quote" onClick={() => { const b = books.find(book => book._id === q.bookId); if (b) { setSelectedBook(b); setShowDetailsModal(true); } }}>
+                                        <Quote size={14} className="quote-icon" />
+                                        <p>&quot;{q.text}&quot;</p>
+                                        <span className="book-origin">{q.bookTitle}</span>
+                                    </div>
+                                )) : (
+                                    <div className="empty-state-lite">
+                                        <Quote size={24} color="#222" />
+                                        <p>No quotes saved yet</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Wishlist Sidebar */}
+                        <div className="wishlist-sidebar glass">
+                            <div className="section-header">
+                                <h3>Wishlist Highlights</h3>
+                                <BookMarked size={18} color="#666" />
+                            </div>
+                            <div className="wishlist-list">
+                                {wishlistPeek.length > 0 ? wishlistPeek.map(book => (
+                                    <div key={book._id} className="wishlist-item" onClick={() => { setSelectedBook(book); setShowDetailsModal(true); }}>
+                                        <div className="dot" />
+                                        <div className="item-info">
+                                            <span className="title">{book.title}</span>
+                                            <span className="author">{book.author}</span>
+                                        </div>
+                                        <button className="add-btn" onClick={(e) => { e.stopPropagation(); updateBookStatus(book._id, 'reading'); }}>
+                                            <Plus size={14} />
+                                        </button>
+                                    </div>
+                                )) : (
+                                    <p className="no-items">Wishlist is empty</p>
+                                )}
+                                <button className="full-wishlist-btn" onClick={() => setActiveView('board')}>
+                                    Full Wishlist
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             ) : (
-                <div className="grid">
-                    {filteredBooks.map(book => (
-                        <div key={book._id} className="card book-card">
-                            <div className="book-header">
-                                <span className={`status ${book.status}`}>{book.status}</span>
-                                <button className="btn btn-ghost btn-danger" onClick={() => deleteBook(book._id)}><Trash2 size={14} /></button>
-                            </div>
-                            <h3 className="book-title">{book.title}</h3>
-                            <p className="book-author">{book.author}</p>
-                            <span className="book-category">{book.category}</span>
-
-                            {book.status !== 'wishlist' && (
-                                <div className="progress-section">
-                                    <div className="progress-bar">
-                                        <div className="progress-fill" style={{ width: `${book.progress}%` }} />
+                <div className="library-content animate-fade-in">
+                    <div className="kanban-board">
+                        {COLUMNS.map(col => (
+                            <div
+                                key={col.key}
+                                className="kanban-column"
+                                onDragOver={onDragOver}
+                                onDrop={(e) => onDrop(e, col.key)}
+                            >
+                                <div className="column-header">
+                                    <div className="header-label">
+                                        <span className="dot" style={{ backgroundColor: col.color }} />
+                                        {col.label}
                                     </div>
-                                    <input type="range" min="0" max="100" value={book.progress} onChange={e => updateProgress(book._id, parseInt(e.target.value))} />
-                                    <span className="progress-text">{book.progress}%</span>
+                                    <span className="count">{filteredBooks.filter(b => b.status === col.key).length}</span>
                                 </div>
-                            )}
 
-                            <div className="book-footer">
-                                <div className="rating">
-                                    {[1, 2, 3, 4, 5].map(s => (
-                                        <button key={s} onClick={() => updateRating(book._id, s)} className={book.rating >= s ? 'filled' : ''}>
-                                            <Star size={14} fill={book.rating >= s ? 'currentColor' : 'none'} />
+                                <div className="cards-container">
+                                    {filteredBooks.filter(b => b.status === col.key).map(book => (
+                                        <div
+                                            key={book._id}
+                                            className="book-card glass"
+                                            draggable
+                                            onDragStart={(e) => onDragStart(e, book._id)}
+                                            onClick={() => { setSelectedBook(book); setShowDetailsModal(true); }}
+                                        >
+                                            <div className="card-top">
+                                                {col.key === 'reading' ? (
+                                                    <div className="reading-icon"><BookOpen size={16} /></div>
+                                                ) : (
+                                                    <FileText size={16} className="file-icon" />
+                                                )}
+                                                <h3 className="card-title">{book.title}</h3>
+                                            </div>
+                                            <div className="card-meta">
+                                                {book.quotes?.length > 0 && (
+                                                    <span className="quote-badge">
+                                                        <MessageSquare size={12} />
+                                                        {book.quotes.length}
+                                                    </span>
+                                                )}
+                                                {book.isFavorite && <Heart size={12} fill="#ff4d4d" color="#ff4d4d" />}
+                                                <span className="date-meta">{new Date(book.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {activeAddingColumn === col.key ? (
+                                        <div className="quick-add-input">
+                                            <input
+                                                autoFocus
+                                                placeholder="Book title..."
+                                                value={quickTitle}
+                                                onChange={e => setQuickTitle(e.target.value)}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') handleAddBook(col.key);
+                                                    if (e.key === 'Escape') setActiveAddingColumn(null);
+                                                }}
+                                                onBlur={() => handleAddBook(col.key)}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <button className="add-card-btn" onClick={() => setActiveAddingColumn(col.key)}>
+                                            <Plus size={16} /> New page
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Details Modal */}
+            {showDetailsModal && selectedBook && (
+                <div className="modal-overlay" onClick={() => { setShowDetailsModal(false); setSelectedBook(null); }}>
+                    <div className="modal glass" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div>
+                                <h2 className="modal-title">{selectedBook.title}</h2>
+                                <p className="modal-author">{selectedBook.author || 'Author Unknown'}</p>
+                            </div>
+                            <div className="modal-actions">
+                                <button className="fav-modal-btn" onClick={(e) => toggleFavorite(e, selectedBook._id)}>
+                                    <Heart size={20} fill={selectedBook.isFavorite ? 'currentColor' : 'none'} />
+                                </button>
+                                <button className="close-btn" onClick={() => { setShowDetailsModal(false); setSelectedBook(null); }}>
+                                    <X size={20} />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="modal-body">
+                            <div className="section status-section">
+                                <label>Move to</label>
+                                <div className="status-grid">
+                                    {COLUMNS.map(c => (
+                                        <button
+                                            key={c.key}
+                                            className={`status-btn ${selectedBook.status === c.key ? 'active' : ''}`}
+                                            onClick={() => updateBookStatus(selectedBook._id, c.key)}
+                                        >
+                                            {c.label}
                                         </button>
                                     ))}
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
-            )}
 
-            {showModal && (
-                <div className="modal-overlay" onClick={() => setShowModal(false)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3 className="modal-title">Add Book</h3>
-                            <button className="btn btn-ghost" onClick={() => setShowModal(false)}><X size={18} /></button>
-                        </div>
-                        <div className="modal-body">
-                            <div className="form-group">
-                                <label className="form-label">Title</label>
-                                <input type="text" placeholder="Book title" value={newBook.title} onChange={e => setNewBook({ ...newBook, title: e.target.value })} autoFocus />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Author</label>
-                                <input type="text" placeholder="Author name" value={newBook.author} onChange={e => setNewBook({ ...newBook, author: e.target.value })} />
-                            </div>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label className="form-label">Category</label>
-                                    <select value={newBook.category} onChange={e => setNewBook({ ...newBook, category: e.target.value })}>
-                                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                    </select>
+                            <div className="section quotes-section">
+                                <div className="section-head">
+                                    <h3>Quotes</h3>
+                                    <button className="add-quote-btn" onClick={() => setShowQuoteModal(true)}>
+                                        <Plus size={14} /> Add
+                                    </button>
                                 </div>
-                                <div className="form-group">
-                                    <label className="form-label">Status</label>
-                                    <select value={newBook.status} onChange={e => setNewBook({ ...newBook, status: e.target.value as any })}>
-                                        <option value="wishlist">Wishlist</option>
-                                        <option value="reading">Reading</option>
-                                        <option value="completed">Completed</option>
-                                    </select>
+                                <div className="quotes-list-lite">
+                                    {selectedBook.quotes?.map(q => (
+                                        <div key={q._id} className="quote-card-lite">
+                                            <p>&quot;{q.text}&quot;</p>
+                                            <div className="quote-footer">
+                                                {q.page && <span>p. {q.page}</span>}
+                                                <button className="delete-quote" onClick={() => removeQuote(q._id)}>
+                                                    <Trash2 size={12} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {(!selectedBook.quotes || selectedBook.quotes.length === 0) && (
+                                        <p className="empty-text">No quotes yet.</p>
+                                    )}
                                 </div>
                             </div>
+
+                            <div className="section notes-section">
+                                <h3>Notes</h3>
+                                <textarea
+                                    placeholder="Write your reflections..."
+                                    value={selectedBook.notes || ''}
+                                    onChange={e => updateBook(selectedBook._id, { notes: e.target.value })}
+                                />
+                            </div>
                         </div>
+
                         <div className="modal-footer">
-                            <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                            <button className="btn btn-primary" onClick={addBook} disabled={isSaving}>
-                                {isSaving ? <Loader2 size={14} className="animate-spin" /> : 'Add Book'}
+                            <button className="delete-book-link" onClick={() => deleteBook(selectedBook._id)}>
+                                <Trash2 size={14} /> Delete permanently
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
+            {/* Add Quote Modal */}
+            {showQuoteModal && (
+                <div className="modal-overlay" onClick={() => setShowQuoteModal(false)}>
+                    <div className="quote-modal glass" onClick={e => e.stopPropagation()}>
+                        <h3>New Quote</h3>
+                        <textarea
+                            placeholder="What resonated with you?"
+                            value={newQuote.text}
+                            onChange={e => setNewQuote({ ...newQuote, text: e.target.value })}
+                            rows={4}
+                            autoFocus
+                        />
+                        <div className="quote-fields">
+                            <input
+                                type="number"
+                                placeholder="Page"
+                                value={newQuote.page}
+                                onChange={e => setNewQuote({ ...newQuote, page: e.target.value })}
+                            />
+                            <input
+                                placeholder="Chapter"
+                                value={newQuote.chapter}
+                                onChange={e => setNewQuote({ ...newQuote, chapter: e.target.value })}
+                            />
+                        </div>
+                        <div className="quote-modal-footer">
+                            <button className="cancel-btn" onClick={() => setShowQuoteModal(false)}>Cancel</button>
+                            <button className="save-btn" onClick={addQuote} disabled={!newQuote.text.trim()}>Save passsage</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <style jsx>{`
-        .page { 
-            min-height: 100vh;
-            background: #080808;
-            color: #fff;
-            padding: 48px;
-            animation: fadeUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        @keyframes fadeUp { 
-            from { opacity: 0; transform: translateY(16px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
+                .page {
+                    min-height: 100vh;
+                    background: #030303;
+                    color: #fff;
+                    padding: 32px;
+                    font-family: 'Inter', -apple-system, sans-serif;
+                }
 
-        .header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: flex-end; 
-            margin-bottom: 48px;
-            max-width: 1200px;
-            margin-left: auto;
-            margin-right: auto;
-        }
+                .header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 40px;
+                    max-width: 1400px;
+                    margin-left: auto;
+                    margin-right: auto;
+                }
 
-        .title { 
-            font-size: 2.5rem; 
-            font-weight: 800; 
-            margin: 0; 
-            color: #fff; 
-            letter-spacing: -0.04em; 
-        }
+                .header-left {
+                    display: flex;
+                    align-items: center;
+                    gap: 32px;
+                }
 
-        .subtitle { 
-            color: #555; 
-            font-size: 1rem; 
-            font-weight: 500;
-            margin-top: 4px;
-        }
-        
-        .toolbar { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 32px; 
-            gap: 16px; 
-            max-width: 1200px;
-            margin-left: auto;
-            margin-right: auto;
-        }
+                .header-title {
+                    font-size: 1.25rem;
+                    font-weight: 800;
+                    margin: 0;
+                    letter-spacing: -0.02em;
+                    color: #fff;
+                }
 
-        .tabs { 
-            display: flex; 
-            gap: 4px; 
-            background: #0a0a0a; 
-            padding: 4px; 
-            border-radius: 10px; 
-            border: 1px solid #1a1a1a; 
-        }
+                .view-switcher {
+                    display: flex;
+                    background: #0d0d0d;
+                    padding: 4px;
+                    border-radius: 12px;
+                    border: 1px solid #1a1a1a;
+                }
 
-        .tab { 
-            padding: 8px 16px; 
-            font-size: 0.8125rem; 
-            color: #444; 
-            border-radius: 8px; 
-            transition: all 0.2s; 
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
+                .view-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    color: #666;
+                    border: none;
+                    background: none;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
 
-        .tab:hover { color: #888; }
-        .tab.active { background: #151515; color: #fff; }
+                .view-btn.active {
+                    background: #1a1a1a;
+                    color: #fff;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                }
 
-        .search { 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            padding: 10px 16px; 
-            background: #0a0a0a; 
-            border: 1px solid #1a1a1a; 
-            border-radius: 10px; 
-            transition: border-color 0.2s;
-        }
+                .header-right {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                }
 
-        .search:focus-within { border-color: #333; }
-        .search svg { color: #333; }
-        .search input { 
-            background: none; 
-            border: none; 
-            color: #fff; 
-            width: 200px; 
-            font-size: 0.875rem; 
-            outline: none; 
-            font-weight: 500;
-        }
+                .search-bar {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    background: #0d0d0d;
+                    padding: 8px 16px;
+                    border-radius: 10px;
+                    border: 1px solid #1a1a1a;
+                }
 
-        .search input::placeholder { color: #222; }
-        
-        .grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-            gap: 24px; 
-            max-width: 1200px;
-            margin-left: auto;
-            margin-right: auto;
-        }
+                .search-bar input {
+                    background: none;
+                    border: none;
+                    color: #fff;
+                    outline: none;
+                    width: 180px;
+                    font-size: 0.85rem;
+                }
 
-        .card { 
-            background: #0a0a0a; 
-            border: 1px solid #151515; 
-            border-radius: 16px; 
-            padding: 24px; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+                .fav-toggle {
+                    background: #0d0d0d;
+                    border: 1px solid #1a1a1a;
+                    color: #444;
+                    padding: 8px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
 
-        .card:hover { 
-            border-color: #252525; 
-            background: #0d0d0d;
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-        }
+                .fav-toggle.active {
+                    color: #ff4d4d;
+                    border-color: #ff4d4d33;
+                }
 
-        .book-card { display: flex; flex-direction: column; gap: 8px; }
-        .book-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        
-        .status { 
-            font-size: 0.625rem; 
-            font-weight: 800; 
-            padding: 3px 8px; 
-            border-radius: 6px; 
-            text-transform: uppercase; 
-            letter-spacing: 0.05em; 
-        }
+                /* Dashboard UI */
+                .dashboard-content {
+                    max-width: 1400px;
+                    margin: 0 auto;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 24px;
+                }
 
-        .status.wishlist { background: #1a1a1a; color: #555; }
-        .status.reading { background: rgba(255,255,255,0.1); color: #fff; }
-        .status.completed { background: #fff; color: #000; }
+                .dashboard-grid-top {
+                    display: grid;
+                    grid-template-columns: 1fr 1.5fr;
+                    gap: 24px;
+                }
 
-        .book-title { 
-            font-size: 1.125rem; 
-            font-weight: 700; 
-            color: #fff; 
-            margin-top: 4px; 
-            letter-spacing: -0.01em;
-        }
+                .dashboard-grid-bottom {
+                    display: grid;
+                    grid-template-columns: 2fr 1fr;
+                    gap: 24px;
+                }
 
-        .book-author { font-size: 0.875rem; color: #555; font-weight: 500; }
-        
-        .book-category { 
-            font-size: 0.6875rem; 
-            color: #333; 
-            text-transform: uppercase; 
-            letter-spacing: 0.1em; 
-            margin-top: 8px;
-            font-weight: 800;
-        }
-        
-        .progress-section { 
-            margin-top: 24px; 
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+                .glass {
+                    background: rgba(13, 13, 13, 0.7);
+                    backdrop-filter: blur(16px);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-radius: 24px;
+                    padding: 24px;
+                    transition: border-color 0.3s;
+                }
 
-        .progress-bar { 
-            height: 4px; 
-            background: #151515; 
-            border-radius: 2px; 
-            overflow: hidden; 
-        }
+                .glass:hover {
+                    border-color: rgba(255, 255, 255, 0.1);
+                }
 
-        .progress-fill { 
-            height: 100%; 
-            background: #fff; 
-            transition: width 0.3s ease; 
-        }
+                .main-stats-card {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    background: linear-gradient(145deg, rgba(20,20,20,0.8), rgba(10,10,10,0.8));
+                }
 
-        .progress-section input[type="range"] { 
-            width: 100%; 
-            margin: 8px 0; 
-            accent-color: #fff; 
-            height: 4px; 
-            background: none;
-        }
+                .stat-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    margin-bottom: 32px;
+                }
 
-        .progress-text { 
-            font-size: 0.75rem; 
-            color: #444; 
-            font-weight: 700;
-        }
-        
-        .book-footer { 
-            margin-top: 24px; 
-            padding-top: 16px; 
-            border-top: 1px solid #151515;
-        }
+                .stat-header h3 {
+                    margin: 0;
+                    font-size: 1rem;
+                    color: #888;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
 
-        .rating { display: flex; gap: 4px; }
-        .rating button { color: #1a1a1a; padding: 2px; transition: all 0.2s; }
-        .rating button:hover { color: #333; transform: scale(1.2); }
-        .rating button.filled { color: #fff; }
-        
-        .btn { 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            font-size: 0.875rem; 
-            font-weight: 700; 
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
-        }
+                .icon-gold { color: #facc15; }
 
-        .btn-primary { 
-            background: #fff; 
-            color: #000; 
-            padding: 10px 20px; 
-            border-radius: 10px; 
-            box-shadow: 0 4px 12px rgba(255,255,255,0.1);
-        }
+                .stats-row {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 40px;
+                }
 
-        .btn-primary:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 8px 20px rgba(255,255,255,0.2);
-        }
+                .stat-unit {
+                    display: flex;
+                    flex-direction: column;
+                }
 
-        .btn-secondary { 
-            background: transparent; 
-            border: 1px solid #1a1a1a; 
-            color: #444; 
-            padding: 10px 20px; 
-            border-radius: 10px; 
-        }
+                .unit-value {
+                    font-size: 2.5rem;
+                    font-weight: 800;
+                    color: #fff;
+                    line-height: 1;
+                }
 
-        .btn-secondary:hover { border-color: #333; color: #888; }
-        .btn-ghost { color: #222; padding: 6px; border-radius: 8px; }
-        .btn-ghost:hover { color: #fff; background: #111; }
-        .btn-danger:hover { color: #ff4444; background: rgba(255, 68, 68, 0.1); }
-        
-        .empty-state { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 80px 0; 
-            gap: 24px; 
-            color: #222; 
-        }
+                .unit-label {
+                    font-size: 0.8rem;
+                    color: #555;
+                    margin-top: 4px;
+                }
 
-        .empty-state p {
-            font-size: 1rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
-        }
+                .progress-mini .bar {
+                    height: 6px;
+                    background: #1a1a1a;
+                    border-radius: 3px;
+                    overflow: hidden;
+                    margin-bottom: 8px;
+                }
 
-        .empty-state svg { color: #111; }
-        
-        .modal-overlay { 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(0, 0, 0, 0.9); 
-            backdrop-filter: blur(12px); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            z-index: 1000; 
-        }
+                .progress-mini .fill {
+                    height: 100%;
+                    background: #fff;
+                    border-radius: 3px;
+                }
 
-        .modal-content { 
-            background: #080808; 
-            border: 1px solid #151515; 
-            border-radius: 20px; 
-            width: 440px; 
-            animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
-            overflow: hidden; 
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-        }
+                .progress-mini .label {
+                    font-size: 0.75rem;
+                    color: #444;
+                }
 
-        @keyframes modalIn { 
-            from { opacity: 0; transform: translateY(24px) scale(0.95); } 
-            to { opacity: 1; transform: translateY(0) scale(1); } 
-        }
+                .section-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                }
 
-        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 40px 40px 0; }
-        .modal-title { font-size: 1.25rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
-        .modal-body { padding: 32px 40px; display: flex; flex-direction: column; gap: 24px; }
-        .modal-footer { display: flex; justify-content: flex-end; gap: 12px; padding: 0 40px 40px; }
-        
-        .form-group { display: flex; flex-direction: column; gap: 8px; }
-        .form-label { font-size: 0.75rem; font-weight: 800; color: #333; text-transform: uppercase; letter-spacing: 0.1em; }
-        
-        .form-group input, .form-group select { 
-            width: 100%; 
-            padding: 12px 16px; 
-            background: #050505; 
-            border: 1px solid #151515; 
-            border-radius: 10px; 
-            color: #fff; 
-            font-size: 0.9375rem; 
-            outline: none; 
-            transition: all 0.2s; 
-            font-weight: 500;
-        }
+                .section-header h3 {
+                    margin: 0;
+                    font-size: 0.95rem;
+                    font-weight: 700;
+                    color: #eee;
+                }
 
-        .form-group input:focus, .form-group select:focus { border-color: #333; background: #080808; }
-        .form-group input::placeholder { color: #222; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        
-        .animate-spin { animation: spin 1s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        
-        @media (max-width: 800px) {
-            .page { padding: 32px 20px; }
-            .toolbar { flex-direction: column; align-items: stretch; }
-            .grid { grid-template-columns: 1fr; }
-            .header { flex-direction: column; align-items: flex-start; gap: 24px; }
-        }
-      `}</style>
+                .text-btn {
+                    background: none;
+                    border: none;
+                    color: #666;
+                    font-size: 0.8rem;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+
+                .current-grid {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 16px;
+                }
+
+                .book-card-lite {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    padding: 20px;
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                }
+
+                .book-card-lite:hover {
+                    transform: translateY(-4px);
+                }
+
+                .icon-circle {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .icon-circle.reading {
+                    background: rgba(59, 130, 246, 0.1);
+                    color: #3b82f6;
+                }
+
+                .book-card-lite .content h4 {
+                    margin: 0;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    max-width: 150px;
+                }
+
+                .book-card-lite .content p {
+                    margin: 2px 0 0;
+                    font-size: 0.75rem;
+                    color: #555;
+                }
+
+                .empty-current {
+                    grid-column: span 3;
+                    height: 120px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    color: #333;
+                    gap: 8px;
+                }
+
+                .quotes-stack {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 16px;
+                }
+
+                .dashboard-quote {
+                    background: rgba(255,255,255,0.02);
+                    border: 1px solid rgba(255,255,255,0.05);
+                    padding: 20px;
+                    border-radius: 20px;
+                    position: relative;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                }
+
+                .dashboard-quote:hover {
+                    background: rgba(255,255,255,0.04);
+                }
+
+                .quote-icon {
+                    position: absolute;
+                    top: 16px;
+                    right: 16px;
+                    color: #222;
+                }
+
+                .dashboard-quote p {
+                    margin: 0 0 12px;
+                    font-size: 0.9rem;
+                    font-style: italic;
+                    line-height: 1.5;
+                    color: #bbb;
+                }
+
+                .book-origin {
+                    font-size: 0.7rem;
+                    color: #555;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+
+                .wishlist-sidebar {
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .wishlist-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                }
+
+                .wishlist-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 12px;
+                    border-radius: 12px;
+                    background: rgba(255,255,255,0.02);
+                    cursor: pointer;
+                    transition: border-color 0.2s;
+                }
+
+                .wishlist-item:hover {
+                    background: rgba(255,255,255,0.03);
+                }
+
+                .wishlist-item .dot {
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 50%;
+                    background: #333;
+                }
+
+                .item-info {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .item-info .title {
+                    font-size: 0.85rem;
+                    font-weight: 500;
+                    color: #eee;
+                }
+
+                .item-info .author {
+                    font-size: 0.7rem;
+                    color: #444;
+                }
+
+                .add-btn {
+                    background: none;
+                    border: none;
+                    color: #444;
+                    cursor: pointer;
+                    padding: 4px;
+                }
+
+                .add-btn:hover { color: #fff; }
+
+                .full-wishlist-btn {
+                    margin-top: 12px;
+                    padding: 10px;
+                    border-radius: 10px;
+                    background: #1a1a1a;
+                    border: none;
+                    color: #666;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                }
+
+                /* Layout Board UI */
+                .library-content {
+                    max-width: 1400px;
+                    margin: 0 auto;
+                }
+
+                .kanban-board {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 24px;
+                    align-items: flex-start;
+                }
+
+                .kanban-column {
+                    background: rgba(13, 13, 13, 0.5);
+                    border-radius: 20px;
+                    padding: 20px;
+                    min-height: 500px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                }
+
+                .column-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 0 4px;
+                }
+
+                .header-label {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    font-weight: 700;
+                    font-size: 0.9rem;
+                    color: #fff;
+                }
+
+                .header-label .dot {
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 50%;
+                }
+
+                .count {
+                    font-size: 0.75rem;
+                    color: #444;
+                    background: #0d0d0d;
+                    padding: 2px 10px;
+                    border-radius: 6px;
+                    font-weight: 700;
+                }
+
+                .cards-container {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                }
+
+                .book-card {
+                    padding: 20px;
+                    cursor: grab;
+                    background: rgba(26, 26, 26, 0.4);
+                }
+
+                .book-card:active { cursor: grabbing; }
+
+                .card-top {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 12px;
+                    margin-bottom: 16px;
+                }
+
+                .reading-icon {
+                    color: #3b82f6;
+                    background: rgba(59, 130, 246, 0.1);
+                    padding: 4px;
+                    border-radius: 6px;
+                }
+
+                .file-icon { color: #333; }
+
+                .card-title {
+                    margin: 0;
+                    font-size: 0.95rem;
+                    font-weight: 600;
+                    line-height: 1.4;
+                    color: #eee;
+                }
+
+                .card-meta {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    color: #444;
+                    font-size: 0.75rem;
+                }
+
+                .quote-badge {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    background: rgba(255,255,255,0.03);
+                    padding: 2px 8px;
+                    border-radius: 4px;
+                }
+
+                .date-meta {
+                    margin-left: auto;
+                    font-weight: 500;
+                }
+
+                .add-card-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    background: none;
+                    border: 2px dashed #1a1a1a;
+                    color: #444;
+                    padding: 12px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    width: 100%;
+                    border-radius: 12px;
+                    transition: all 0.2s;
+                }
+
+                .add-card-btn:hover {
+                    border-color: #333;
+                    color: #888;
+                }
+
+                .quick-add-input input {
+                    width: 100%;
+                    background: #0d0d0d;
+                    border: 1px solid #3b82f6;
+                    border-radius: 12px;
+                    padding: 12px 16px;
+                    color: #fff;
+                    outline: none;
+                    font-size: 0.9rem;
+                }
+
+                /* Modals Refined */
+                .modal-overlay {
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(0,0,0,0.85);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    backdrop-filter: blur(8px);
+                    z-index: 1000;
+                    padding: 20px;
+                }
+
+                .modal {
+                    width: 540px;
+                    max-height: 85vh;
+                    overflow-y: auto;
+                    padding: 40px;
+                }
+
+                .modal-header {
+                    margin-bottom: 32px;
+                    display: flex;
+                    justify-content: space-between;
+                }
+
+                .modal-title {
+                    font-size: 1.75rem;
+                    font-weight: 800;
+                    margin: 0;
+                    letter-spacing: -0.03em;
+                }
+
+                .modal-author {
+                    color: #555;
+                    margin-top: 4px;
+                    font-size: 1.1rem;
+                }
+
+                .status-grid {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 12px;
+                    margin-top: 12px;
+                }
+
+                .status-btn {
+                    padding: 12px;
+                    background: #0d0d0d;
+                    border: 1px solid #1a1a1a;
+                    border-radius: 12px;
+                    color: #444;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .status-btn.active {
+                    background: #fff;
+                    color: #000;
+                    border-color: #fff;
+                }
+
+                .section h3 {
+                    font-size: 0.75rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.15em;
+                    color: #333;
+                    margin-bottom: 16px;
+                }
+
+                .quotes-list-lite {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 16px;
+                }
+
+                .quote-card-lite {
+                    background: #0d0d0d;
+                    padding: 20px;
+                    border-radius: 16px;
+                    border-left: 3px solid #333;
+                }
+
+                .quote-card-lite p {
+                    margin: 0 0 12px;
+                    font-style: italic;
+                    color: #aaa;
+                    line-height: 1.6;
+                }
+
+                .quote-footer {
+                    display: flex;
+                    justify-content: space-between;
+                    color: #333;
+                    font-size: 0.75rem;
+                }
+
+                .notes-section textarea {
+                    width: 100%;
+                    min-height: 140px;
+                    background: #0d0d0d;
+                    border: 1px solid #1a1a1a;
+                    border-radius: 16px;
+                    padding: 20px;
+                    color: #bbb;
+                    font-size: 0.95rem;
+                    outline: none;
+                    line-height: 1.6;
+                }
+
+                .animate-fade-in {
+                    animation: fadeIn 0.4s ease-out;
+                }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+
+                .spin { animation: spin 1s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+                @media (max-width: 1100px) {
+                    .dashboard-grid-top, .dashboard-grid-bottom { grid-template-columns: 1fr; }
+                    .stats-row { justify-content: space-around; }
+                }
+
+                @media (max-width: 800px) {
+                    .kanban-board { grid-template-columns: 1fr; }
+                    .header { flex-direction: column; align-items: flex-start; gap: 24px; }
+                    .header-right { width: 100%; justify-content: space-between; }
+                }
+            `}</style>
         </div>
     );
 }
