@@ -94,7 +94,7 @@ export default function LoginPage() {
         .login-screen {
           position: fixed;
           inset: 0;
-          background: #000;
+          background: var(--bg-deep);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -103,34 +103,33 @@ export default function LoginPage() {
 
         .login-content {
           width: 100%;
-          max-width: 400px;
-          padding: 2rem;
+          max-width: 380px;
+          padding: 1.5rem;
         }
 
         .login-box {
-          background: #000;
-          border: 1px solid #111;
-          padding: 3.5rem 2.5rem;
-          border-radius: 12px;
+          background: var(--bg-card);
+          border: 1px solid var(--border-default);
+          padding: 2.5rem 2rem;
+          border-radius: var(--radius-xl);
         }
 
         .login-header {
           text-align: center;
-          margin-bottom: 3rem;
+          margin-bottom: 2.5rem;
         }
 
         .login-header h1 {
-          font-size: 2rem;
-          font-weight: 800;
-          letter-spacing: -0.05em;
+          font-size: 1.75rem;
+          font-weight: 700;
+          letter-spacing: -0.03em;
           margin-bottom: 0.5rem;
+          color: var(--text-primary);
         }
 
         .login-header p {
-          color: #555;
+          color: var(--text-muted);
           font-size: 0.85rem;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
         }
 
         .error-banner {
@@ -138,71 +137,87 @@ export default function LoginPage() {
           align-items: center;
           gap: 0.5rem;
           padding: 0.75rem 1rem;
-          background: #070000;
-          border: 1px solid #200;
-          border-radius: 8px;
-          color: #f44;
+          background: var(--error-muted);
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          border-radius: var(--radius-md);
+          color: var(--error);
           font-size: 0.8rem;
-          margin-bottom: 2rem;
+          margin-bottom: 1.5rem;
         }
 
         .login-form {
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: 1.25rem;
         }
 
         .field {
           display: flex;
           flex-direction: column;
-          gap: 0.6rem;
+          gap: 0.5rem;
         }
 
         .field label {
-          font-size: 0.7rem;
-          font-weight: 700;
-          color: #333;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
+          font-size: 0.75rem;
+          font-weight: 500;
+          color: var(--text-secondary);
         }
 
         .field input {
-          background: #000;
-          border: 1px solid #1a1a1a;
-          padding: 0.85rem 1rem;
-          border-radius: 8px;
-          color: #fff;
-          font-size: 0.95rem;
+          background: var(--bg-deep);
+          border: 1px solid var(--border-default);
+          padding: 0.75rem 1rem;
+          border-radius: var(--radius-md);
+          color: var(--text-primary);
+          font-size: 0.9rem;
           outline: none;
-          transition: border-color 0.2s;
+          transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
         }
 
         .field input:focus {
-          border-color: #444;
+          border-color: var(--border-strong);
+          box-shadow: 0 0 0 3px var(--accent-muted);
+        }
+
+        .field input::placeholder {
+          color: var(--text-dim);
         }
 
         .login-btn {
-          background: #fff;
-          color: #000;
-          padding: 1rem;
-          border-radius: 8px;
-          font-weight: 800;
-          font-size: 0.9rem;
-          margin-top: 1rem;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
+          background: var(--text-primary);
+          color: var(--bg-deep);
+          padding: 0.875rem;
+          border-radius: var(--radius-md);
+          font-weight: 600;
+          font-size: 0.875rem;
+          margin-top: 0.5rem;
+          transition: opacity var(--transition-fast), transform var(--transition-fast);
+        }
+
+        .login-btn:hover:not(:disabled) {
+          opacity: 0.9;
+          transform: translateY(-1px);
+        }
+
+        .login-btn:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
         }
 
         .login-footer {
-          margin-top: 2.5rem;
+          margin-top: 2rem;
           text-align: center;
           font-size: 0.85rem;
-          color: #444;
+          color: var(--text-muted);
         }
 
         .login-footer a {
-          color: #fff;
-          font-weight: 700;
+          color: var(--text-primary);
+          font-weight: 600;
+        }
+
+        .login-footer a:hover {
+          text-decoration: underline;
         }
       `}</style>
     </div>

@@ -92,7 +92,7 @@ export default function Sidebar() {
                                     className={cn("nav-item", isActive && "active")}
                                     onClick={() => setIsOpen(false)}
                                 >
-                                    <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                                    <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                                     <span>{item.name}</span>
                                 </Link>
                             );
@@ -120,41 +120,41 @@ export default function Sidebar() {
                     .sidebar {
                         width: var(--sidebar-width);
                         height: 100vh;
-                        background: #0a0a0a;
-                        border-right: 1px solid #141414;
+                        background: var(--bg-card);
+                        border-right: 1px solid var(--border-default);
                         position: fixed;
                         left: 0;
                         top: 0;
                         z-index: 100;
-                        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        transition: transform 0.3s var(--ease-out);
                     }
 
                     .sidebar-container {
                         display: flex;
                         flex-direction: column;
                         height: 100%;
-                        padding: 2rem 1rem;
+                        padding: 1.5rem 0.75rem;
                     }
 
                     .brand {
                         display: flex;
                         align-items: center;
-                        gap: 0.85rem;
-                        padding: 0 0.5rem;
-                        margin-bottom: 2.5rem;
+                        gap: 0.75rem;
+                        padding: 0 0.75rem;
+                        margin-bottom: 2rem;
                     }
 
                     .brand-logo {
-                        color: #fff;
+                        color: var(--text-primary);
                         display: flex;
                         align-items: center;
                         justify-content: center;
                     }
 
                     .brand-title {
-                        font-size: 1.5rem;
-                        font-weight: 800;
-                        color: #fff;
+                        font-size: 1.25rem;
+                        font-weight: 700;
+                        color: var(--text-primary);
                         letter-spacing: -0.02em;
                     }
 
@@ -168,25 +168,25 @@ export default function Sidebar() {
                     .nav-item {
                         display: flex;
                         align-items: center;
-                        gap: 1.25rem;
-                        padding: 0.8rem 1rem;
-                        color: #888;
+                        gap: 0.75rem;
+                        padding: 0.6rem 0.75rem;
+                        color: var(--text-secondary);
                         text-decoration: none;
-                        border-radius: 10px;
+                        border-radius: var(--radius-md);
                         font-weight: 500;
-                        font-size: 1rem;
-                        transition: all 0.2s ease;
+                        font-size: 0.875rem;
+                        transition: all var(--transition-fast);
                     }
 
                     .nav-item:hover {
-                        color: #fff;
-                        background: rgba(255, 255, 255, 0.03);
+                        color: var(--text-primary);
+                        background: var(--accent-muted);
                     }
 
                     .nav-item.active {
-                        color: #fff;
-                        background: #1a1a1a;
-                        font-weight: 700;
+                        color: var(--text-primary);
+                        background: var(--bg-elevated);
+                        font-weight: 600;
                     }
 
                     .sidebar-footer {
@@ -195,30 +195,28 @@ export default function Sidebar() {
 
                     .divider {
                         height: 1px;
-                        background: #141414;
-                        margin-bottom: 1.5rem;
-                        width: 100%;
+                        background: var(--border-default);
+                        margin: 1rem 0;
                     }
 
                     .user-profile {
                         display: flex;
                         align-items: center;
-                        gap: 0.85rem;
-                        padding: 0.5rem;
-                        position: relative;
+                        gap: 0.75rem;
+                        padding: 0.5rem 0.75rem;
                     }
 
                     .avatar {
-                        width: 36px;
-                        height: 36px;
-                        background: #1a1a1a;
+                        width: 32px;
+                        height: 32px;
+                        background: var(--bg-elevated);
                         border-radius: 50%;
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        color: #fff;
-                        font-weight: 700;
-                        font-size: 0.85rem;
+                        color: var(--text-primary);
+                        font-weight: 600;
+                        font-size: 0.8rem;
                         flex-shrink: 0;
                     }
 
@@ -230,8 +228,8 @@ export default function Sidebar() {
                     }
 
                     .user-name {
-                        color: #fff;
-                        font-size: 0.9rem;
+                        color: var(--text-primary);
+                        font-size: 0.8rem;
                         font-weight: 600;
                         white-space: nowrap;
                         overflow: hidden;
@@ -239,47 +237,49 @@ export default function Sidebar() {
                     }
 
                     .user-email {
-                        color: #666;
-                        font-size: 0.7rem;
+                        color: var(--text-dim);
+                        font-size: 0.65rem;
                         white-space: nowrap;
                         overflow: hidden;
                         text-overflow: ellipsis;
                     }
 
                     .logout-btn-icon {
-                        color: #444;
+                        color: var(--text-dim);
                         background: none;
                         border: none;
                         cursor: pointer;
-                        transition: color 0.2s;
+                        padding: 0.375rem;
+                        border-radius: var(--radius-sm);
+                        transition: all var(--transition-fast);
                     }
 
                     .logout-btn-icon:hover {
-                        color: #f87171;
+                        color: var(--error);
+                        background: var(--error-muted);
                     }
 
                     .mobile-toggle {
                         display: none;
                         position: fixed;
-                        top: 1.25rem;
-                        right: 1.25rem;
+                        top: 1rem;
+                        right: 1rem;
                         z-index: 1000;
-                        background: #111;
-                        color: #fff;
-                        width: 44px;
-                        height: 44px;
-                        border-radius: 12px;
-                        border: 1px solid #222;
+                        background: var(--bg-card);
+                        color: var(--text-primary);
+                        width: 40px;
+                        height: 40px;
+                        border-radius: var(--radius-md);
+                        border: 1px solid var(--border-default);
                         align-items: center;
                         justify-content: center;
                         cursor: pointer;
-                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
                     }
 
                     .mobile-overlay {
                         position: fixed;
                         inset: 0;
-                        background: rgba(0, 0, 0, 0.7);
+                        background: rgba(0, 0, 0, 0.75);
                         backdrop-filter: blur(4px);
                         z-index: 90;
                     }
@@ -288,11 +288,11 @@ export default function Sidebar() {
                         .mobile-toggle { display: flex; }
                         .sidebar {
                             transform: translateX(-100%);
-                            width: 280px;
+                            width: 260px;
                         }
                         .sidebar.open {
                             transform: translateX(0);
-                            box-shadow: 20px 0 50px rgba(0,0,0,0.8);
+                            box-shadow: 20px 0 40px rgba(0,0,0,0.6);
                         }
                     }
                 `}</style>
