@@ -41,6 +41,7 @@ export default function ProfilePage() {
     const [editName, setEditName] = useState('');
     const [profileImageUrl, setProfileImageUrl] = useState('');
     const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
+    const [isUploading, setIsUploading] = useState<string | null>(null);
 
     // Password change
     const [showPasswordSection, setShowPasswordSection] = useState(false);
@@ -83,6 +84,38 @@ export default function ProfilePage() {
     const showMessage = (type: 'success' | 'error', text: string) => {
         setMessage({ type, text });
         setTimeout(() => setMessage(null), 4000);
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'background') => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(type);
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (type === 'profile') {
+                    setProfileImageUrl(data.url);
+                } else {
+                    setBackgroundImageUrl(data.url);
+                }
+                showMessage('success', `${type === 'profile' ? 'Profile' : 'Background'} image uploaded!`);
+            } else {
+                showMessage('error', 'Failed to upload image');
+            }
+        } catch (error) {
+            showMessage('error', 'Error uploading image');
+        } finally {
+            setIsUploading(null);
+        }
     };
 
     const handleSaveProfile = async () => {
@@ -261,25 +294,63 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="form-group">
-                        <label><Camera size={14} /> Profile Image URL</label>
-                        <input
-                            type="url"
-                            value={profileImageUrl}
-                            onChange={e => setProfileImageUrl(e.target.value)}
-                            placeholder="https://example.com/your-avatar.jpg"
-                        />
-                        <p className="helper-text">Paste a direct link to your profile image</p>
+                        <label><Camera size={14} /> Profile Image</label>
+                        <div className="upload-wrapper">
+                            <input
+                                type="file"
+                                id="profile-upload"
+                                style={{ display: 'none' }}
+                                accept="image/*"
+                                onChange={e => handleImageUpload(e, 'profile')}
+                            />
+                            <div className="upload-preview-row">
+                                {profileImageUrl ? (
+                                    <div className="mini-preview">
+                                        <img src={profileImageUrl} alt="Preview" />
+                                    </div>
+                                ) : (
+                                    <div className="mini-preview-empty">
+                                        <User size={20} />
+                                    </div>
+                                )}
+                                <button className="btn btn-secondary upload-btn" onClick={() => document.getElementById('profile-upload')?.click()} disabled={isUploading === 'profile'}>
+                                    {isUploading === 'profile' ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
+                                    {profileImageUrl ? 'Change Image' : 'Upload Image'}
+                                </button>
+                                {profileImageUrl && (
+                                    <button className="btn btn-icon-only" onClick={() => setProfileImageUrl('')} title="Remove">
+                                        <Trash2 size={16} />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     <div className="form-group">
-                        <label><ImageIcon size={14} /> Background Image URL</label>
-                        <input
-                            type="url"
-                            value={backgroundImageUrl}
-                            onChange={e => setBackgroundImageUrl(e.target.value)}
-                            placeholder="https://example.com/background.jpg"
-                        />
-                        <p className="helper-text">This will appear as the header background on your home page</p>
+                        <label><ImageIcon size={14} /> Background Image</label>
+                        <div className="upload-wrapper">
+                            <input
+                                type="file"
+                                id="background-upload"
+                                style={{ display: 'none' }}
+                                accept="image/*"
+                                onChange={e => handleImageUpload(e, 'background')}
+                            />
+                            <div className="upload-preview-row">
+                                <div className="background-mini-preview" style={{ backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : undefined }}>
+                                    {!backgroundImageUrl && <ImageIcon size={20} />}
+                                </div>
+                                <button className="btn btn-secondary upload-btn" onClick={() => document.getElementById('background-upload')?.click()} disabled={isUploading === 'background'}>
+                                    {isUploading === 'background' ? <Loader2 size={16} className="animate-spin" /> : <ImageIcon size={16} />}
+                                    {backgroundImageUrl ? 'Change Background' : 'Upload Background'}
+                                </button>
+                                {backgroundImageUrl && (
+                                    <button className="btn btn-icon-only" onClick={() => setBackgroundImageUrl('')} title="Remove">
+                                        <Trash2 size={16} />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
                     <button className="btn btn-primary" onClick={handleSaveProfile} disabled={isSaving}>
@@ -605,6 +676,62 @@ export default function ProfilePage() {
 
                 .btn-danger { background: #111; border: 1px solid #1a1a1a; color: #ff4444; }
                 .btn-danger:hover:not(:disabled) { background: rgba(255, 68, 68, 0.1); border-color: #ff4444; }
+
+                .btn-icon-only {
+                    padding: 12px;
+                    background: transparent;
+                    border: 1px solid #1a1a1a;
+                    color: #444;
+                    border-radius: 10px;
+                    transition: all 0.2s;
+                    cursor: pointer;
+                }
+                .btn-icon-only:hover { color: #ff4444; border-color: rgba(255,68,68,0.2); background: rgba(255,68,68,0.05); }
+
+                .upload-wrapper {
+                    background: #050505;
+                    border: 1px dashed #151515;
+                    border-radius: 16px;
+                    padding: 20px;
+                    transition: all 0.3s;
+                }
+                .upload-wrapper:hover { border-color: #333; }
+
+                .upload-preview-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                }
+
+                .mini-preview, .mini-preview-empty {
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 14px;
+                    background: #111;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    overflow: hidden;
+                    border: 1px solid #1a1a1a;
+                }
+                .mini-preview img { width: 100%; height: 100%; object-fit: cover; }
+                .mini-preview-empty svg { color: #222; }
+
+                .background-mini-preview {
+                    width: 80px;
+                    height: 48px;
+                    border-radius: 12px;
+                    background: #111;
+                    background-size: cover;
+                    background-position: center;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 1px solid #1a1a1a;
+                }
+                .background-mini-preview svg { color: #222; }
+
+                .upload-btn { flex: 1; justify-content: flex-start; }
 
                 .btn-group { display: flex; gap: 12px; margin-top: 24px; }
 
