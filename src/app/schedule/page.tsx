@@ -15,8 +15,12 @@ interface Schedule {
     color: string;
 }
 
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const COLORS = ['#ffffff', '#a3a3a3', '#737373', '#404040', '#262626', '#171717'];
+const TIME_SLOTS = [
+    '07:00', '08:00', '09:00', '10:00', '11:00', '12:00',
+    '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'
+];
 
 export default function SchedulePage() {
     const { data: session, status } = useSession();
@@ -100,9 +104,25 @@ export default function SchedulePage() {
         }));
     };
 
-    const getClassesForDay = (dayFull: string) => {
-        const dayShort = dayFull.substring(0, 3);
-        return schedules.filter(s => s.days.includes(dayShort)).sort((a, b) => a.time.localeCompare(b.time));
+    const getClassesForSlotAndDay = (slotStart: string, dayShort: string) => {
+        // Simple check: does the class start within this hour slot?
+        // Larger implementation would handle spans, but for the 'modern grid' look we'll start with presence.
+        return schedules.filter(s => {
+            const isDay = s.days.includes(dayShort);
+            if (!isDay) return false;
+
+            // Extract HH from slotStart (e.g. "07:00" -> 7)
+            const slotHour = parseInt(slotStart.split(':')[0]);
+
+            // Extract HH from class time (e.g. "07:30 - 09:00" -> 7)
+            const scheduleMatch = s.time.match(/(\d{1,2})[:.](\d{2})/);
+            if (!scheduleMatch) return false;
+
+            const startHour = parseInt(scheduleMatch[1]);
+            // Handle 12-hour vs 24-hour loosely or assume 24-hour/formatted correctly
+            // If class starts in this hour, show it
+            return startHour === slotHour;
+        });
     };
 
     if (status === 'loading' || isLoading) {
@@ -132,34 +152,52 @@ export default function SchedulePage() {
                 </button>
             </header>
 
-            <div className="grid">
-                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
-                    <div key={day} className="column">
-                        <div className="col-header">
-                            <span className="day-name">{day}</span>
-                            <span className="count">{getClassesForDay(day).length}</span>
+            <div className="schedule-workspace">
+                <div className="table-container">
+                    <div className="grid-table">
+                        {/* Header Row */}
+                        <div className="grid-header-row">
+                            <div className="time-header-cell">TIME</div>
+                            {DAYS.map(day => (
+                                <div key={day} className="day-header-cell">{day.toUpperCase()}</div>
+                            ))}
                         </div>
-                        <div className="cards">
-                            {getClassesForDay(day).length === 0 ? (
-                                <div className="empty">Void</div>
-                            ) : (
-                                getClassesForDay(day).map(cls => (
-                                    <div key={cls._id} className="card" style={{ borderLeft: `2px solid ${cls.color}` }}>
-                                        <div className="card-top">
-                                            <span className="time">{cls.time}</span>
-                                            <button className="del" onClick={() => deleteSchedule(cls._id)}><X size={12} /></button>
-                                        </div>
-                                        <h4>{cls.subject}</h4>
-                                        <div className="meta">
-                                            {cls.room && <span className="tag">{cls.room}</span>}
-                                            {cls.teacher && <span className="tag">{cls.teacher}</span>}
-                                        </div>
+
+                        {/* Time Rows */}
+                        {TIME_SLOTS.map((slot, sIdx) => {
+                            const endSlot = TIME_SLOTS[sIdx + 1] || '20:00';
+                            return (
+                                <div key={slot} className="grid-row">
+                                    <div className="time-label-cell">
+                                        <span className="time-range">{slot} - {endSlot}</span>
                                     </div>
-                                ))
-                            )}
-                        </div>
+                                    {DAYS.map(day => {
+                                        const classes = getClassesForSlotAndDay(slot, day);
+                                        return (
+                                            <div key={`${day}-${slot}`} className="grid-cell">
+                                                {classes.map(cls => (
+                                                    <div key={cls._id} className="grid-class-card" style={{ borderLeftColor: cls.color }}>
+                                                        <div className="class-inner">
+                                                            <div className="class-header">
+                                                                <span className="exact-time">{cls.time}</span>
+                                                                <button className="mini-del" onClick={() => deleteSchedule(cls._id)}><X size={10} /></button>
+                                                            </div>
+                                                            <h4 className="class-title">{cls.subject}</h4>
+                                                            <div className="class-meta">
+                                                                {cls.room && <span className="m-tag">{cls.room}</span>}
+                                                                {cls.teacher && <span className="m-tag">{cls.teacher}</span>}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })}
                     </div>
-                ))}
+                </div>
             </div>
 
             {showModal && (
@@ -227,14 +265,14 @@ export default function SchedulePage() {
             <style jsx>{`
         .schedule-page { 
             min-height: 100vh;
-            background: #080808;
+            background: #000;
             color: #fff;
-            padding: 40px;
-            animation: fadeUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 2rem 2rem 2rem 1.5rem;
+            animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         
         @keyframes fadeUp { 
-            from { opacity: 0; transform: translateY(16px); } 
+            from { opacity: 0; transform: translateY(24px); } 
             to { opacity: 1; transform: translateY(0); } 
         }
 
@@ -242,10 +280,9 @@ export default function SchedulePage() {
             display: flex; 
             justify-content: space-between; 
             align-items: flex-end; 
-            margin-bottom: 48px;
+            margin-bottom: 2.5rem;
+            width: 100%;
             max-width: 1400px;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .breadcrumb { 
@@ -259,7 +296,7 @@ export default function SchedulePage() {
         }
 
         .page-header h1 { 
-            font-size: 2.5rem; 
+            font-size: 2rem; 
             font-weight: 800; 
             margin: 0; 
             color: #fff; 
@@ -268,7 +305,7 @@ export default function SchedulePage() {
 
         .page-header p { 
             color: #555; 
-            font-size: 1rem; 
+            font-size: 0.875rem; 
             font-weight: 500;
             margin-top: 4px;
         }
@@ -292,139 +329,141 @@ export default function SchedulePage() {
             box-shadow: 0 8px 20px rgba(255,255,255,0.2);
         }
 
-        .grid { 
-            display: grid; 
-            grid-template-columns: repeat(5, 1fr); 
-            gap: 24px; 
+        .schedule-workspace {
+            width: 100%;
             max-width: 1400px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .column { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 16px; 
-        }
-
-        .col-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            border-bottom: 1px solid #151515; 
-            padding-bottom: 12px;
-            margin-bottom: 8px;
-        }
-
-        .day-name { 
-            font-size: 0.75rem; 
-            font-weight: 800; 
-            text-transform: uppercase; 
-            letter-spacing: 0.15em; 
-            color: #444; 
-        }
-
-        .count { 
-            font-size: 0.6875rem; 
-            color: #888; 
-            background: #111; 
-            padding: 2px 8px; 
-            border-radius: 4px;
-            font-weight: 700;
-        }
-
-        .cards { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-        }
-
-        .card { 
-            background: #0a0a0a; 
-            border: 1px solid #151515; 
-            padding: 16px; 
-            border-radius: 12px; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
+            border: 1px solid rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.01);
+            border-radius: 12px;
             overflow: hidden;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
         }
 
-        .card:hover { 
-            border-color: #252525; 
-            background: #0d0d0d;
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+
+        .grid-table {
+            display: grid;
+            min-width: 900px;
+        }
+
+        .grid-header-row {
+            display: grid;
+            grid-template-columns: 90px repeat(6, 1fr);
+            background: rgba(255,255,255,0.08);
+            border-bottom: 1px solid rgba(255,255,255,0.4);
+        }
+
+        .time-header-cell, .day-header-cell {
+            padding: 0.875rem;
+            font-size: 0.6rem;
+            font-weight: 900;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            text-align: left;
+            border-right: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .grid-row {
+            display: grid;
+            grid-template-columns: 90px repeat(6, 1fr);
+            border-bottom: 1px solid rgba(255,255,255,0.4);
+            min-height: 70px;
+        }
+
+        .time-label-cell {
+            padding: 0.5rem;
+            background: rgba(255,255,255,0.02);
+            border-right: 1px solid rgba(255,255,255,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .time-range {
+            font-size: 0.55rem;
+            font-weight: 900;
+            color: #333;
+            letter-spacing: 0;
+            text-align: center;
+        }
+
+        .grid-cell {
+            border-right: 1px solid rgba(255,255,255,0.4);
+            padding: 0.35rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .grid-class-card {
+            background: #080808;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-left: 2px solid #fff;
+            border-radius: 8px;
+            padding: 0.6rem;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 2;
+        }
+
+        .grid-class-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-color: rgba(255,255,255,0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            background: #0d0d0d;
         }
 
-        .card-top { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 12px; 
+        .class-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.4rem;
         }
 
-        .time { 
-            font-size: 0.625rem; 
-            color: #888; 
-            font-weight: 800; 
-            background: #151515; 
-            padding: 4px 8px; 
-            border-radius: 6px;
+        .exact-time {
+            font-size: 0.5rem;
+            font-weight: 900;
+            color: #666;
+            text-transform: uppercase;
             letter-spacing: 0.05em;
         }
 
-        .del { 
-            color: #333; 
-            opacity: 0; 
-            transition: all 0.2s; 
-            padding: 4px; 
-            border-radius: 6px; 
+        .mini-del {
+            background: none;
+            border: none;
+            color: #333;
+            cursor: pointer;
+            padding: 2px;
+            transition: color 0.2s;
         }
+        .mini-del:hover { color: #fff; }
 
-        .card:hover .del { 
-            opacity: 1; 
-        }
-
-        .del:hover { 
-            color: #ff4444; 
-            background: rgba(255, 68, 68, 0.1); 
-        }
-        
-        .card h4 { 
-            font-size: 0.9375rem; 
-            font-weight: 700; 
-            margin-bottom: 12px; 
-            line-height: 1.4; 
-            color: #fff; 
-            letter-spacing: -0.01em;
-        }
-
-        .meta { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 6px; 
-        }
-
-        .tag { 
-            font-size: 0.625rem; 
-            color: #555; 
-            background: #080808; 
-            border: 1px solid #151515;
-            padding: 3px 8px; 
-            border-radius: 6px; 
-            text-transform: uppercase; 
-            letter-spacing: 0.05em;
-            font-weight: 700;
-        }
-
-        .empty { 
-            text-align: center; 
-            font-size: 0.6875rem; 
-            color: #1a1a1a; 
-            padding: 40px 0; 
-            text-transform: uppercase; 
-            letter-spacing: 4px;
+        .class-title {
+            font-size: 0.75rem;
             font-weight: 800;
+            color: #fff;
+            margin: 0 0 0.4rem 0;
+            line-height: 1.1;
+        }
+
+        .class-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .m-tag {
+            font-size: 0.5rem;
+            color: #444;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .modal-overlay { 
@@ -549,8 +588,8 @@ export default function SchedulePage() {
 
         .save-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        @media (max-width: 1200px) { .grid { grid-template-columns: repeat(3, 1fr); padding: 0 20px; } }
-        @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } .page-header { flex-direction: column; align-items: flex-start; gap: 24px; padding: 0 20px; } }
+        @media (max-width: 1200px) { .schedule-page { padding: 2rem; } }
+        @media (max-width: 800px) { .page-header { flex-direction: column; align-items: flex-start; gap: 24px; } }
       `}</style>
         </div>
     );
