@@ -1,9 +1,25 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Plus, X, Calendar as CalIcon, Check, Flame, Loader2 } from 'lucide-react';
+import {
+    ChevronLeft,
+    ChevronRight,
+    Plus,
+    X,
+    Calendar as CalIcon,
+    Check,
+    Loader2,
+    MoreHorizontal,
+    Filter,
+    ArrowUpDown,
+    Zap,
+    Search,
+    Maximize2,
+    CheckCircle2,
+    CalendarDays
+} from 'lucide-react';
 
 interface HabitDefinition {
     _id: string;
@@ -31,12 +47,11 @@ export default function HabitPage() {
     const [definitions, setDefinitions] = useState<HabitDefinition[]>([]);
     const [habitDays, setHabitDays] = useState<HabitDay[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [showModal, setShowModal] = useState(false);
+    const [showDefModal, setShowDefModal] = useState(false);
+    const [selectedDay, setSelectedDay] = useState<Date | null>(null);
     const [newHabitName, setNewHabitName] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
-    const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
-    const daysInMonth = getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth());
     const monthName = currentDate.toLocaleDateString('en-US', { month: 'long' });
     const currentYear = currentDate.getFullYear();
     const today = new Date();
@@ -68,7 +83,9 @@ export default function HabitPage() {
 
     const toggleHabit = async (date: Date, habitId: string, currentCompleted: boolean) => {
         try {
-            const dateStr = date.toISOString().split('T')[0];
+            // Adjust to local date string to avoid timezone issues
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
             const res = await fetch('/api/habits', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -99,7 +116,7 @@ export default function HabitPage() {
         }
     };
 
-    const addHabit = async () => {
+    const addHabitDefinition = async () => {
         if (!newHabitName.trim()) return;
         setIsSaving(true);
         try {
@@ -116,7 +133,7 @@ export default function HabitPage() {
                 const data = await res.json();
                 setDefinitions(prev => [...prev, data.definition]);
                 setNewHabitName('');
-                setShowModal(false);
+                setShowDefModal(false);
             }
         } catch (error) {
             console.error('Error adding habit:', error);
@@ -125,7 +142,8 @@ export default function HabitPage() {
         }
     };
 
-    const deleteHabit = async (habitId: string) => {
+    const deleteHabitDefinition = async (habitId: string) => {
+        if (!confirm('Are you sure you want to delete this habit? History will be kept but it will no longer appear in new days.')) return;
         try {
             await fetch('/api/habits', {
                 method: 'DELETE',
@@ -155,173 +173,709 @@ export default function HabitPage() {
         setCurrentDate(new Date());
     };
 
-    if (status === 'loading' || isLoading) {
+    // Calendar logic
+    const calendarDays = useMemo(() => {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const firstDayOfMonth = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        const days = [];
+
+        // Prev month days
+        const prevMonthLastDay = new Date(year, month, 0).getDate();
+        for (let i = firstDayOfMonth - 1; i >= 0; i--) {
+            days.push({
+                date: new Date(year, month - 1, prevMonthLastDay - i),
+                currentMonth: false
+            });
+        }
+
+        // Current month days
+        for (let i = 1; i <= daysInMonth; i++) {
+            days.push({
+                date: new Date(year, month, i),
+                currentMonth: true
+            });
+        }
+
+        // Next month days to fill 6 rows (42 cells)
+        const remainingCells = 42 - days.length;
+        for (let i = 1; i <= remainingCells; i++) {
+            days.push({
+                date: new Date(year, month + 1, i),
+                currentMonth: false
+            });
+        }
+
+        return days;
+    }, [currentDate]);
+
+    if (status === 'loading') {
         return (
             <div className="loading-screen">
                 <Loader2 size={32} className="spinner" />
-                <style jsx>{`
-          .loading-screen { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
-          .spinner { animation: spin 1s linear infinite; color: #444; }
-          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        `}</style>
             </div>
         );
     }
 
     return (
-        <div className="habit-page">
-            <header className="page-header">
-                <div className="title-section">
-                    <span className="breadcrumb">Productivity / Habits</span>
-                    <h1>Journey</h1>
-                    <p>Small consistent steps.</p>
+        <div className="habit-workspace">
+            {/* Top Toolbar */}
+            <header className="workspace-header">
+                <div className="left-controls">
+                    <div className="view-switcher">
+                        <CalendarDays size={14} />
+                        <span>Monthly</span>
+                    </div>
                 </div>
-
-                <div className="header-actions">
-                    <button className="primary-btn" onClick={() => setShowModal(true)}>
-                        <Plus size={18} />
-                        <span>Add Habit</span>
+                <div className="right-controls">
+                    <button className="icon-tool"><Filter size={14} /></button>
+                    <button className="icon-tool"><ArrowUpDown size={14} /></button>
+                    <button className="icon-tool"><Zap size={14} /></button>
+                    <button className="icon-tool"><Search size={14} /></button>
+                    <button className="icon-tool"><Maximize2 size={14} /></button>
+                    <button className="icon-tool"><MoreHorizontal size={14} /></button>
+                    <button className="new-btn" onClick={() => setShowDefModal(true)}>
+                        New <ChevronRight size={14} />
                     </button>
                 </div>
             </header>
 
-            {definitions.length > 0 && (
-                <div className="habit-definitions">
-                    {definitions.map(def => (
-                        <div key={def._id} className="habit-tag">
-                            <span>{def.name}</span>
-                            <button onClick={() => deleteHabit(def._id)}><X size={12} /></button>
-                        </div>
-                    ))}
+            {/* Calendar Controls */}
+            <div className="calendar-nav">
+                <div className="month-display">
+                    <h2>{monthName} {currentYear}</h2>
                 </div>
-            )}
-
-            <section className="calendar-container">
-                <div className="calendar-toolbar">
-                    <div className="month-picker">
-                        <button className="nav-btn" onClick={() => changeMonth(-1)}><ChevronLeft size={18} /></button>
-                        <div className="current-month">
-                            <span>{monthName} {currentYear}</span>
-                        </div>
-                        <button className="nav-btn" onClick={() => changeMonth(1)}><ChevronRight size={18} /></button>
+                <div className="nav-actions">
+                    <button className="manage-btn"><CalIcon size={14} /> Manage definitions</button>
+                    <div className="step-controls">
+                        <button onClick={() => changeMonth(-1)}><ChevronLeft size={16} /></button>
+                        <button className="today-txt" onClick={goToToday}>Today</button>
+                        <button onClick={() => changeMonth(1)}><ChevronRight size={16} /></button>
                     </div>
-                    <button className="today-btn" onClick={goToToday}>Today</button>
                 </div>
+            </div>
 
-                <div className="weekday-header">
+            {/* Calendar Grid */}
+            <div className="calendar-board">
+                <div className="grid-header">
                     {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                        <div key={d} className="weekday">{d}</div>
+                        <div key={d} className="header-cell">{d}</div>
                     ))}
                 </div>
-
-                <div className="calendar-grid">
-                    {Array.from({ length: daysInMonth }).map((_, i) => {
-                        const cellDate = new Date(currentYear, currentDate.getMonth(), i + 1);
-                        const isToday = cellDate.toDateString() === today.toDateString();
-                        const allCompleted = definitions.length > 0 && definitions.every(def => getHabitStatus(cellDate, def._id));
+                <div className="grid-body">
+                    {calendarDays.map((day, idx) => {
+                        const isToday = day.date.toDateString() === today.toDateString();
+                        const isSelected = selectedDay?.toDateString() === day.date.toDateString();
 
                         return (
-                            <div key={i} className={`day-card ${isToday ? 'is-today' : ''}`}>
-                                <div className="card-header">
-                                    <span className="day-num">{i + 1}</span>
-                                    {allCompleted && definitions.length > 0 && <Flame size={12} className="flame-icon" />}
+                            <div
+                                key={idx}
+                                className={`calendar-cell ${!day.currentMonth ? 'off-month' : ''} ${isToday ? 'is-today' : ''}`}
+                                onClick={() => setSelectedDay(day.date)}
+                            >
+                                <div className="cell-header">
+                                    <span className="day-number">{day.date.getDate()}</span>
                                 </div>
 
-                                <div className="habit-dots">
-                                    {definitions.map(def => {
-                                        const completed = getHabitStatus(cellDate, def._id);
-                                        return (
-                                            <div
-                                                key={def._id}
-                                                className={`habit-dot ${completed ? 'done' : ''}`}
-                                                onClick={() => toggleHabit(cellDate, def._id, completed)}
-                                                title={def.name}
-                                            />
-                                        );
-                                    })}
-                                </div>
+                                {definitions.length > 0 && day.currentMonth && (
+                                    <div className="habit-card">
+                                        <div className="habit-card-header">
+                                            <div className="status-box">
+                                                <Check size={12} strokeWidth={3} />
+                                            </div>
+                                            <span className="card-title">Daily Habits</span>
+                                        </div>
+                                        <div className="habit-mini-list">
+                                            {definitions.slice(0, 3).map(def => {
+                                                const completed = getHabitStatus(day.date, def._id);
+                                                return (
+                                                    <div key={def._id} className="mini-item">
+                                                        <div className={`mini-check ${completed ? 'checked' : ''}`} />
+                                                        <span>{def.name}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                            {definitions.length > 3 && (
+                                                <div className="more-count">+{definitions.length - 3} more</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
                 </div>
-            </section>
+            </div>
 
-            {showModal && (
-                <div className="modal-overlay" onClick={() => setShowModal(false)}>
-                    <div className="modal-box" onClick={e => e.stopPropagation()}>
-                        <h3>New Habit</h3>
+            {/* Day Detail Modal */}
+            {selectedDay && (
+                <div className="modal-overlay" onClick={() => setSelectedDay(null)}>
+                    <div className="detail-modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-top">
+                            <div className="large-check-icon">
+                                <Check size={32} strokeWidth={3} />
+                            </div>
+                            <button className="close-btn" onClick={() => setSelectedDay(null)}><X size={20} /></button>
+                        </div>
+
+                        <div className="modal-content">
+                            <h1 className="editable-title">Daily Habits</h1>
+
+                            <div className="info-row">
+                                <div className="info-label">
+                                    <CalIcon size={16} />
+                                    <span>Date</span>
+                                </div>
+                                <div className="info-value">
+                                    {selectedDay.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                </div>
+                            </div>
+
+                            <div className="habit-checklist">
+                                {definitions.length === 0 ? (
+                                    <div className="no-habits">
+                                        <p>No habits defined yet.</p>
+                                        <button onClick={() => { setShowDefModal(true); setSelectedDay(null); }}>Create your first habit</button>
+                                    </div>
+                                ) : (
+                                    definitions.map(def => {
+                                        const completed = getHabitStatus(selectedDay, def._id);
+                                        return (
+                                            <div key={def._id} className="checklist-item">
+                                                <div className="item-label">
+                                                    <CalIcon size={16} className="item-icon" />
+                                                    <span>{def.name}</span>
+                                                </div>
+                                                <div
+                                                    className={`item-checkbox ${completed ? 'checked' : ''}`}
+                                                    onClick={() => toggleHabit(selectedDay, def._id, completed)}
+                                                >
+                                                    {completed && <Check size={12} strokeWidth={4} />}
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* New Habit Definition Modal */}
+            {showDefModal && (
+                <div className="modal-overlay" onClick={() => setShowDefModal(false)}>
+                    <div className="definition-modal" onClick={e => e.stopPropagation()}>
+                        <h2>New Habit Definition</h2>
+                        <p className="modal-sub">This will add a new habit to your daily list.</p>
                         <input
                             type="text"
-                            placeholder="Habit name..."
+                            placeholder="What's the habit?"
                             value={newHabitName}
                             onChange={e => setNewHabitName(e.target.value)}
                             autoFocus
                         />
                         <div className="modal-actions">
-                            <button className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
-                            <button className="confirm-btn" onClick={addHabit} disabled={isSaving}>
-                                {isSaving ? '...' : 'Create'}
+                            <button className="secondary-btn" onClick={() => setShowDefModal(false)}>Cancel</button>
+                            <button className="primary-btn" onClick={addHabitDefinition} disabled={isSaving}>
+                                {isSaving ? <Loader2 size={16} className="spinner" /> : 'Create Habit'}
                             </button>
                         </div>
+
+                        {definitions.length > 0 && (
+                            <div className="existing-defs">
+                                <h3>Active Habits</h3>
+                                <div className="def-list">
+                                    {definitions.map(def => (
+                                        <div key={def._id} className="def-item">
+                                            <span>{def.name}</span>
+                                            <button onClick={() => deleteHabitDefinition(def._id)}><X size={14} /></button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
 
             <style jsx>{`
-        .habit-page { max-width: 960px; margin: 0 auto; padding: 1.5rem; animation: fadeUp 0.4s ease-out; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
-        .breadcrumb { font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
-        .page-header h1 { font-size: 1.75rem; font-weight: 700; margin: 0.25rem 0; color: #fff; letter-spacing: -0.02em; }
-        .page-header p { color: #666; font-size: 0.875rem; }
+                .habit-workspace {
+                    min-height: 100vh;
+                    background: #111;
+                    color: #fff;
+                    display: flex;
+                    flex-direction: column;
+                }
 
-        .primary-btn { background: #fff; color: #000; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; transition: all 0.15s ease; }
-        .primary-btn:hover { transform: translateY(-1px); }
-        
-        .habit-definitions { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        .habit-tag { background: #0f0f0f; border: 1px solid #1f1f1f; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem; color: #999; }
-        .habit-tag button { color: #555; padding: 2px; }
-        .habit-tag button:hover { color: #fff; }
+                /* Workspace Header */
+                .workspace-header {
+                    height: 48px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 0 16px;
+                    border-bottom: 1px solid #1f1f1f;
+                    background: #111;
+                }
 
-        .calendar-container { background: #0a0a0a; border: 1px solid #181818; border-radius: 14px; padding: 1.25rem; }
-        .calendar-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
-        .month-picker { display: flex; align-items: center; gap: 1rem; }
-        .nav-btn { color: #666; padding: 0.25rem; border-radius: 6px; transition: all 0.15s; }
-        .nav-btn:hover { color: #fff; background: #151515; }
-        .current-month { font-weight: 600; font-size: 0.9375rem; color: #fff; }
-        .today-btn { font-size: 0.8rem; color: #666; border: 1px solid #1f1f1f; padding: 0.375rem 0.75rem; border-radius: 6px; transition: all 0.15s; }
-        .today-btn:hover { color: #fff; border-color: #333; }
+                .view-switcher {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    background: #191919;
+                    border: 1px solid #2a2a2a;
+                    padding: 4px 10px;
+                    border-radius: 4px;
+                    font-size: 13px;
+                    font-weight: 500;
+                }
 
-        .weekday-header { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 0.75rem; }
-        .weekday { text-align: center; font-size: 0.6875rem; font-weight: 600; color: #555; text-transform: uppercase; }
+                .right-controls {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                }
 
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #151515; border: 1px solid #181818; border-radius: 10px; overflow: hidden; }
-        .day-card { background: #0a0a0a; min-height: 90px; padding: 0.625rem; display: flex; flex-direction: column; gap: 0.5rem; transition: background 0.15s; }
-        .day-card:hover { background: #0e0e0e; }
-        .day-card.is-today { background: #0f0f0f; }
-        
-        .card-header { display: flex; justify-content: space-between; align-items: center; }
-        .day-num { font-size: 0.8rem; font-weight: 500; color: #666; }
-        .is-today .day-num { color: #fff; font-weight: 600; }
-        .flame-icon { color: #f59e0b; }
+                .icon-tool {
+                    width: 28px;
+                    height: 28px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #777;
+                    border-radius: 4px;
+                    transition: all 0.2s;
+                }
 
-        .habit-dots { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; align-content: flex-start; }
-        .habit-dot { width: 100%; height: 5px; background: #1a1a1a; border-radius: 2px; cursor: pointer; transition: all 0.15s; }
-        .habit-dot:hover { background: #252525; }
-        .habit-dot.done { background: #10b981; }
+                .icon-tool:hover {
+                    background: #1f1f1f;
+                    color: #fff;
+                }
 
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-box { background: #0f0f0f; border: 1px solid #1f1f1f; padding: 1.5rem; border-radius: 14px; width: 340px; animation: slideUp 0.2s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .modal-box h3 { margin-bottom: 1rem; font-size: 1rem; color: #fff; }
-        .modal-box input { width: 100%; background: #080808; border: 1px solid #1f1f1f; padding: 0.625rem 0.875rem; border-radius: 8px; color: #fff; margin-bottom: 1.25rem; outline: none; font-size: 0.875rem; }
-        .modal-box input:focus { border-color: #333; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; }
-        .cancel-btn { color: #666; font-size: 0.8125rem; padding: 0.5rem 1rem; }
-        .cancel-btn:hover { color: #999; }
-        .confirm-btn { background: #fff; color: #000; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.8125rem; }
-      `}</style>
+                .new-btn {
+                    margin-left: 8px;
+                    background: #2383e2;
+                    color: #fff;
+                    padding: 4px 12px;
+                    border-radius: 4px;
+                    font-size: 13px;
+                    font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+
+                /* Calendar Nav */
+                .calendar-nav {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 32px 24px 16px;
+                }
+
+                .month-display h2 {
+                    font-size: 20px;
+                    font-weight: 700;
+                }
+
+                .nav-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 24px;
+                }
+
+                .manage-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 13px;
+                    color: #777;
+                }
+
+                .manage-btn:hover {
+                    color: #fff;
+                }
+
+                .step-controls {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+
+                .step-controls button {
+                    color: #777;
+                }
+
+                .step-controls button:hover {
+                    color: #fff;
+                }
+
+                .today-txt {
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #fff !important;
+                }
+
+                /* Calendar Grid */
+                .calendar-board {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    padding: 0 24px 24px;
+                }
+
+                .grid-header {
+                    display: grid;
+                    grid-template-columns: repeat(7, 1fr);
+                    border-bottom: 1px solid #1f1f1f;
+                }
+
+                .header-cell {
+                    padding: 8px;
+                    text-align: right;
+                    font-size: 12px;
+                    color: #777;
+                    font-weight: 500;
+                }
+
+                .grid-body {
+                    display: grid;
+                    grid-template-columns: repeat(7, 1fr);
+                    grid-auto-rows: minmax(140px, 1fr);
+                    border-left: 1px solid #1f1f1f;
+                    border-top: 1px solid #1f1f1f;
+                }
+
+                .calendar-cell {
+                    border-right: 1px solid #1f1f1f;
+                    border-bottom: 1px solid #1f1f1f;
+                    padding: 8px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    cursor: pointer;
+                    transition: background 0.1s;
+                }
+
+                .calendar-cell:hover {
+                    background: #191919;
+                }
+
+                .off-month {
+                    color: #444;
+                }
+
+                .is-today .day-number {
+                    background: #e25555;
+                    color: #fff;
+                    width: 24px;
+                    height: 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 50%;
+                }
+
+                .day-number {
+                    font-size: 12px;
+                    font-weight: 600;
+                }
+
+                /* Habit Card in Cell */
+                .habit-card {
+                    background: #191919;
+                    border: 1px solid #2a2a2a;
+                    border-radius: 6px;
+                    padding: 8px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                }
+
+                .habit-card-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 6px;
+                }
+
+                .status-box {
+                    width: 18px;
+                    height: 18px;
+                    background: #4a9e4a;
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #fff;
+                }
+
+                .card-title {
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: #fff;
+                }
+
+                .habit-mini-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                }
+
+                .mini-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 11px;
+                    color: #999;
+                }
+
+                .mini-check {
+                    width: 12px;
+                    height: 12px;
+                    border: 1px solid #444;
+                    border-radius: 2px;
+                }
+
+                .mini-check.checked {
+                    background: #2383e2;
+                    border-color: #2383e2;
+                }
+
+                .more-count {
+                    font-size: 10px;
+                    color: #555;
+                    margin-top: 2px;
+                }
+
+                /* Modal UI */
+                .modal-overlay {
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(0,0,0,0.7);
+                    backdrop-filter: blur(4px);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 1000;
+                }
+
+                /* Detail Modal */
+                .detail-modal {
+                    background: #191919;
+                    width: 100%;
+                    max-width: 600px;
+                    border-radius: 12px;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+                    animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                }
+
+                @keyframes modalPop {
+                    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+                    to { opacity: 1; transform: scale(1) translateY(0); }
+                }
+
+                .modal-top {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 16px 24px;
+                }
+
+                .large-check-icon {
+                    width: 64px;
+                    height: 64px;
+                    background: #73b373;
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #fff;
+                }
+
+                .close-btn {
+                    align-self: flex-start;
+                    color: #777;
+                }
+
+                .modal-content {
+                    padding: 0 64px 64px;
+                }
+
+                .editable-title {
+                    font-size: 42px;
+                    font-weight: 800;
+                    margin-bottom: 24px;
+                    letter-spacing: -1px;
+                }
+
+                .info-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 48px;
+                    margin-bottom: 24px;
+                }
+
+                .info-label {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #777;
+                    font-size: 14px;
+                    width: 100px;
+                }
+
+                .info-value {
+                    font-size: 14px;
+                    font-weight: 500;
+                }
+
+                .habit-checklist {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    margin-top: 32px;
+                }
+
+                .checklist-item {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 8px 0;
+                }
+
+                .item-label {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+
+                .item-icon {
+                    color: #555;
+                }
+
+                .item-checkbox {
+                    width: 20px;
+                    height: 20px;
+                    border: 2px solid #333;
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .item-checkbox.checked {
+                    background: #2383e2;
+                    border-color: #2383e2;
+                    color: #fff;
+                }
+
+                /* Definition Modal */
+                .definition-modal {
+                    background: #191919;
+                    padding: 32px;
+                    border-radius: 12px;
+                    width: 100%;
+                    max-width: 440px;
+                }
+
+                .definition-modal h2 {
+                    font-size: 18px;
+                    font-weight: 700;
+                    margin-bottom: 8px;
+                }
+
+                .modal-sub {
+                    color: #777;
+                    font-size: 14px;
+                    margin-bottom: 24px;
+                }
+
+                .definition-modal input {
+                    width: 100%;
+                    background: #111;
+                    border: 1px solid #333;
+                    padding: 12px;
+                    border-radius: 8px;
+                    color: #fff;
+                    font-size: 15px;
+                    margin-bottom: 24px;
+                    outline: none;
+                }
+
+                .definition-modal input:focus {
+                    border-color: #2383e2;
+                }
+
+                .secondary-btn {
+                    color: #777;
+                    font-size: 14px;
+                    font-weight: 600;
+                    padding: 8px 16px;
+                }
+
+                .primary-btn {
+                    background: #fff;
+                    color: #000;
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    font-weight: 700;
+                }
+
+                .existing-defs {
+                    margin-top: 32px;
+                    border-top: 1px solid #333;
+                    padding-top: 24px;
+                }
+
+                .existing-defs h3 {
+                    font-size: 12px;
+                    color: #555;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    margin-bottom: 12px;
+                }
+
+                .def-item {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 8px 12px;
+                    background: #111;
+                    border: 1px solid #222;
+                    border-radius: 6px;
+                    margin-bottom: 6px;
+                    font-size: 14px;
+                }
+
+                .def-item button {
+                    color: #444;
+                }
+
+                .def-item button:hover {
+                    color: #e25555;
+                }
+
+                .spinner {
+                    animation: spin 1s linear infinite;
+                }
+
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+
+                @media (max-width: 1024px) {
+                    .calendar-board { padding: 0 16px 16px; }
+                    .grid-body { grid-auto-rows: minmax(100px, 1fr); }
+                    .detail-modal { max-width: 90%; }
+                    .modal-content { padding: 0 32px 32px; }
+                    .editable-title { font-size: 32px; }
+                }
+            `}</style>
         </div>
     );
 }
