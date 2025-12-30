@@ -401,7 +401,7 @@ export default function TodoPage() {
                                 >
                                     <div className="item-status">
                                         <button className="check-btn" onClick={(e) => { e.stopPropagation(); toggleTodo(todo._id, todo.completed); }}>
-                                            {todo.completed ? <CheckCircle2 size={24} strokeWidth={2.5} /> : <Circle size={24} strokeWidth={2} />}
+                                            {todo.completed ? <CheckCircle2 size={20} strokeWidth={2.5} /> : <Circle size={20} strokeWidth={2} />}
                                         </button>
                                     </div>
 
@@ -603,21 +603,22 @@ export default function TodoPage() {
         .todo-page { max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); color: #fff; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .page-header { margin-bottom: 5rem; }
-        .breadcrumb { font-size: 0.7rem; color: #333; text-transform: uppercase; letter-spacing: 0.3em; font-weight: 800; margin-bottom: 1rem; display: block; }
-        .header-main { display: flex; justify-content: space-between; align-items: center; }
-        .page-header h1 { font-size: 3.5rem; font-weight: 900; margin: 0; color: #fff; letter-spacing: -0.05em; line-height: 1; }
-        .page-header p { color: #444; font-size: 1rem; margin-top: 0.75rem; font-weight: 600; }
+        .page-header { margin-bottom: 3.5rem; display: flex; flex-direction: column; align-items: flex-start; }
+        .breadcrumb { font-size: 0.6rem; color: #fff; text-transform: uppercase; letter-spacing: 0.4rem; font-weight: 900; margin-bottom: 1.25rem; display: block; }
+        .header-main { width: 100%; display: flex; justify-content: space-between; align-items: flex-end; gap: 2rem; }
+        .header-main > div { text-align: left; }
+        .page-header h1 { font-size: 2.75rem; font-weight: 900; margin: 0; color: #fff; letter-spacing: -0.06em; line-height: 0.9; text-align: left; }
+        .page-header p { color: #555; font-size: 0.8125rem; margin-top: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; text-align: left; }
 
-        .add-btn { background: #fff; color: #000; padding: 0.875rem 1.75rem; border-radius: 14px; font-weight: 800; display: flex; align-items: center; gap: 0.75rem; font-size: 0.9375rem; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 10px 30px rgba(255,255,255,0.1); border: none; cursor: pointer; }
-        .add-btn:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 20px 40px rgba(255,255,255,0.15); }
+        .add-btn { background: #fff; color: #000; padding: 0.625rem 1.25rem; border-radius: 12px; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 10px 20px rgba(255,255,255,0.1); border: none; cursor: pointer; }
+        .add-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 15px 30px rgba(255,255,255,0.15); }
         .add-btn:active { transform: translateY(-1px); }
 
-        .main-layout { display: grid; grid-template-columns: 260px 1fr; gap: 5rem; }
+        .main-layout { display: grid; grid-template-columns: 220px 1fr; gap: 3.5rem; }
         
-        .search-box { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; margin-bottom: 3rem; transition: all 0.3s; }
+        .search-box { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 2rem; transition: all 0.3s; }
         .search-box:focus-within { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .search-box input { background: none; border: none; font-size: 0.9375rem; color: #fff; outline: none; width: 100%; font-weight: 600; }
+        .search-box input { background: none; border: none; font-size: 0.875rem; color: #fff; outline: none; width: 100%; font-weight: 600; }
         .search-box input::placeholder { color: #222; }
         .search-icon { color: #222; transition: color 0.3s; }
         .search-box:focus-within .search-icon { color: #fff; }
@@ -625,12 +626,11 @@ export default function TodoPage() {
         .filter-group label { display: block; font-size: 0.65rem; color: #444; text-transform: uppercase; font-weight: 900; letter-spacing: 0.2em; margin-bottom: 1.5rem; padding-left: 0.5rem; }
         .filter-nav { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 2rem; }
         
-        .filter-item { position: relative; display: flex; align-items: center; justify-content: space-between; border-radius: 12px; transition: all 0.3s; }
+        .filter-item { position: relative; display: flex; align-items: center; justify-content: space-between; border-radius: 10px; transition: all 0.3s; }
         .filter-item:hover { background: rgba(255,255,255,0.03); }
-        .filter-link { flex: 1; text-align: left; padding: 0.875rem 1rem; font-size: 0.875rem; color: #444; transition: all 0.3s; font-weight: 700; border: none; background: none; cursor: pointer; }
+        .filter-link { flex: 1; text-align: left; padding: 0.75rem 0.875rem; font-size: 0.8125rem; color: #444; transition: all 0.3s; font-weight: 700; border: none; background: none; cursor: pointer; }
         .filter-link:hover { color: #888; }
         .filter-link.active { color: #fff; background: rgba(255,255,255,0.05); }
-        .filter-link.active::before { content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; background: #fff; border-radius: 0 4px 4px 0; }
         
         .filter-actions { display: flex; gap: 0.5rem; opacity: 0; padding-right: 1rem; transition: opacity 0.2s; }
         .filter-item:hover .filter-actions { opacity: 1; }
@@ -650,18 +650,18 @@ export default function TodoPage() {
         .cat-cancel { flex: 1; background: #111; color: #444; border-radius: 10px; padding: 0.625rem; font-size: 0.75rem; font-weight: 800; border: none; cursor: pointer; transition: all 0.2s; }
         .cat-cancel:hover { color: #fff; }
 
-        .todo-stack { display: flex; flex-direction: column; gap: 1rem; }
-        .todo-item { display: flex; align-items: center; gap: 1.5rem; padding: 1.75rem 2rem; background: #050505; border: 1px solid #111; border-radius: 24px; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; position: relative; overflow: hidden; }
-        .todo-item:hover { border-color: #333; transform: translateX(8px); background: #080808; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+        .todo-stack { display: flex; flex-direction: column; gap: 0.75rem; }
+        .todo-item { display: flex; align-items: center; gap: 1rem; padding: 1.25rem 1.5rem; background: #050505; border: 1px solid #111; border-radius: 16px; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; position: relative; overflow: hidden; }
+        .todo-item:hover { border-color: #333; transform: translateX(5px); background: #080808; box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
         .todo-item.selected { border-color: #fff; background: #0c0c0c; box-shadow: 0 0 40px rgba(255,255,255,0.03); }
-        .todo-item.done { opacity: 0.2; transform: scale(0.98); }
+        .todo-item.done { opacity: 0.2; transform: scale(0.99); }
 
         .check-btn { color: #111; transition: all 0.3s; flex-shrink: 0; background: none; border: none; cursor: pointer; }
         .check-btn:hover { color: #fff; transform: scale(1.2); }
         .done .check-btn { color: #fff; }
 
         .todo-body { flex: 1; min-width: 0; }
-        .todo-body h4 { font-size: 1.25rem; font-weight: 800; margin-bottom: 0.75rem; color: #fff; letter-spacing: -0.02em; transition: all 0.3s; }
+        .todo-body h4 { font-size: 1rem; font-weight: 800; margin-bottom: 0.5rem; color: #fff; letter-spacing: -0.01em; transition: all 0.3s; }
         .done h4 { text-decoration: line-through; color: #333; }
 
         .tags { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
@@ -712,14 +712,14 @@ export default function TodoPage() {
             width: 100%;
             background: none;
             border: none;
-            font-size: 2.75rem;
+            font-size: 2rem;
             font-weight: 900;
             color: #fff;
             letter-spacing: -0.05em;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
             outline: none;
             resize: none;
-            min-height: 3.5rem;
+            min-height: 2.5rem;
             line-height: 1.1;
         }
         .detail-title-input::placeholder { color: #111; }
@@ -731,9 +731,9 @@ export default function TodoPage() {
         .meta-row select:hover, .meta-row input:hover { color: #fff; border-bottom: 1px solid #222; }
         .meta-row select option { background: #000; color: #fff; }
 
-        .detail-section { margin-bottom: 4rem; }
-        .section-label { display: block; font-size: 0.75rem; color: #333; text-transform: uppercase; font-weight: 900; letter-spacing: 0.25em; margin-bottom: 1.5rem; }
-        .description-area { width: 100%; height: 250px; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 24px; padding: 2rem; color: #888; font-size: 1.0625rem; line-height: 1.8; outline: none; transition: all 0.4s; resize: none; font-weight: 500; }
+        .detail-section { margin-bottom: 3rem; }
+        .section-label { display: block; font-size: 0.7rem; color: #333; text-transform: uppercase; font-weight: 900; letter-spacing: 0.25em; margin-bottom: 1rem; }
+        .description-area { width: 100%; height: 200px; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 20px; padding: 1.5rem; color: #888; font-size: 0.9375rem; line-height: 1.7; outline: none; transition: all 0.4s; resize: none; font-weight: 500; }
         .description-area:focus { border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); color: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
 
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
@@ -765,8 +765,9 @@ export default function TodoPage() {
 
         .input-field { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; }
         .input-field label { font-size: 0.75rem; color: #444; text-transform: uppercase; font-weight: 900; letter-spacing: 0.2rem; }
-        .input-field input, .input-field select { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem 1.5rem; border-radius: 18px; color: #fff; outline: none; font-size: 1.125rem; transition: all 0.3s; font-weight: 600; }
-        .input-field input:focus, .input-field select:focus { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04); }
+        .input-field input, .input-field select { background: #0a0a0a; border: 1px solid #1a1a1a; padding: 1rem 1.25rem; border-radius: 14px; color: #fff; outline: none; font-size: 1rem; transition: all 0.3s; font-weight: 600; }
+        .input-field input:focus, .input-field select:focus { border-color: #333; background: #0f0f0f; }
+        .input-field select option { background: #0a0a0a; color: #fff; padding: 10px; }
         
         .grid-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
         .modal-footer { display: flex; justify-content: flex-end; margin-top: 3rem; }
@@ -775,10 +776,24 @@ export default function TodoPage() {
         .save-btn:disabled { opacity: 0.5; transform: none; box-shadow: none; cursor: not-allowed; }
 
         @media (max-width: 1100px) {
-          .main-layout { grid-template-columns: 1fr; gap: 3rem; }
-          .filters { display: none; }
+          .main-layout { grid-template-columns: 1fr; gap: 4rem; }
+          .filters { order: 2; border: none; padding: 0; }
+          .filter-nav { flex-direction: row; flex-wrap: wrap; gap: 0.75rem; }
+          .filter-link { padding: 0.6rem 1rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); }
+          .filter-link.active::before { display: none; }
           .header-main { flex-direction: column; align-items: flex-start; gap: 2rem; }
-          .detail-sidebar { width: calc(100% - 3rem); left: 1.5rem; }
+          .detail-sidebar { width: calc(100% - 2rem); right: 1rem; left: 1rem; height: calc(100% - 2rem); }
+          .content { order: 1; }
+        }
+
+        @media (max-width: 768px) {
+          .todo-page { padding: 2.5rem 1.5rem; }
+          .page-header h1 { font-size: 2.25rem; }
+          .main-layout { gap: 3rem; }
+          .todo-item { padding: 1.25rem; gap: 1rem; }
+          .todo-body h4 { font-size: 1rem; }
+          .modal-box { width: 95%; padding: 2.5rem 1.5rem; }
+          .grid-fields { grid-template-columns: 1fr; }
         }
       `}</style>
         </div>
