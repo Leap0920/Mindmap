@@ -76,8 +76,8 @@ export default function Home() {
         totalHabits: habitsData.habits?.length || 0,
         completedTodos: todosData.todos?.filter((t: any) => t.completed).length || 0,
         totalTodos: todosData.todos?.length || 0,
-        routineProgress: routinesData.routines?.length > 0 
-          ? Math.round((routinesData.logs?.filter((l: any) => l.completed).length / routinesData.routines.length) * 100) 
+        routineProgress: routinesData.routines?.length > 0
+          ? Math.round((routinesData.logs?.filter((l: any) => l.completed).length / routinesData.routines.length) * 100)
           : 0,
         booksReading: booksData.books?.filter((b: any) => b.status === 'reading').length || 0,
       });

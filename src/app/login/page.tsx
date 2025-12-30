@@ -7,90 +7,90 @@ import { useRouter } from 'next/navigation';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setIsLoading(true);
 
-    try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      });
+        try {
+            const result = await signIn('credentials', {
+                email,
+                password,
+                redirect: false,
+            });
 
-      if (result?.error) {
-        setError('Invalid credentials');
-      } else {
-        router.push('/');
-        router.refresh();
-      }
-    } catch (err) {
-      setError('System error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+            if (result?.error) {
+                setError('Invalid credentials');
+            } else {
+                router.push('/');
+                router.refresh();
+            }
+        } catch (err) {
+            setError('System error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-  return (
-    <div className="login-screen">
-      <div className="login-content">
-        <div className="login-box">
-          <header className="login-header">
-            <h1>Mindmap</h1>
-            <p>Access your workspace.</p>
-          </header>
+    return (
+        <div className="login-screen">
+            <div className="login-content">
+                <div className="login-box">
+                    <header className="login-header">
+                        <h1>Mindmap</h1>
+                        <p>Access your workspace.</p>
+                    </header>
 
-          {error && (
-            <div className="error-banner">
-              <AlertCircle size={14} />
-              <span>{error}</span>
+                    {error && (
+                        <div className="error-banner">
+                            <AlertCircle size={14} />
+                            <span>{error}</span>
+                        </div>
+                    )}
+
+                    <form className="login-form" onSubmit={handleSubmit}>
+                        <div className="field">
+                            <label>Identification</label>
+                            <input
+                                type="email"
+                                placeholder="Email address"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                disabled={isLoading}
+                            />
+                        </div>
+
+                        <div className="field">
+                            <label>Secret</label>
+                            <input
+                                type="password"
+                                placeholder="Password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                disabled={isLoading}
+                            />
+                        </div>
+
+                        <button type="submit" className="login-btn" disabled={isLoading}>
+                            {isLoading ? '...' : 'Unlock'}
+                        </button>
+                    </form>
+
+                    <footer className="login-footer">
+                        New entity? <Link href="/signup">Establish identity</Link>
+                    </footer>
+                </div>
             </div>
-          )}
 
-          <form className="login-form" onSubmit={handleSubmit}>
-            <div className="field">
-              <label>Identification</label>
-              <input
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="field">
-              <label>Secret</label>
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <button type="submit" className="login-btn" disabled={isLoading}>
-              {isLoading ? '...' : 'Unlock'}
-            </button>
-          </form>
-
-          <footer className="login-footer">
-            New entity? <Link href="/signup">Establish identity</Link>
-          </footer>
-        </div>
-      </div>
-
-      <style jsx>{`
+            <style jsx>{`
         .login-screen {
           position: fixed;
           inset: 0;
@@ -220,6 +220,6 @@ export default function LoginPage() {
           text-decoration: underline;
         }
       `}</style>
-    </div>
-  );
+        </div>
+    );
 }
