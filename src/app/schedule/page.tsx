@@ -38,6 +38,13 @@ export default function SchedulePage() {
         color: '#ffffff',
     });
 
+    const [selectedDay, setSelectedDay] = useState(() => {
+        // Default to current day if possible
+        const dayNum = new Date().getDay(); // 0=Sun, 1=Mon...
+        if (dayNum === 0) return 'Mon'; 
+        return DAYS[dayNum - 1] || 'Mon';
+    });
+
     const fetchSchedules = useCallback(async () => {
         if (!session) return;
         setIsLoading(true);
@@ -153,7 +160,19 @@ export default function SchedulePage() {
             </header>
 
             <div className="schedule-workspace">
-                <div className="table-container">
+                <div className="mobile-day-selector">
+                    {DAYS.map(day => (
+                        <button
+                            key={day}
+                            className={`mobile-day-btn ${selectedDay === day ? 'active' : ''}`}
+                            onClick={() => setSelectedDay(day)}
+                        >
+                            {day}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="table-container desktop-view">
                     <div className="grid-table">
                         {/* Header Row */}
                         <div className="grid-header-row">
@@ -197,6 +216,45 @@ export default function SchedulePage() {
                             );
                         })}
                     </div>
+                </div>
+
+                <div className="mobile-schedule-view">
+                    {TIME_SLOTS.map((slot, sIdx) => {
+                        const endSlot = TIME_SLOTS[sIdx + 1] || '20:00';
+                        const classes = getClassesForSlotAndDay(slot, selectedDay);
+                        // Skip empty slots in mobile view to save space? 
+                        // Or keep them for structure? Let's keep them but make them small.
+                        // Actually, users prefer to see "Free Time" or just gaps.
+                        // To be "responsive and easy to use", a list of classes is better, but seeing gaps is useful.
+                        // I will render all, but empty ones will be minimal.
+                        
+                        return (
+                            <div key={slot} className="mobile-slot-row">
+                                <div className="m-slot-time">
+                                    <span>{slot}</span>
+                                </div>
+                                <div className="m-slot-content">
+                                    {classes.length > 0 ? (
+                                        classes.map(cls => (
+                                            <div key={cls._id} className="m-class-card" style={{ borderLeft: `4px solid ${cls.color}` }}>
+                                                <div className="m-card-top">
+                                                    <span className="m-card-time">{cls.time}</span>
+                                                    <button className="mini-del" onClick={() => deleteSchedule(cls._id)}><X size={14} /></button>
+                                                </div>
+                                                <div className="m-card-subject">{cls.subject}</div>
+                                                <div className="m-card-info">
+                                                    {cls.room && <span className="m-info-tag">{cls.room}</span>}
+                                                    {cls.teacher && <span className="m-info-tag">{cls.teacher}</span>}
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="m-empty-slot"></div>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -588,50 +646,146 @@ export default function SchedulePage() {
 
         .save-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
+        /* Default: Desktop View */
+        .mobile-day-selector, .mobile-schedule-view { display: none; }
+        .desktop-view { display: block; }
+
+        /* Mobile specific components */
+        .mobile-day-selector {
+            gap: 12px;
+            overflow-x: auto;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: #000;
+            scrollbar-width: none;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .mobile-day-selector::-webkit-scrollbar { display: none; }
+        
+        .mobile-day-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #666;
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            white-space: nowrap;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .mobile-day-btn.active {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(255,255,255,0.2);
+        }
+
+        .mobile-schedule-view { padding: 20px; padding-bottom: 100px; }
+        .mobile-slot-row { display: flex; gap: 16px; margin-bottom: 0; min-height: 50px; position: relative; }
+        
+        /* Vertical line guide */
+        .mobile-slot-row::before {
+            content: '';
+            position: absolute;
+            left: 58px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .m-slot-time { 
+            width: 50px; 
+            flex-shrink: 0; 
+            font-size: 0.75rem; 
+            color: #444; 
+            font-weight: 700; 
+            text-align: right; 
+            padding-top: 10px;
+            line-height: 1;
+        }
+        
+        .m-slot-content { 
+            flex-grow: 1; 
+            padding-left: 8px; 
+            padding-bottom: 24px;
+        }
+        
+        .m-empty-slot { 
+            /* Minimal visual for empty slot */
+        }
+
+        .m-class-card {
+            background: #0a0a0a;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .m-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .m-card-time { font-size: 0.75rem; color: #888; font-weight: 700; }
+        .m-card-subject { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 8px; line-height: 1.2; }
+        .m-card-info { display: flex; gap: 8px; flex-wrap: wrap; }
+        .m-info-tag { font-size: 0.7rem; background: rgba(255,255,255,0.08); padding: 6px 10px; border-radius: 6px; color: #ccc; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+
         @media (max-width: 1024px) {
             .schedule-page { padding: 1.5rem; }
-            .page-header { margin-bottom: 2rem; }
-            .page-header h1 { font-size: 1.75rem; }
             .grid-table { min-width: 800px; }
         }
 
         @media (max-width: 768px) {
-            .schedule-page { padding: 1.25rem 1rem; }
-            .page-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+            .desktop-view { display: none; }
+            .mobile-day-selector, .mobile-schedule-view { display: block; }
+            .mobile-day-selector { display: flex; }
+            
+            .schedule-page { padding: 0; background: #000; }
+            .page-header { padding: 20px 20px 0 20px; margin-bottom: 10px; flex-direction: row; align-items: center; }
             .page-header h1 { font-size: 1.5rem; }
-            .breadcrumb { font-size: 0.65rem; }
-            .add-btn { width: 100%; justify-content: center; padding: 12px 20px; }
-            .schedule-workspace { border-radius: 10px; }
-            .grid-header-row { grid-template-columns: 70px repeat(6, 1fr); }
-            .grid-row { grid-template-columns: 70px repeat(6, 1fr); min-height: 60px; }
-            .time-label-cell { padding: 0.25rem; }
-            .time-range { font-size: 0.45rem; }
-            .day-header-cell { font-size: 0.5rem; padding: 0.5rem 0.25rem; letter-spacing: 0.1em; }
-            .grid-cell { padding: 0.2rem; }
-            .grid-class-card { padding: 0.4rem; border-radius: 6px; }
-            .class-title { font-size: 0.6rem; }
-            .exact-time { font-size: 0.4rem; }
-            .m-tag { font-size: 0.4rem; }
-            .modal-box { width: 95vw; padding: 24px; border-radius: 16px; }
-            .modal-box h3 { font-size: 1.1rem; margin-bottom: 24px; }
-            .fields { gap: 16px; }
-            .row { grid-template-columns: 1fr; }
-            .chip { padding: 10px 16px; font-size: 0.75rem; }
-        }
+            .breadcrumb { display: none; } /* simplify header */
+            .page-header p { display: none; } 
+            
+            .schedule-workspace { border: none; background: transparent; box-shadow: none; }
+            
+            /* Transform Add Button to Floating Action Button */
+            .add-btn { 
+                position: fixed; 
+                bottom: 30px; 
+                right: 24px; 
+                z-index: 900; 
+                width: 60px; 
+                height: 60px; 
+                border-radius: 50%; 
+                padding: 0; 
+                justify-content: center;
+                box-shadow: 0 8px 30px rgba(255,255,255,0.2);
+                background: #fff;
+                color: #000;
+            }
+            .add-btn span { display: none; }
+            .add-btn svg { width: 28px; height: 28px; }
 
-        @media (max-width: 480px) {
-            .schedule-page { padding: 1rem 0.75rem; }
-            .page-header h1 { font-size: 1.25rem; }
-            .page-header p { font-size: 0.8rem; }
-            .add-btn { font-size: 0.8rem; padding: 10px 16px; }
-            .grid-table { min-width: 600px; }
-            .grid-header-row { grid-template-columns: 50px repeat(6, 1fr); }
-            .grid-row { grid-template-columns: 50px repeat(6, 1fr); min-height: 50px; }
-            .day-header-cell { font-size: 0.45rem; padding: 0.4rem 0.15rem; }
-            .time-range { font-size: 0.4rem; }
-            .class-title { font-size: 0.55rem; }
-            .modal-box { padding: 20px; }
-            .fields input { padding: 10px 12px; font-size: 0.875rem; }
+            .modal-box { 
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                border-radius: 24px 24px 0 0;
+                padding: 32px 24px;
+                animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+                border: none;
+                border-top: 1px solid rgba(255,255,255,0.2);
+            }
+            @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+            
+            .fields input { font-size: 16px; /* prevent zoom on iOS */ }
         }
       `}</style>
         </div>
