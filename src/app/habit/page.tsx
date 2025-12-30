@@ -414,12 +414,12 @@ export default function HabitPage() {
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    padding: 4rem 3rem 2rem;
+                    padding: 2.5rem 2rem 1.5rem;
                     background: #000;
                 }
 
                 .month-display h2 {
-                    font-size: 2.5rem;
+                    font-size: 1.75rem;
                     font-weight: 900;
                     letter-spacing: -0.05em;
                     color: #fff;
@@ -428,7 +428,7 @@ export default function HabitPage() {
                 .nav-actions {
                     display: flex;
                     align-items: center;
-                    gap: 3rem;
+                    gap: 1.5rem;
                 }
 
                 .step-controls {
@@ -474,15 +474,15 @@ export default function HabitPage() {
                 .new-btn {
                     background: #fff;
                     color: #000;
-                    padding: 0.875rem 1.75rem;
-                    border-radius: 14px;
-                    font-size: 0.875rem;
+                    padding: 0.6rem 1.25rem;
+                    border-radius: 12px;
+                    font-size: 0.75rem;
                     font-weight: 900;
                     display: flex;
                     align-items: center;
-                    gap: 0.75rem;
+                    gap: 0.5rem;
                     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-                    box-shadow: 0 10px 30px rgba(255,255,255,0.1);
+                    box-shadow: 0 10px 20px rgba(255,255,255,0.1);
                     border: none;
                     cursor: pointer;
                 }
@@ -496,44 +496,44 @@ export default function HabitPage() {
                     flex: 1;
                     display: flex;
                     flex-direction: column;
-                    padding: 0 3rem 3rem;
+                    padding: 0 2rem 2rem;
                 }
 
                 .grid-header {
                     display: grid;
                     grid-template-columns: repeat(7, 1fr);
-                    border-bottom: 1px solid rgba(255,255,255,0.03);
-                    margin-bottom: 1rem;
+                    border-bottom: 1px solid rgba(255,255,255,0.2);
+                    margin-bottom: 0.25rem;
                 }
 
                 .header-cell {
-                    padding: 1rem;
+                    padding: 0.75rem;
                     text-align: center;
-                    font-size: 0.65rem;
-                    color: #222;
+                    font-size: 0.6rem;
+                    color: #333;
                     font-weight: 900;
                     text-transform: uppercase;
-                    letter-spacing: 0.2em;
+                    letter-spacing: 0.25em;
                 }
 
                 .grid-body {
                     display: grid;
                     grid-template-columns: repeat(7, 1fr);
-                    grid-auto-rows: minmax(180px, 1fr);
-                    gap: 1.5rem;
+                    grid-auto-rows: minmax(105px, 1fr);
+                    gap: 0.5rem;
                 }
 
                 .calendar-cell {
                     position: relative;
-                    border-radius: 24px;
-                    padding: 1.5rem;
+                    border-radius: 10px;
+                    padding: 0.75rem;
                     display: flex;
                     flex-direction: column;
-                    gap: 1.5rem;
+                    gap: 0.5rem;
                     cursor: pointer;
                     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                     background: rgba(255,255,255,0.01);
-                    border: 1px solid rgba(255,255,255,0.03);
+                    border: 1px solid rgba(255,255,255,0.2);
                 }
 
                 .calendar-cell:hover {
@@ -569,9 +569,9 @@ export default function HabitPage() {
                 }
 
                 .day-number {
-                    font-size: 1.25rem;
+                    font-size: 1rem;
                     font-weight: 800;
-                    color: #222;
+                    color: #333;
                     letter-spacing: -0.02em;
                     transition: color 0.3s;
                 }
@@ -579,9 +579,9 @@ export default function HabitPage() {
 
                 .habit-card {
                     background: #000;
-                    border: 1px solid rgba(255,255,255,0.08);
-                    border-radius: 16px;
-                    padding: 1.25rem;
+                    border: 1px solid rgba(255,255,255,0.2);
+                    border-radius: 8px;
+                    padding: 0.5rem;
                     box-shadow: 0 10px 40px rgba(0,0,0,0.5);
                     position: relative;
                     overflow: hidden;
@@ -599,8 +599,8 @@ export default function HabitPage() {
                 .habit-card-header {
                     display: flex;
                     align-items: center;
-                    gap: 12px;
-                    margin-bottom: 1rem;
+                    gap: 8px;
+                    margin-bottom: 0.5rem;
                 }
 
                 .status-box {
@@ -616,7 +616,7 @@ export default function HabitPage() {
                 }
 
                 .card-title {
-                    font-size: 0.8125rem;
+                    font-size: 0.75rem;
                     font-weight: 900;
                     color: #fff;
                     text-transform: uppercase;
@@ -626,25 +626,25 @@ export default function HabitPage() {
                 .habit-mini-list {
                     display: flex;
                     flex-direction: column;
-                    gap: 0.75rem;
+                    gap: 0.4rem;
                 }
 
                 .mini-item {
                     display: flex;
                     align-items: center;
-                    gap: 12px;
-                    font-size: 0.75rem;
-                    color: #444;
+                    gap: 6px;
+                    font-size: 0.6rem;
+                    color: #333;
                     font-weight: 600;
                     transition: all 0.3s;
                 }
                 .mini-item:hover { color: #888; }
 
                 .mini-check {
-                    width: 18px;
-                    height: 18px;
-                    border: 1.5px solid #111;
-                    border-radius: 6px;
+                    width: 14px;
+                    height: 14px;
+                    border: 1px solid #1a1a1a;
+                    border-radius: 4px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -772,11 +772,40 @@ export default function HabitPage() {
                 .spinner { animation: spin 1s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
+                @media (max-width: 1200px) {
+                    .grid-body { grid-template-columns: repeat(4, 1fr); }
+                    .grid-header { grid-template-columns: repeat(4, 1fr); }
+                    .header-cell:nth-child(n+5) { display: none; }
+                }
+
                 @media (max-width: 1024px) {
+                    .calendar-nav { padding: 3rem 2rem 1.5rem; flex-direction: column; gap: 2rem; align-items: flex-start; }
+                    .calendar-board { padding: 0 2rem 2rem; }
+                    .grid-body { grid-template-columns: repeat(3, 1fr); grid-auto-rows: minmax(140px, auto); gap: 1rem; }
+                    .grid-header { grid-template-columns: repeat(3, 1fr); }
+                    .header-cell:nth-child(n+4) { display: none; }
+                    .calendar-cell { padding: 1.25rem; }
+                    .month-display h2 { font-size: 2rem; }
+                    .nav-actions { width: 100%; justify-content: space-between; gap: 1rem; }
+                }
+
+                @media (max-width: 768px) {
+                    .grid-body { grid-template-columns: 1fr; gap: 1rem; }
+                    .grid-header { display: none; }
+                    .calendar-cell { min-height: auto; }
+                    .detail-modal { border-radius: 24px; }
+                    .modal-header { padding: 2rem 2rem 1rem; }
+                    .modal-content { padding: 0 2rem 2rem; }
+                    .editable-title { font-size: 1.75rem; }
+                    .habit-grid { grid-template-columns: 1fr; }
+                }
+
+                @media (max-width: 480px) {
+                    .calendar-nav { padding: 2rem 1rem 1rem; }
+                    .nav-actions { flex-direction: column; align-items: stretch; }
+                    .step-controls { justify-content: center; }
+                    .new-btn { justify-content: center; }
                     .calendar-board { padding: 0 1rem 1rem; }
-                    .grid-body { grid-auto-rows: minmax(120px, 1fr); gap: 0.75rem; }
-                    .calendar-cell { padding: 1rem; border-radius: 16px; }
-                    .month-display h2 { font-size: 1.75rem; }
                 }
             `}</style>
         </div>
