@@ -7,17 +7,12 @@ import { Clock, Plus, Trash2, CheckCircle2, Circle, Sunrise, Sun, Moon, Loader2,
 
 interface RoutineItem {
     _id: string;
-    title: string;
+    name: string;
     time: string;
     period: 'morning' | 'afternoon' | 'evening';
     order: number;
-}
-
-interface RoutineLog {
-    _id: string;
-    itemId: string;
-    date: string;
     completed: boolean;
+    isActive: boolean;
 }
 
 const PERIODS = [
@@ -26,18 +21,24 @@ const PERIODS = [
     { key: 'evening', label: 'Evening', icon: Moon, color: '#8b5cf6' },
 ];
 
+// Helper to determine period based on time
+const getPeriodFromTime = (time: string): 'morning' | 'afternoon' | 'evening' => {
+    const hour = parseInt(time.split(':')[0], 10);
+    if (hour < 12) return 'morning';
+    if (hour < 18) return 'afternoon';
+    return 'evening';
+};
+
 export default function RoutinePage() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const [routines, setRoutines] = useState<RoutineItem[]>([]);
-    const [logs, setLogs] = useState<RoutineLog[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [newRoutine, setNewRoutine] = useState({
-        title: '',
+        name: '',
         time: '08:00',
-        period: 'morning' as const,
     });
 
     const today = new Date().toISOString().split('T')[0];
@@ -48,8 +49,12 @@ export default function RoutinePage() {
         try {
             const res = await fetch(`/api/routines?date=${today}`);
             const data = await res.json();
-            setRoutines(data.routines || []);
-            setLogs(data.logs || []);
+            // API returns routines with completion status already merged
+            const routinesWithPeriod = (data.routines || []).map((r: any) => ({
+                ...r,
+                period: getPeriodFromTime(r.time),
+            }));
+            setRoutines(routinesWithPeriod);
         } catch (error) {
             console.error('Error fetching routines:', error);
         } finally {
@@ -66,18 +71,27 @@ export default function RoutinePage() {
     }, [status, router, fetchRoutines]);
 
     const addRoutine = async () => {
-        if (!newRoutine.title.trim()) return;
+        if (!newRoutine.name.trim()) return;
         setIsSaving(true);
         try {
             const res = await fetch('/api/routines', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...newRoutine, order: routines.length }),
+                body: JSON.stringify({
+                    action: 'create',
+                    name: newRoutine.name,
+                    time: newRoutine.time,
+                }),
             });
             const data = await res.json();
-            if (res.ok) {
-                setRoutines(prev => [...prev, data.routine]);
-                setNewRoutine({ title: '', time: '08:00', period: 'morning' });
+            if (res.ok && data.routineItem) {
+                const newItem = {
+                    ...data.routineItem,
+                    period: getPeriodFromTime(data.routineItem.time),
+                    completed: false,
+                };
+                setRoutines(prev => [...prev, newItem]);
+                setNewRoutine({ name: '', time: '08:00' });
                 setShowModal(false);
             }
         } catch (error) {
@@ -88,62 +102,87 @@ export default function RoutinePage() {
     };
 
     const toggleComplete = async (itemId: string) => {
-        const existingLog = logs.find(l => l.itemId === itemId && l.date === today);
+        const routine = routines.find(r => r._id === itemId);
+        if (!routine) return;
+
+        const newCompleted = !routine.completed;
+
+        // Optimistic update
+        setRoutines(prev => prev.map(r =>
+            r._id === itemId ? { ...r, completed: newCompleted } : r
+        ));
+
         try {
             const res = await fetch('/api/routines', {
-                method: 'PATCH',
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    itemId,
+                    action: 'toggle',
+                    routineItemId: itemId,
                     date: today,
-                    completed: existingLog ? !existingLog.completed : true,
+                    completed: newCompleted,
                 }),
             });
-            const data = await res.json();
-            if (res.ok) {
-                if (existingLog) {
-                    setLogs(prev => prev.map(l => l._id === existingLog._id ? { ...l, completed: !l.completed } : l));
-                } else {
-                    setLogs(prev => [...prev, data.log]);
-                }
+            if (!res.ok) {
+                // Revert on failure
+                setRoutines(prev => prev.map(r =>
+                    r._id === itemId ? { ...r, completed: !newCompleted } : r
+                ));
             }
         } catch (error) {
             console.error('Error toggling completion:', error);
+            // Revert on error
+            setRoutines(prev => prev.map(r =>
+                r._id === itemId ? { ...r, completed: !newCompleted } : r
+            ));
         }
     };
 
     const deleteRoutine = async (id: string) => {
+        // Optimistic update
+        setRoutines(prev => prev.filter(r => r._id !== id));
         try {
-            await fetch('/api/routines', {
+            const res = await fetch('/api/routines', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id }),
             });
-            setRoutines(prev => prev.filter(r => r._id !== id));
+            if (!res.ok) {
+                // Refetch on failure
+                fetchRoutines();
+            }
         } catch (error) {
             console.error('Error deleting routine:', error);
+            fetchRoutines();
         }
     };
 
     const resetToday = async () => {
+        // Optimistic update - set all to incomplete
+        setRoutines(prev => prev.map(r => ({ ...r, completed: false })));
+
         try {
-            await fetch('/api/routines', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ resetDate: today }),
-            });
-            setLogs(prev => prev.filter(l => l.date !== today));
+            // Reset each routine's completion for today
+            const resetPromises = routines.map(r =>
+                fetch('/api/routines', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'toggle',
+                        routineItemId: r._id,
+                        date: today,
+                        completed: false,
+                    }),
+                })
+            );
+            await Promise.all(resetPromises);
         } catch (error) {
             console.error('Error resetting day:', error);
+            fetchRoutines();
         }
     };
 
-    const isCompleted = (itemId: string) => {
-        const log = logs.find(l => l.itemId === itemId && l.date === today);
-        return log?.completed || false;
-    };
-
-    const completedCount = routines.filter(r => isCompleted(r._id)).length;
+    const completedCount = routines.filter(r => r.completed).length;
     const progressPercent = routines.length > 0 ? Math.round((completedCount / routines.length) * 100) : 0;
 
     const groupedRoutines = PERIODS.map(period => ({
@@ -203,7 +242,7 @@ export default function RoutinePage() {
                         <div className="period-header" style={{ '--accent': group.color } as any}>
                             <group.icon size={20} />
                             <h2>{group.label}</h2>
-                            <span className="period-count">{group.items.filter(i => isCompleted(i._id)).length}/{group.items.length}</span>
+                            <span className="period-count">{group.items.filter(i => i.completed).length}/{group.items.length}</span>
                         </div>
 
                         {group.items.length === 0 ? (
@@ -211,9 +250,9 @@ export default function RoutinePage() {
                         ) : (
                             <div className="period-items">
                                 {group.items.map((item, idx) => (
-                                    <div key={item._id} className={`routine-item glass-panel ${isCompleted(item._id) ? 'completed' : ''}`}>
+                                    <div key={item._id} className={`routine-item glass-panel ${item.completed ? 'completed' : ''}`}>
                                         <button className="check-btn" onClick={() => toggleComplete(item._id)}>
-                                            {isCompleted(item._id) ? (
+                                            {item.completed ? (
                                                 <CheckCircle2 size={24} className="checked" />
                                             ) : (
                                                 <Circle size={24} />
@@ -221,7 +260,7 @@ export default function RoutinePage() {
                                         </button>
                                         <div className="item-content">
                                             <span className="item-time">{item.time}</span>
-                                            <span className="item-title">{item.title}</span>
+                                            <span className="item-title">{item.name}</span>
                                         </div>
                                         <button className="delete-btn" onClick={() => deleteRoutine(item._id)}>
                                             <Trash2 size={16} />
@@ -247,8 +286,8 @@ export default function RoutinePage() {
                             <input
                                 type="text"
                                 placeholder="e.g., Morning meditation"
-                                value={newRoutine.title}
-                                onChange={e => setNewRoutine({ ...newRoutine, title: e.target.value })}
+                                value={newRoutine.name}
+                                onChange={e => setNewRoutine({ ...newRoutine, name: e.target.value })}
                                 autoFocus
                             />
                         </div>
@@ -261,14 +300,6 @@ export default function RoutinePage() {
                                     value={newRoutine.time}
                                     onChange={e => setNewRoutine({ ...newRoutine, time: e.target.value })}
                                 />
-                            </div>
-                            <div className="form-group">
-                                <label>Period</label>
-                                <select value={newRoutine.period} onChange={e => setNewRoutine({ ...newRoutine, period: e.target.value as any })}>
-                                    <option value="morning">Morning</option>
-                                    <option value="afternoon">Afternoon</option>
-                                    <option value="evening">Evening</option>
-                                </select>
                             </div>
                         </div>
 

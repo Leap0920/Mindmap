@@ -269,19 +269,7 @@ export default function Home() {
               <span className="quote-author">— Leonardo da Vinci</span>
             </div>
 
-            <div className="sidebar-card action-item">
-              <div className="action-header">
-                <History size={14} />
-                <span>Next up</span>
-              </div>
-              <div className="action-content">
-                <span className="action-title">Review Daily Journal</span>
-                <span className="action-time">Available now</span>
-              </div>
-              <Link href="/journal" className="action-btn">
-                Launch <ArrowRight size={14} />
-              </Link>
-            </div>
+
           </aside>
         </div>
       </main>
