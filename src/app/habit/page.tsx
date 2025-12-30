@@ -276,7 +276,9 @@ export default function HabitPage() {
                                         <div className="habit-mini-list">
                                             {habitDay?.entries.filter(e => e.completed).slice(0, 3).map(entry => (
                                                 <div key={entry.habitId} className="mini-item">
-                                                    <div className="mini-check checked" />
+                                                    <div className="mini-check checked">
+                                                        <Check size={8} strokeWidth={4} />
+                                                    </div>
                                                     <span>{entry.name}</span>
                                                 </div>
                                             ))}
@@ -387,68 +389,10 @@ export default function HabitPage() {
             <style jsx>{`
                 .habit-workspace {
                     min-height: 100vh;
-                    background: #111;
+                    background: #080808;
                     color: #fff;
                     display: flex;
                     flex-direction: column;
-                }
-
-                /* Workspace Header */
-                .workspace-header {
-                    height: 48px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    padding: 0 16px;
-                    border-bottom: 1px solid #1f1f1f;
-                    background: #111;
-                }
-
-                .view-switcher {
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    background: #191919;
-                    border: 1px solid #2a2a2a;
-                    padding: 4px 10px;
-                    border-radius: 4px;
-                    font-size: 13px;
-                    font-weight: 500;
-                }
-
-                .right-controls {
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
-                }
-
-                .icon-tool {
-                    width: 28px;
-                    height: 28px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: #777;
-                    border-radius: 4px;
-                    transition: all 0.2s;
-                }
-
-                .icon-tool:hover {
-                    background: #1f1f1f;
-                    color: #fff;
-                }
-
-                .new-btn {
-                    margin-left: 8px;
-                    background: #2383e2;
-                    color: #fff;
-                    padding: 4px 12px;
-                    border-radius: 4px;
-                    font-size: 13px;
-                    font-weight: 600;
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
                 }
 
                 /* Calendar Nav */
@@ -456,40 +400,31 @@ export default function HabitPage() {
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    padding: 32px 24px 16px;
+                    padding: 40px 32px 24px;
+                    background: #080808;
                 }
 
                 .month-display h2 {
-                    font-size: 20px;
-                    font-weight: 700;
+                    font-size: 24px;
+                    font-weight: 800;
+                    letter-spacing: -0.03em;
                 }
 
                 .nav-actions {
                     display: flex;
                     align-items: center;
-                    gap: 24px;
-                }
-
-                .manage-btn {
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    font-size: 13px;
-                    color: #777;
-                }
-
-                .manage-btn:hover {
-                    color: #fff;
+                    gap: 32px;
                 }
 
                 .step-controls {
                     display: flex;
                     align-items: center;
-                    gap: 12px;
+                    gap: 16px;
                 }
 
                 .step-controls button {
-                    color: #777;
+                    color: #555;
+                    transition: color 0.2s;
                 }
 
                 .step-controls button:hover {
@@ -497,9 +432,27 @@ export default function HabitPage() {
                 }
 
                 .today-txt {
-                    font-size: 13px;
-                    font-weight: 600;
+                    font-size: 14px;
+                    font-weight: 700;
                     color: #fff !important;
+                }
+
+                .new-btn {
+                    background: #2383e2;
+                    color: #fff;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    font-weight: 700;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    transition: transform 0.2s, background 0.2s;
+                }
+
+                .new-btn:hover {
+                    background: #2b91f0;
+                    transform: translateY(-1px);
                 }
 
                 /* Calendar Grid */
@@ -507,87 +460,85 @@ export default function HabitPage() {
                     flex: 1;
                     display: flex;
                     flex-direction: column;
-                    padding: 0 24px 24px;
+                    padding: 0 32px 32px;
                 }
 
                 .grid-header {
                     display: grid;
                     grid-template-columns: repeat(7, 1fr);
-                    border-bottom: 1px solid #1f1f1f;
+                    border-bottom: 1px solid #151515;
                 }
 
                 .header-cell {
-                    padding: 8px;
+                    padding: 12px;
                     text-align: right;
                     font-size: 12px;
-                    color: #777;
-                    font-weight: 500;
+                    color: #444;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
                 }
 
                 .grid-body {
                     display: grid;
                     grid-template-columns: repeat(7, 1fr);
-                    grid-auto-rows: minmax(140px, 1fr);
-                    border-left: 1px solid #1f1f1f;
-                    border-top: 1px solid #1f1f1f;
+                    grid-auto-rows: minmax(160px, 1fr);
+                    border-left: 1px solid #151515;
+                    border-top: 1px solid #151515;
                 }
 
                 .calendar-cell {
-                    border-right: 1px solid #1f1f1f;
-                    border-bottom: 1px solid #1f1f1f;
-                    padding: 8px;
+                    border-right: 1px solid #151515;
+                    border-bottom: 1px solid #151515;
+                    padding: 16px;
                     display: flex;
                     flex-direction: column;
-                    gap: 8px;
+                    gap: 12px;
                     cursor: pointer;
-                    transition: background 0.1s;
+                    transition: background 0.2s;
+                    background: #080808;
                 }
 
                 .calendar-cell:hover {
-                    background: #191919;
+                    background: #0c0c0c;
                 }
 
                 .off-month {
-                    color: #444;
+                    opacity: 0.2;
                 }
 
                 .is-today .day-number {
-                    background: #e25555;
-                    color: #fff;
-                    width: 24px;
-                    height: 24px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border-radius: 50%;
+                    color: #2383e2;
+                    font-weight: 800;
                 }
 
                 .day-number {
-                    font-size: 12px;
+                    font-size: 14px;
                     font-weight: 600;
+                    color: #666;
                 }
 
                 /* Habit Card in Cell */
                 .habit-card {
-                    background: #191919;
-                    border: 1px solid #2a2a2a;
-                    border-radius: 6px;
-                    padding: 8px;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                    background: #0f0f0f;
+                    border: 1px solid #1f1f1f;
+                    border-radius: 10px;
+                    padding: 12px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
                 }
 
                 .habit-card-header {
                     display: flex;
                     align-items: center;
-                    gap: 8px;
-                    margin-bottom: 6px;
+                    gap: 10px;
+                    margin-bottom: 10px;
                 }
 
                 .status-box {
-                    width: 18px;
-                    height: 18px;
+                    width: 20px;
+                    height: 20px;
                     background: #4a9e4a;
-                    border-radius: 4px;
+                    border-radius: 5px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -595,7 +546,7 @@ export default function HabitPage() {
                 }
 
                 .card-title {
-                    font-size: 12px;
+                    font-size: 13px;
                     font-weight: 700;
                     color: #fff;
                 }
@@ -603,33 +554,38 @@ export default function HabitPage() {
                 .habit-mini-list {
                     display: flex;
                     flex-direction: column;
-                    gap: 4px;
+                    gap: 8px;
                 }
 
                 .mini-item {
                     display: flex;
                     align-items: center;
-                    gap: 6px;
-                    font-size: 11px;
-                    color: #999;
+                    gap: 10px;
+                    font-size: 12px;
+                    color: #bbb;
                 }
 
                 .mini-check {
-                    width: 12px;
-                    height: 12px;
-                    border: 1px solid #444;
-                    border-radius: 2px;
+                    width: 14px;
+                    height: 14px;
+                    border: 1.5px solid #333;
+                    border-radius: 3px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #111;
                 }
 
                 .mini-check.checked {
                     background: #2383e2;
                     border-color: #2383e2;
+                    color: #fff;
                 }
 
                 .more-count {
-                    font-size: 10px;
-                    color: #555;
-                    margin-top: 2px;
+                    font-size: 11px;
+                    color: #444;
+                    margin-top: 4px;
                 }
 
                 /* Modal UI */
