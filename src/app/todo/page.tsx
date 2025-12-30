@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Plus, CheckCircle2, Circle, Trash2, Calendar, Search, Loader2, X } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Trash2, Calendar, Search, Loader2, X, Edit2, Settings } from 'lucide-react';
 
 interface Todo {
     _id: string;
@@ -14,7 +14,7 @@ interface Todo {
     completed: boolean;
 }
 
-const CATEGORIES = ['General', 'Academic', 'Technical', 'Personal', 'Essential'];
+const INITIAL_CATEGORIES = ['General', 'Academic', 'Technical', 'Personal', 'Essential'];
 const PRIORITIES = ['Low', 'Medium', 'High'] as const;
 
 export default function TodoPage() {
@@ -26,7 +26,12 @@ export default function TodoPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-    const [newTodo, setNewTodo] = useState({
+    const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [showCategoryInput, setShowCategoryInput] = useState(false);
+
+    const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+    const [todoForm, setTodoForm] = useState({
         task: '',
         category: 'General',
         priority: 'Medium' as 'Low' | 'Medium' | 'High',
@@ -39,7 +44,15 @@ export default function TodoPage() {
         try {
             const res = await fetch('/api/todos');
             const data = await res.json();
-            setTodos(data.todos || []);
+            const fetchedTodos = data.todos || [];
+            setTodos(fetchedTodos);
+
+            // Extract unique categories from todos and add to categories list if not already there
+            const uniqueCats = Array.from(new Set(fetchedTodos.map((t: Todo) => t.category))) as string[];
+            setCategories(prev => {
+                const combined = Array.from(new Set([...prev, ...uniqueCats]));
+                return combined;
+            });
         } catch (error) {
             console.error('Error fetching todos:', error);
         } finally {
@@ -55,25 +68,59 @@ export default function TodoPage() {
         }
     }, [status, router, fetchTodos]);
 
-    const addTodo = async () => {
-        if (!newTodo.task.trim()) return;
+    const handleOpenAddModal = () => {
+        setEditingTodo(null);
+        setTodoForm({ task: '', category: 'General', priority: 'Medium', dueDate: '' });
+        setShowModal(true);
+    };
+
+    const handleOpenEditModal = (todo: Todo) => {
+        setEditingTodo(todo);
+        setTodoForm({
+            task: todo.task,
+            category: todo.category,
+            priority: todo.priority,
+            dueDate: todo.dueDate ? new Date(todo.dueDate).toISOString().split('T')[0] : '',
+        });
+        setShowModal(true);
+    };
+
+    const saveTodo = async () => {
+        if (!todoForm.task.trim()) return;
         setIsSaving(true);
         try {
+            const method = editingTodo ? 'PATCH' : 'POST';
+            const payload = editingTodo
+                ? { ...todoForm, id: editingTodo._id }
+                : todoForm;
+
             const res = await fetch('/api/todos', {
-                method: 'POST',
+                method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newTodo),
+                body: JSON.stringify(payload),
             });
+
             if (res.ok) {
                 const data = await res.json();
-                setTodos(prev => [data.todo, ...prev]);
-                setNewTodo({ task: '', category: 'General', priority: 'Medium', dueDate: '' });
+                if (editingTodo) {
+                    setTodos(prev => prev.map(t => t._id === editingTodo._id ? data.todo : t));
+                } else {
+                    setTodos(prev => [data.todo, ...prev]);
+                }
                 setShowModal(false);
             }
         } catch (error) {
-            console.error('Error adding todo:', error);
+            console.error('Error saving todo:', error);
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const addCategory = () => {
+        if (newCategoryName.trim() && !categories.includes(newCategoryName.trim())) {
+            setCategories(prev => [...prev, newCategoryName.trim()]);
+            setNewCategoryName('');
+            setShowCategoryInput(false);
         }
     };
 
@@ -93,6 +140,7 @@ export default function TodoPage() {
     };
 
     const deleteTodo = async (id: string) => {
+        if (!confirm('Delete this task?')) return;
         try {
             await fetch('/api/todos', {
                 method: 'DELETE',
@@ -132,7 +180,7 @@ export default function TodoPage() {
                     <h1>Tasks</h1>
                     <p>{todos.filter(t => !t.completed).length} pending actions.</p>
                 </div>
-                <button className="add-btn" onClick={() => setShowModal(true)}>
+                <button className="add-btn" onClick={handleOpenAddModal}>
                     <Plus size={18} />
                     <span>Next Task</span>
                 </button>
@@ -150,23 +198,49 @@ export default function TodoPage() {
                         />
                     </div>
 
-                    <nav className="filter-nav">
-                        <button
-                            className={`filter-link ${filter === 'all' ? 'active' : ''}`}
-                            onClick={() => setFilter('all')}
-                        >
-                            All Tasks
-                        </button>
-                        {CATEGORIES.map(cat => (
+                    <div className="filter-group">
+                        <label>Categories</label>
+                        <nav className="filter-nav">
                             <button
-                                key={cat}
-                                className={`filter-link ${filter === cat ? 'active' : ''}`}
-                                onClick={() => setFilter(cat)}
+                                className={`filter-link ${filter === 'all' ? 'active' : ''}`}
+                                onClick={() => setFilter('all')}
                             >
-                                {cat}
+                                All Tasks
                             </button>
-                        ))}
-                    </nav>
+                            {categories.map(cat => (
+                                <button
+                                    key={cat}
+                                    className={`filter-link ${filter === cat ? 'active' : ''}`}
+                                    onClick={() => setFilter(cat)}
+                                >
+                                    {cat}
+                                </button>
+                            ))}
+                        </nav>
+
+                        <div className="add-category-section">
+                            {showCategoryInput ? (
+                                <div className="category-input-group">
+                                    <input
+                                        type="text"
+                                        placeholder="Name..."
+                                        value={newCategoryName}
+                                        onChange={e => setNewCategoryName(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && addCategory()}
+                                        autoFocus
+                                    />
+                                    <div className="cat-btn-group">
+                                        <button onClick={addCategory} className="cat-confirm">Add</button>
+                                        <button onClick={() => setShowCategoryInput(false)} className="cat-cancel">Cancel</button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <button className="add-cat-btn" onClick={() => setShowCategoryInput(true)}>
+                                    <Plus size={12} /> New Category
+                                </button>
+                            )}
+                        </div>
+                    </div>
                 </aside>
 
                 <main className="content">
@@ -193,9 +267,14 @@ export default function TodoPage() {
                                         </div>
                                     </div>
 
-                                    <button className="delete-btn" onClick={() => deleteTodo(todo._id)}>
-                                        <Trash2 size={16} />
-                                    </button>
+                                    <div className="actions">
+                                        <button className="edit-btn" onClick={() => handleOpenEditModal(todo)}>
+                                            <Edit2 size={16} />
+                                        </button>
+                                        <button className="delete-btn" onClick={() => deleteTodo(todo._id)}>
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -207,7 +286,7 @@ export default function TodoPage() {
                 <div className="modal-overlay" onClick={() => setShowModal(false)}>
                     <div className="modal-box" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3>Record Task</h3>
+                            <h3>{editingTodo ? 'Edit Task' : 'Record Task'}</h3>
                             <button onClick={() => setShowModal(false)}><X size={18} /></button>
                         </div>
 
@@ -215,8 +294,8 @@ export default function TodoPage() {
                             <label>Description</label>
                             <input
                                 type="text"
-                                value={newTodo.task}
-                                onChange={e => setNewTodo({ ...newTodo, task: e.target.value })}
+                                value={todoForm.task}
+                                onChange={e => setTodoForm({ ...todoForm, task: e.target.value })}
                                 autoFocus
                             />
                         </div>
@@ -224,21 +303,21 @@ export default function TodoPage() {
                         <div className="grid-fields">
                             <div className="input-field">
                                 <label>Project</label>
-                                <select value={newTodo.category} onChange={e => setNewTodo({ ...newTodo, category: e.target.value })}>
-                                    {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                <select value={todoForm.category} onChange={e => setTodoForm({ ...todoForm, category: e.target.value })}>
+                                    {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                                 </select>
                             </div>
                             <div className="input-field">
                                 <label>Level</label>
-                                <select value={newTodo.priority} onChange={e => setNewTodo({ ...newTodo, priority: e.target.value as any })}>
+                                <select value={todoForm.priority} onChange={e => setTodoForm({ ...todoForm, priority: e.target.value as any })}>
                                     {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
                                 </select>
                             </div>
                         </div>
 
                         <div className="modal-footer">
-                            <button className="save-btn" onClick={addTodo} disabled={isSaving}>
-                                {isSaving ? '...' : 'Commit'}
+                            <button className="save-btn" onClick={saveTodo} disabled={isSaving}>
+                                {isSaving ? '...' : (editingTodo ? 'Update' : 'Commit')}
                             </button>
                         </div>
                     </div>
@@ -246,75 +325,94 @@ export default function TodoPage() {
             )}
 
             <style jsx>{`
-        .todo-page { max-width: 960px; margin: 0 auto; padding: 1.5rem; animation: fadeUp 0.4s ease-out; }
+        .todo-page { max-width: 1000px; margin: 0 auto; padding: 2.5rem 1.5rem; animation: fadeUp 0.4s ease-out; color: #fff; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
-        .breadcrumb { font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
-        .page-header h1 { font-size: 1.75rem; font-weight: 700; margin: 0.25rem 0; color: #fff; letter-spacing: -0.02em; }
-        .page-header p { color: #666; font-size: 0.875rem; }
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; }
+        .breadcrumb { font-size: 0.75rem; color: #444; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-bottom: 0.5rem; display: block; }
+        .page-header h1 { font-size: 2.5rem; font-weight: 800; margin: 0; color: #fff; letter-spacing: -0.04em; }
+        .page-header p { color: #555; font-size: 0.9375rem; margin-top: 0.25rem; font-weight: 500; }
 
-        .add-btn { background: #fff; color: #000; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; transition: all 0.15s ease; }
-        .add-btn:hover { transform: translateY(-1px); }
+        .add-btn { background: #fff; color: #000; padding: 0.625rem 1.25rem; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 0.625rem; font-size: 0.875rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(255,255,255,0.1); }
+        .add-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,255,255,0.15); }
+        .add-btn:active { transform: translateY(0); }
 
-        .main-layout { display: grid; grid-template-columns: 200px 1fr; gap: 2rem; }
+        .main-layout { display: grid; grid-template-columns: 220px 1fr; gap: 3rem; }
         
-        .search-box { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background: #0f0f0f; border: 1px solid #1f1f1f; border-radius: 8px; margin-bottom: 1.25rem; }
-        .search-box input { background: none; border: none; font-size: 0.8125rem; color: #fff; outline: none; width: 100%; }
-        .search-box input::placeholder { color: #555; }
-        .search-icon { color: #555; }
+        .search-box { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1rem; background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 10px; margin-bottom: 2rem; transition: border-color 0.2s; }
+        .search-box:focus-within { border-color: #333; }
+        .search-box input { background: none; border: none; font-size: 0.875rem; color: #fff; outline: none; width: 100%; font-weight: 500; }
+        .search-box input::placeholder { color: #333; }
+        .search-icon { color: #333; }
 
-        .filter-nav { display: flex; flex-direction: column; gap: 0.125rem; }
-        .filter-link { text-align: left; padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.8125rem; color: #777; transition: all 0.15s; }
-        .filter-link:hover { background: #0f0f0f; color: #bbb; }
-        .filter-link.active { background: #111; color: #fff; font-weight: 600; border-left: 2px solid #fff; border-radius: 0 6px 6px 0; }
+        .filter-group label { display: block; font-size: 0.6875rem; color: #333; text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em; margin-bottom: 1rem; }
+        .filter-nav { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 1.5rem; }
+        .filter-link { text-align: left; padding: 0.625rem 1rem; border-radius: 8px; font-size: 0.875rem; color: #444; transition: all 0.2s; font-weight: 600; }
+        .filter-link:hover { background: #0d0d0d; color: #888; }
+        .filter-link.active { background: #111; color: #fff; border-left: 3px solid #fff; border-radius: 2px 8px 8px 2px; }
 
-        .todo-stack { display: flex; flex-direction: column; gap: 0.5rem; }
-        .todo-item { display: flex; align-items: center; gap: 0.875rem; padding: 1rem 1.125rem; background: #0a0a0a; border: 1px solid #181818; border-radius: 10px; transition: all 0.15s; }
-        .todo-item:hover { border-color: #252525; background: #0c0c0c; }
-        .todo-item.done { opacity: 0.45; }
+        .add-category-section { border-top: 1px solid #111; padding-top: 1.5rem; }
+        .add-cat-btn { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: #333; font-weight: 600; padding: 0.5rem 1rem; border-radius: 6px; transition: color 0.2s; }
+        .add-cat-btn:hover { color: #888; }
+        
+        .category-input-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .category-input-group input { background: #0a0a0a; border: 1px solid #1a1a1a; padding: 0.5rem 0.75rem; border-radius: 6px; color: #fff; font-size: 0.8125rem; outline: none; }
+        .cat-btn-group { display: flex; gap: 0.5rem; }
+        .cat-confirm { background: #222; color: #fff; border-radius: 4px; padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 600; }
+        .cat-cancel { color: #444; font-size: 0.75rem; font-weight: 600; }
 
-        .check-btn { color: #444; transition: all 0.15s; flex-shrink: 0; }
-        .check-btn:hover { color: #666; }
-        .done .check-btn { color: #10b981; }
+        .todo-stack { display: flex; flex-direction: column; gap: 0.75rem; }
+        .todo-item { display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem 1.5rem; background: #080808; border: 1px solid #111; border-radius: 12px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .todo-item:hover { border-color: #222; transform: translateX(4px); background: #0a0a0a; }
+        .todo-item.done { opacity: 0.3; }
+
+        .check-btn { color: #222; transition: all 0.2s; flex-shrink: 0; }
+        .check-btn:hover { color: #444; transform: scale(1.1); }
+        .done .check-btn { color: #fff; }
 
         .todo-body { flex: 1; min-width: 0; }
-        .todo-body h4 { font-size: 0.9375rem; font-weight: 500; margin-bottom: 0.375rem; color: #eee; }
-        .done h4 { text-decoration: line-through; color: #555; }
+        .todo-body h4 { font-size: 1.0625rem; font-weight: 600; margin-bottom: 0.5rem; color: #fff; letter-spacing: -0.01em; }
+        .done h4 { text-decoration: line-through; color: #444; }
 
-        .tags { display: flex; gap: 0.375rem; flex-wrap: wrap; }
-        .tag { font-size: 0.625rem; color: #666; background: #111; padding: 0.1875rem 0.5rem; border-radius: 4px; display: flex; align-items: center; gap: 0.25rem; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 500; }
+        .tags { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .tag { font-size: 0.6875rem; color: #555; background: #0d0d0d; border: 1px solid #111; padding: 0.25rem 0.625rem; border-radius: 6px; display: flex; align-items: center; gap: 0.375rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
         
-        .tag.priority.high { color: #ef4444; background: rgba(239,68,68,0.1); font-weight: 600; }
-        .tag.priority.medium { color: #f59e0b; background: rgba(245,158,11,0.1); }
-        .tag.priority.low { color: #555; }
+        .tag.priority.high { color: #fff; background: #300; border-color: #500; }
+        .tag.priority.medium { color: #888; background: #111; }
+        .tag.priority.low { color: #444; background: #050505; }
 
-        .delete-btn { color: #333; transition: all 0.15s; flex-shrink: 0; padding: 0.25rem; border-radius: 4px; }
-        .delete-btn:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+        .actions { display: flex; gap: 0.25rem; opacity: 0; transition: opacity 0.2s; }
+        .todo-item:hover .actions { opacity: 1; }
+        .edit-btn, .delete-btn { color: #222; transition: all 0.2s; padding: 0.5rem; border-radius: 8px; }
+        .edit-btn:hover { color: #fff; background: #111; }
+        .delete-btn:hover { color: #ff4444; background: rgba(255,68,68,0.1); }
 
-        .empty { text-align: center; padding-top: 4rem; color: #444; font-size: 0.875rem; }
+        .empty { text-align: center; padding: 6rem 0; color: #222; font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2em; }
 
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-box { background: #0f0f0f; border: 1px solid #1f1f1f; padding: 1.5rem; border-radius: 14px; width: 400px; animation: slideUp 0.2s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .modal-header h3 { font-size: 1rem; color: #fff; }
-        .modal-header button { color: #555; padding: 0.25rem; }
-        .modal-header button:hover { color: #999; }
-        .input-field { display: flex; flex-direction: column; gap: 0.375rem; margin-bottom: 1rem; }
-        .input-field label { font-size: 0.6875rem; color: #666; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
-        .input-field input, .input-field select { background: #080808; border: 1px solid #1f1f1f; padding: 0.625rem 0.875rem; border-radius: 8px; color: #fff; outline: none; font-size: 0.875rem; transition: border-color 0.15s; }
-        .input-field input:focus, .input-field select:focus { border-color: #333; }
-        .grid-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-        .modal-footer { display: flex; justify-content: flex-end; margin-top: 1.25rem; }
-        .save-btn { background: #fff; color: #000; padding: 0.5rem 1.5rem; border-radius: 8px; font-weight: 600; font-size: 0.8125rem; transition: all 0.15s; }
-        .save-btn:hover { transform: translateY(-1px); }
-        .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-box { background: #080808; border: 1px solid #151515; padding: 2.5rem; border-radius: 20px; width: 440px; animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        @keyframes modalIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; }
+        .modal-header h3 { font-size: 1.25rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+        .modal-header button { color: #333; transition: color 0.2s; }
+        .modal-header button:hover { color: #fff; }
 
-        @media (max-width: 800px) {
-          .main-layout { grid-template-columns: 1fr; }
+        .input-field { display: flex; flex-direction: column; gap: 0.625rem; margin-bottom: 1.5rem; }
+        .input-field label { font-size: 0.75rem; color: #333; text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em; }
+        .input-field input, .input-field select { background: #050505; border: 1px solid #151515; padding: 0.875rem 1.125rem; border-radius: 10px; color: #fff; outline: none; font-size: 1rem; transition: all 0.2s; font-weight: 500; }
+        .input-field input:focus, .input-field select:focus { border-color: #333; background: #080808; }
+        
+        .grid-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .modal-footer { display: flex; justify-content: flex-end; margin-top: 2rem; }
+        .save-btn { background: #fff; color: #000; padding: 0.875rem 2.5rem; border-radius: 10px; font-weight: 800; font-size: 0.9375rem; transition: all 0.2s; box-shadow: 0 4px 12px rgba(255,255,255,0.1); }
+        .save-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,255,255,0.2); }
+        .save-btn:disabled { opacity: 0.5; transform: none; box-shadow: none; }
+
+        @media (max-width: 850px) {
+          .main-layout { grid-template-columns: 1fr; gap: 2rem; }
           .filters { display: none; }
-          .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+          .page-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
         }
       `}</style>
         </div>

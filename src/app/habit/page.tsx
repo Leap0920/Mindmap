@@ -438,21 +438,22 @@ export default function HabitPage() {
                 }
 
                 .new-btn {
-                    background: #2383e2;
-                    color: #fff;
-                    padding: 8px 16px;
-                    border-radius: 6px;
-                    font-size: 14px;
-                    font-weight: 700;
+                    background: #fff;
+                    color: #000;
+                    padding: 10px 24px;
+                    border-radius: 10px;
+                    font-size: 0.8125rem;
+                    font-weight: 800;
                     display: flex;
                     align-items: center;
-                    gap: 6px;
-                    transition: transform 0.2s, background 0.2s;
+                    gap: 8px;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    box-shadow: 0 4px 12px rgba(255,255,255,0.1);
                 }
 
                 .new-btn:hover {
-                    background: #2b91f0;
-                    transform: translateY(-1px);
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 20px rgba(255,255,255,0.2);
                 }
 
                 /* Calendar Grid */
@@ -508,8 +509,10 @@ export default function HabitPage() {
                 }
 
                 .is-today .day-number {
-                    color: #2383e2;
-                    font-weight: 800;
+                    color: #fff;
+                    background: #222;
+                    padding: 2px 8px;
+                    border-radius: 6px;
                 }
 
                 .day-number {
@@ -537,12 +540,12 @@ export default function HabitPage() {
                 .status-box {
                     width: 20px;
                     height: 20px;
-                    background: #4a9e4a;
+                    background: #fff;
                     border-radius: 5px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    color: #fff;
+                    color: #000;
                 }
 
                 .card-title {
@@ -577,9 +580,9 @@ export default function HabitPage() {
                 }
 
                 .mini-check.checked {
-                    background: #2383e2;
-                    border-color: #2383e2;
-                    color: #fff;
+                    background: #fff;
+                    border-color: #fff;
+                    color: #000;
                 }
 
                 .more-count {
@@ -624,12 +627,12 @@ export default function HabitPage() {
                 .large-check-icon {
                     width: 64px;
                     height: 64px;
-                    background: #73b373;
+                    background: #fff;
                     border-radius: 12px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    color: #fff;
+                    color: #000;
                 }
 
                 .close-btn {
@@ -706,9 +709,9 @@ export default function HabitPage() {
                 }
 
                 .item-checkbox.checked {
-                    background: #2383e2;
-                    border-color: #2383e2;
-                    color: #fff;
+                    background: #fff;
+                    border-color: #fff;
+                    color: #000;
                 }
 
                 /* Definition Modal */

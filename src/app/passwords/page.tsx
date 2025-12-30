@@ -287,65 +287,282 @@ export default function PasswordsPage() {
             )}
 
             <style jsx>{`
-        .vault-page { max-width: 960px; margin: 0 auto; padding: 1.5rem; animation: fadeUp 0.4s ease-out; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
-        .security-badge { display: flex; align-items: center; gap: 0.375rem; font-size: 0.625rem; font-weight: 600; color: #10b981; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.375rem; }
-        .page-header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; color: #fff; letter-spacing: -0.02em; }
-        .page-header p { color: #666; font-size: 0.875rem; }
-        .primary-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #fff; color: #000; font-weight: 600; border-radius: 8px; font-size: 0.8125rem; transition: all 0.15s; }
-        .primary-btn:hover { transform: translateY(-1px); }
-        .secondary-btn { padding: 0.5rem 1rem; background: transparent; border: 1px solid #1f1f1f; color: #777; border-radius: 8px; font-size: 0.8125rem; transition: all 0.15s; }
-        .secondary-btn:hover { border-color: #333; color: #999; }
-        .vault-container { background: #0a0a0a; border: 1px solid #181818; padding: 1.25rem; border-radius: 14px; }
-        .vault-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding-bottom: 0.875rem; border-bottom: 1px solid #151515; }
-        .search-box { display: flex; align-items: center; gap: 0.625rem; padding: 0.5rem 0.875rem; background: #080808; border: 1px solid #1f1f1f; border-radius: 8px; flex: 1; max-width: 280px; }
-        .search-box svg { color: #555; }
-        .search-box input { flex: 1; background: none; border: none; color: #fff; font-size: 0.8125rem; outline: none; }
-        .search-box input::placeholder { color: #444; }
-        .vault-stats { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: #555; }
-        .empty-vault { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1.5rem; color: #444; gap: 0.875rem; }
-        .empty-vault svg { color: #333; }
-        .empty-vault button { color: #888; font-size: 0.8125rem; }
+        .vault-page { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            padding: 48px 24px; 
+            animation: fadeUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        
+        @keyframes fadeUp { 
+            from { opacity: 0; transform: translateY(16px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        .page-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-end; 
+            margin-bottom: 48px; 
+            gap: 24px;
+        }
+
+        .title-group h1 { 
+            font-size: 2.5rem; 
+            font-weight: 800; 
+            margin: 0; 
+            color: #fff; 
+            letter-spacing: -0.04em; 
+        }
+
+        .title-group p { 
+            color: #555; 
+            font-size: 1rem; 
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .security-badge { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+            font-size: 0.6875rem; 
+            font-weight: 800; 
+            color: #fff; 
+            text-transform: uppercase; 
+            letter-spacing: 0.1em; 
+            margin-bottom: 8px; 
+            background: #111;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid #1a1a1a;
+        }
+
+        .primary-btn { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            padding: 12px 24px; 
+            background: #fff; 
+            color: #000; 
+            font-weight: 800; 
+            border-radius: 10px; 
+            font-size: 0.875rem; 
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+        }
+
+        .primary-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,255,255,0.2); }
+
+        .secondary-btn { 
+            padding: 12px 24px; 
+            background: transparent; 
+            border: 1px solid #1a1a1a; 
+            color: #444; 
+            border-radius: 10px; 
+            font-size: 0.875rem; 
+            font-weight: 700;
+            transition: all 0.2s; 
+        }
+
+        .secondary-btn:hover { border-color: #333; color: #888; }
+
+        .vault-container { 
+            background: #0a0a0a; 
+            border: 1px solid #151515; 
+            padding: 32px; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .vault-toolbar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 32px; 
+            padding-bottom: 24px; 
+            border-bottom: 1px solid #151515; 
+            gap: 24px;
+        }
+
+        .search-box { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 12px 18px; 
+            background: #050505; 
+            border: 1px solid #151515; 
+            border-radius: 12px; 
+            flex: 1; 
+            max-width: 400px; 
+            transition: all 0.2s;
+        }
+
+        .search-box:focus-within { border-color: #333; background: #080808; }
+        .search-box svg { color: #333; }
+        .search-box input { flex: 1; background: none; border: none; color: #fff; font-size: 0.9375rem; outline: none; font-weight: 500; }
+        .search-box input::placeholder { color: #1a1a1a; }
+
+        .vault-stats { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            font-size: 0.75rem; 
+            color: #444; 
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .empty-vault { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 80px 0; 
+            color: #222; 
+            gap: 24px; 
+        }
+
+        .empty-vault p {
+            font-size: 1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+
+        .empty-vault button { 
+            color: #444; 
+            font-size: 0.8125rem; 
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
         .empty-vault button:hover { color: #fff; }
-        .vault-list { display: flex; flex-direction: column; gap: 0.375rem; }
-        .vault-row { display: grid; grid-template-columns: 1.5fr 1fr 1.5fr auto; align-items: center; gap: 0.875rem; padding: 0.875rem 1rem; background: #080808; border-radius: 10px; border: 1px solid #151515; transition: all 0.15s; }
-        .vault-row:hover { border-color: #1f1f1f; background: #0a0a0a; }
-        .identity-cell { display: flex; align-items: center; gap: 0.625rem; }
-        .site-avatar { width: 36px; height: 36px; background: #111; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #555; }
+
+        .vault-list { display: flex; flex-direction: column; gap: 8px; }
+
+        .vault-row { 
+            display: grid; 
+            grid-template-columns: 2fr 1.2fr 1.5fr auto; 
+            align-items: center; 
+            gap: 24px; 
+            padding: 16px 24px; 
+            background: #080808; 
+            border-radius: 16px; 
+            border: 1px solid #151515; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+
+        .vault-row:hover { 
+            border-color: #252525; 
+            background: #0d0d0d;
+            transform: scale(1.01);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        }
+
+        .identity-cell { display: flex; align-items: center; gap: 16px; }
+        .site-avatar { 
+            width: 44px; 
+            height: 44px; 
+            background: #111; 
+            border-radius: 12px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: #333; 
+            border: 1px solid #1a1a1a;
+        }
+
         .site-details { display: flex; flex-direction: column; }
-        .site-name { font-weight: 600; font-size: 0.875rem; color: #eee; }
-        .site-url { font-size: 0.6875rem; color: #444; }
-        .account-cell { display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: #888; }
-        .account-cell svg { color: #444; }
-        .copy-btn { padding: 0.25rem; color: #444; border-radius: 4px; transition: all 0.15s; }
-        .copy-btn:hover, .copy-btn.copied { color: #fff; }
-        .credential-cell { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
-        .password-display { font-family: monospace; font-size: 0.8125rem; color: #666; }
-        .pass-actions { display: flex; gap: 0.25rem; }
-        .pass-actions button { padding: 0.375rem; color: #444; border-radius: 6px; transition: all 0.15s; }
-        .pass-actions button:hover, .pass-actions button.copied { color: #fff; background: #151515; }
-        .delete-btn { padding: 0.375rem; color: #333; border-radius: 6px; transition: all 0.15s; }
-        .delete-btn:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-box { background: #0f0f0f; border: 1px solid #1f1f1f; border-radius: 14px; padding: 1.5rem; width: 90%; max-width: 440px; animation: slideUp 0.2s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
-        .modal-header h3 { display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; color: #fff; }
-        .modal-header button { color: #555; padding: 0.25rem; }
-        .modal-header button:hover { color: #999; }
-        .form-group { display: flex; flex-direction: column; gap: 0.375rem; margin-bottom: 0.875rem; }
-        .form-group label { font-size: 0.6875rem; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
-        .form-group input, .form-group select { padding: 0.625rem 0.875rem; background: #080808; border: 1px solid #1f1f1f; border-radius: 8px; color: #fff; font-size: 0.875rem; outline: none; transition: border-color 0.15s; }
-        .form-group input:focus, .form-group select:focus { border-color: #333; }
-        .form-group input::placeholder { color: #444; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 0.625rem; margin-top: 1.25rem; }
+        .site-name { font-weight: 700; font-size: 1rem; color: #fff; letter-spacing: -0.01em; }
+        .site-url { font-size: 0.75rem; color: #444; font-weight: 500; }
+
+        .account-cell { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; color: #555; font-weight: 600; }
+        .account-cell svg { color: #222; }
+
+        .copy-btn { padding: 6px; color: #222; border-radius: 8px; transition: all 0.2s; }
+        .copy-btn:hover, .copy-btn.copied { color: #fff; background: #151515; }
+
+        .credential-cell { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            gap: 12px; 
+            background: #050505;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid #111;
+        }
+
+        .password-display { font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; color: #444; letter-spacing: 0.05em; }
+        .pass-actions { display: flex; gap: 4px; }
+        .pass-actions button { padding: 6px; color: #222; border-radius: 8px; transition: all 0.2s; }
+        .pass-actions button:hover, .pass-actions button.copied { color: #fff; background: #1a1a1a; }
+
+        .delete-btn { padding: 8px; color: #1a1a1a; border-radius: 10px; transition: all 0.2s; }
+        .delete-btn:hover { color: #ff4444; background: rgba(255, 68, 68, 0.1); }
+
+        .modal-overlay { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0, 0, 0, 0.9); 
+            backdrop-filter: blur(12px); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 1000; 
+        }
+
+        .modal-box { 
+            background: #080808; 
+            border: 1px solid #151515; 
+            border-radius: 20px; 
+            padding: 40px; 
+            width: 480px; 
+            animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+        }
+
+        @keyframes modalIn { 
+            from { opacity: 0; transform: translateY(24px) scale(0.95); } 
+            to { opacity: 1; transform: translateY(0) scale(1); } 
+        }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        .modal-header h3 { display: flex; align-items: center; gap: 8px; font-size: 1.25rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+        .modal-header button { color: #333; padding: 4px; border-radius: 8px; transition: all 0.2s; }
+        .modal-header button:hover { color: #fff; background: #111; }
+
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+        .form-group label { font-size: 0.75rem; font-weight: 800; color: #333; text-transform: uppercase; letter-spacing: 0.1em; }
+
+        .form-group input, .form-group select { 
+            padding: 12px 16px; 
+            background: #050505; 
+            border: 1px solid #151515; 
+            border-radius: 10px; 
+            color: #fff; 
+            font-size: 0.9375rem; 
+            outline: none; 
+            transition: all 0.2s; 
+            font-weight: 500;
+        }
+
+        .form-group input:focus, .form-group select:focus { border-color: #333; background: #080808; }
+        .form-group input::placeholder { color: #222; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; }
+
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
-        @media (max-width: 768px) {
-          .vault-row { grid-template-columns: 1fr; gap: 0.625rem; }
-          .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+
+        @media (max-width: 900px) {
+            .vault-row { grid-template-columns: 1fr; gap: 16px; }
+            .identity-cell { margin-bottom: 8px; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 32px; }
         }
       `}</style>
         </div>
