@@ -91,26 +91,49 @@ export default function Home() {
   const fetchStats = async () => {
     setIsLoading(true);
     try {
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      const month = today.getMonth() + 1;
+      const year = today.getFullYear();
+
       const [habitsRes, todosRes, routinesRes, booksRes] = await Promise.all([
-        fetch('/api/habits'),
+        fetch(`/api/habits?month=${month}&year=${year}`),
         fetch('/api/todos'),
-        fetch(`/api/routines?date=${new Date().toISOString().split('T')[0]}`),
+        fetch(`/api/routines?date=${todayStr}`),
         fetch('/api/books'),
       ]);
       const [habitsData, todosData, routinesData, booksData] = await Promise.all([
         habitsRes.json(), todosRes.json(), routinesRes.json(), booksRes.json(),
       ]);
 
-      const todayStr = new Date().toISOString().split('T')[0];
+      // Habits: definitions = habit list, habitDays = daily entries
+      const totalHabits = habitsData.definitions?.length || 0;
+      const todayHabitDay = habitsData.habitDays?.find((day: any) => {
+        const dayDate = new Date(day.date).toISOString().split('T')[0];
+        return dayDate === todayStr;
+      });
+      const habitsCompletedToday = todayHabitDay?.entries?.filter((e: any) => e.completed).length || 0;
+
+      // Todos
+      const totalTodos = todosData.todos?.length || 0;
+      const completedTodos = todosData.todos?.filter((t: any) => t.completed).length || 0;
+
+      // Routines: API already merges completion status into routines array
+      const routines = routinesData.routines || [];
+      const totalRoutines = routines.length;
+      const completedRoutines = routines.filter((r: any) => r.completed).length;
+      const routineProgress = totalRoutines > 0 ? Math.round((completedRoutines / totalRoutines) * 100) : 0;
+
+      // Books
+      const booksReading = booksData.books?.filter((b: any) => b.status === 'reading').length || 0;
+
       setStats({
-        habitsToday: habitsData.entries?.filter((e: any) => e.date === todayStr && e.completed).length || 0,
-        totalHabits: habitsData.habits?.length || 0,
-        completedTodos: todosData.todos?.filter((t: any) => t.completed).length || 0,
-        totalTodos: todosData.todos?.length || 0,
-        routineProgress: routinesData.routines?.length > 0
-          ? Math.round((routinesData.logs?.filter((l: any) => l.completed).length / routinesData.routines.length) * 100)
-          : 0,
-        booksReading: booksData.books?.filter((b: any) => b.status === 'reading').length || 0,
+        habitsToday: habitsCompletedToday,
+        totalHabits,
+        completedTodos,
+        totalTodos,
+        routineProgress,
+        booksReading,
       });
     } catch (error) {
       console.error('Error fetching stats:', error);

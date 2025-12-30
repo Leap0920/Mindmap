@@ -10,13 +10,6 @@ import {
     Hash, ExternalLink, Copy, Share2, Clock
 } from 'lucide-react';
 
-interface QuoteItem {
-    _id: string;
-    text: string;
-    page?: number;
-    chapter?: string;
-    createdAt?: string;
-}
 
 interface BookItem {
     _id: string;
@@ -25,7 +18,6 @@ interface BookItem {
     category: string;
     status: 'wishlist' | 'reading' | 'completed';
     isFavorite: boolean;
-    quotes: QuoteItem[];
     notes: string;
     totalPages: number;
     currentPage: number;
@@ -42,7 +34,6 @@ interface Stats {
     completed: number;
     wishlist: number;
     favorites: number;
-    totalQuotes: number;
 }
 
 const COLUMNS: { key: 'wishlist' | 'reading' | 'completed'; label: string; color: string; bg: string }[] = [
@@ -61,7 +52,6 @@ export default function BooksPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [activeView, setActiveView] = useState<'dashboard' | 'board'>('dashboard');
     const [showDetailsModal, setShowDetailsModal] = useState(false);
-    const [showQuoteModal, setShowQuoteModal] = useState(false);
     const [selectedBook, setSelectedBook] = useState<BookItem | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [showFavorites, setShowFavorites] = useState(false);
@@ -70,10 +60,8 @@ export default function BooksPage() {
     const [quickTitle, setQuickTitle] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
-    const [newQuote, setNewQuote] = useState({ text: '', page: '', chapter: '' });
     const [newTag, setNewTag] = useState('');
     const [localNotes, setLocalNotes] = useState('');
-    const [isSavingQuote, setIsSavingQuote] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
 
     const fetchBooks = useCallback(async (isInitial = false) => {
@@ -104,7 +92,7 @@ export default function BooksPage() {
             if (current) {
                 // Check if there's a meaningful change that wasn't already applied
                 const isDifferent = current.updatedAt !== selectedBook.updatedAt ||
-                    (current.quotes?.length || 0) !== (selectedBook.quotes?.length || 0) ||
+                    (current.tags?.length || 0) !== (selectedBook.tags?.length || 0) ||
                     current.notes !== selectedBook.notes;
 
                 if (isDifferent) {
@@ -234,33 +222,6 @@ export default function BooksPage() {
         }
     };
 
-    const addQuote = async () => {
-        if (!selectedBook || !newQuote.text.trim()) return;
-
-        setIsSavingQuote(true);
-        setSaveError(null);
-        const pageNum = parseInt(newQuote.page);
-        const quoteData = {
-            text: newQuote.text.trim(),
-            page: !isNaN(pageNum) ? pageNum : undefined,
-            chapter: newQuote.chapter?.trim() || undefined
-        };
-
-        const success = await updateBook(selectedBook._id, { quote: quoteData }, 'addQuote');
-
-        if (success) {
-            // Clean up
-            setNewQuote({ text: '', page: '', chapter: '' });
-            setShowQuoteModal(false);
-        }
-        setIsSavingQuote(false);
-    };
-
-    const removeQuote = async (quoteId: string) => {
-        if (!selectedBook) return;
-        if (!confirm('Remove this quote?')) return;
-        await updateBook(selectedBook._id, { quoteId }, 'removeQuote');
-    };
 
     const addTag = async () => {
         if (!selectedBook || !newTag.trim()) return;
@@ -301,7 +262,6 @@ export default function BooksPage() {
     });
 
     const currentReads = books.filter(b => b.status === 'reading').slice(0, 3);
-    const recentQuotes = books.flatMap(b => (b.quotes || []).map(q => ({ ...q, bookTitle: b.title, bookId: b._id }))).sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime()).slice(0, 4);
     const wishlistPeek = books.filter(b => b.status === 'wishlist').slice(0, 5);
 
     if (authStatus === 'loading' || isLoading) {
@@ -359,10 +319,6 @@ export default function BooksPage() {
                                     <span className="unit-value">{stats?.completed || 0}</span>
                                     <span className="unit-label">Completed</span>
                                 </div>
-                                <div className="stat-unit">
-                                    <span className="unit-value">{stats?.totalQuotes || 0}</span>
-                                    <span className="unit-label">Quotes Saved</span>
-                                </div>
                             </div>
                             <div className="progress-mini">
                                 <div className="bar">
@@ -397,26 +353,6 @@ export default function BooksPage() {
                     </div>
 
                     <div className="dashboard-grid-bottom">
-                        <div className="quotes-feed glass">
-                            <div className="section-header">
-                                <h3>Saved Passages</h3>
-                                <Sparkles size={18} className="icon-sparkle" />
-                            </div>
-                            <div className="quotes-stack">
-                                {recentQuotes.length > 0 ? recentQuotes.map((q, i) => (
-                                    <div key={q._id || i} className="dashboard-quote" onClick={() => { const b = books.find(book => book._id === q.bookId); if (b) { setSelectedBook(b); setShowDetailsModal(true); } }}>
-                                        <Quote size={14} className="quote-icon" />
-                                        <p>&quot;{q.text}&quot;</p>
-                                        <span className="book-origin">{q.bookTitle}</span>
-                                    </div>
-                                )) : (
-                                    <div className="empty-state-lite">
-                                        <Quote size={24} color="#222" />
-                                        <p>No quotes saved yet</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
 
                         <div className="wishlist-sidebar glass">
                             <div className="section-header">
@@ -480,12 +416,6 @@ export default function BooksPage() {
                                                 <h3 className="card-title">{book.title}</h3>
                                             </div>
                                             <div className="card-meta">
-                                                {book.quotes?.length > 0 && (
-                                                    <span className="quote-badge">
-                                                        <MessageSquare size={12} />
-                                                        {book.quotes.length}
-                                                    </span>
-                                                )}
                                                 {book.isFavorite && <Heart size={12} fill="#ff4d4d" color="#ff4d4d" />}
                                                 <span className="date-meta">{new Date(book.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                                             </div>
@@ -619,47 +549,6 @@ export default function BooksPage() {
 
                             {/* Right Column: Main Content */}
                             <div className="detail-content">
-                                <div className="tab-section">
-                                    <div className="section-header-modern">
-                                        <div className="header-title-wrap">
-                                            <Quote size={18} />
-                                            <h3>Saved Quotes</h3>
-                                        </div>
-                                        <button className="add-btn-modern" onClick={() => setShowQuoteModal(true)}>
-                                            <Plus size={16} /> New passage
-                                        </button>
-                                    </div>
-
-                                    <div className="content-scrollable">
-                                        {selectedBook.quotes && selectedBook.quotes.length > 0 ? (
-                                            <div className="quotes-grid-modern">
-                                                {selectedBook.quotes.map(q => (
-                                                    <div key={q._id} className="quote-card-modern glass">
-                                                        <Quote size={12} className="quote-tick" />
-                                                        <p className="quote-text">&quot;{q.text}&quot;</p>
-                                                        <div className="quote-meta-modern">
-                                                            <div className="meta-left">
-                                                                {q.page && <span className="p-badge">p. {q.page}</span>}
-                                                                {q.chapter && <span className="c-badge">{q.chapter}</span>}
-                                                            </div>
-                                                            <div className="meta-right">
-                                                                <button className="action-icon-modern" title="Copy"><Copy size={12} /></button>
-                                                                <button className="action-icon-modern" onClick={() => removeQuote(q._id)} title="Delete"><Trash2 size={12} /></button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="empty-content-state">
-                                                <div className="empty-illustration">
-                                                    <Sparkles size={32} color="#1a1a1a" />
-                                                </div>
-                                                <p>No quotes saved yet. Tap &apos;New passage&apos; to start collecting wisdom.</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
 
                                 <div className="notes-section-modern">
                                     <div className="section-header-modern">
@@ -687,60 +576,6 @@ export default function BooksPage() {
                 </div>
             )}
 
-            {/* Add Quote Modal */}
-            {showQuoteModal && (
-                <div className="modal-overlay" onClick={() => setShowQuoteModal(false)}>
-                    <div className="quote-modal glass" onClick={e => e.stopPropagation()}>
-                        <div className="quote-modal-head">
-                            <Quote size={20} className="icon-blue" />
-                            <h3>New Passage</h3>
-                        </div>
-
-                        {saveError && (
-                            <div className="save-error-banner">
-                                {saveError}
-                            </div>
-                        )}
-                        <textarea
-                            className="modern-textarea"
-                            placeholder="Type or paste the quote that inspired you..."
-                            value={newQuote.text}
-                            onChange={e => setNewQuote({ ...newQuote, text: e.target.value })}
-                            rows={6}
-                            autoFocus
-                        />
-                        <div className="quote-fields-modern">
-                            <div className="field">
-                                <label>Page Number</label>
-                                <input
-                                    type="number"
-                                    placeholder="0"
-                                    value={newQuote.page}
-                                    onChange={e => setNewQuote({ ...newQuote, page: e.target.value })}
-                                />
-                            </div>
-                            <div className="field">
-                                <label>Chapter / Section</label>
-                                <input
-                                    placeholder="e.g. Chapter 4"
-                                    value={newQuote.chapter}
-                                    onChange={e => setNewQuote({ ...newQuote, chapter: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                        <div className="quote-modal-footer">
-                            <button className="cancel-btn-modern" onClick={() => setShowQuoteModal(false)}>Discard</button>
-                            <button
-                                className="save-btn-modern"
-                                onClick={addQuote}
-                                disabled={!newQuote.text.trim() || isSavingQuote}
-                            >
-                                {isSavingQuote ? <Loader2 size={16} className="spin" /> : 'Save quote'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             <style jsx>{`
                 .page { 

@@ -33,7 +33,6 @@ export async function GET(request: NextRequest) {
             completed: allBooks.filter((b: any) => b.status === "completed").length,
             wishlist: allBooks.filter((b: any) => b.status === "wishlist").length,
             favorites: allBooks.filter((b: any) => b.isFavorite).length,
-            totalQuotes: allBooks.reduce((acc: number, b: any) => acc + (b.quotes?.length || 0), 0),
         };
 
         return NextResponse.json({ books, stats });
@@ -111,26 +110,7 @@ export async function PATCH(request: NextRequest) {
             }
         }
 
-        if (action === "addQuote") {
-            const quoteData = data.quote;
-            if (!quoteData || !quoteData.text) {
-                return NextResponse.json({ error: "Passage text cannot be empty" }, { status: 400 });
-            }
-
-            console.log(`[PATCH] Adding quote to book ${id}`);
-            book.quotes.push({
-                text: quoteData.text,
-                page: quoteData.page,
-                chapter: quoteData.chapter,
-                createdAt: new Date()
-            });
-            await book.save();
-            console.log("[PATCH] Successfully saved book with new quote");
-        } else if (action === "removeQuote") {
-            console.log(`[PATCH] Removing quote ${data.quoteId} from book ${id}`);
-            book.quotes = book.quotes.filter((q: any) => q._id.toString() !== data.quoteId);
-            await book.save();
-        } else if (action === "toggleFavorite") {
+        if (action === "toggleFavorite") {
             book.isFavorite = !book.isFavorite;
             await book.save();
         } else {
