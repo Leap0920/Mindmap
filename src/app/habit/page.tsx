@@ -221,39 +221,20 @@ export default function HabitPage() {
 
     return (
         <div className="habit-workspace">
-            {/* Top Toolbar */}
-            <header className="workspace-header">
-                <div className="left-controls">
-                    <div className="view-switcher">
-                        <CalendarDays size={14} />
-                        <span>Monthly</span>
-                    </div>
-                </div>
-                <div className="right-controls">
-                    <button className="icon-tool"><Filter size={14} /></button>
-                    <button className="icon-tool"><ArrowUpDown size={14} /></button>
-                    <button className="icon-tool"><Zap size={14} /></button>
-                    <button className="icon-tool"><Search size={14} /></button>
-                    <button className="icon-tool"><Maximize2 size={14} /></button>
-                    <button className="icon-tool"><MoreHorizontal size={14} /></button>
-                    <button className="new-btn" onClick={() => setShowDefModal(true)}>
-                        New <ChevronRight size={14} />
-                    </button>
-                </div>
-            </header>
-
             {/* Calendar Controls */}
             <div className="calendar-nav">
                 <div className="month-display">
                     <h2>{monthName} {currentYear}</h2>
                 </div>
                 <div className="nav-actions">
-                    <button className="manage-btn"><CalIcon size={14} /> Manage definitions</button>
                     <div className="step-controls">
-                        <button onClick={() => changeMonth(-1)}><ChevronLeft size={16} /></button>
+                        <button onClick={() => changeMonth(-1)}><ChevronLeft size={20} /></button>
                         <button className="today-txt" onClick={goToToday}>Today</button>
-                        <button onClick={() => changeMonth(1)}><ChevronRight size={16} /></button>
+                        <button onClick={() => changeMonth(1)}><ChevronRight size={20} /></button>
                     </div>
+                    <button className="new-btn" onClick={() => setShowDefModal(true)}>
+                        New Habit <Plus size={14} />
+                    </button>
                 </div>
             </div>
 
@@ -267,7 +248,12 @@ export default function HabitPage() {
                 <div className="grid-body">
                     {calendarDays.map((day, idx) => {
                         const isToday = day.date.toDateString() === today.toDateString();
-                        const isSelected = selectedDay?.toDateString() === day.date.toDateString();
+
+                        // Check if this day has any completed habits
+                        const habitDay = habitDays.find(hd =>
+                            new Date(hd.date).toDateString() === day.date.toDateString()
+                        );
+                        const hasCompleted = habitDay?.entries.some(e => e.completed) || false;
 
                         return (
                             <div
@@ -279,7 +265,7 @@ export default function HabitPage() {
                                     <span className="day-number">{day.date.getDate()}</span>
                                 </div>
 
-                                {definitions.length > 0 && day.currentMonth && (
+                                {hasCompleted && day.currentMonth && (
                                     <div className="habit-card">
                                         <div className="habit-card-header">
                                             <div className="status-box">
@@ -288,17 +274,14 @@ export default function HabitPage() {
                                             <span className="card-title">Daily Habits</span>
                                         </div>
                                         <div className="habit-mini-list">
-                                            {definitions.slice(0, 3).map(def => {
-                                                const completed = getHabitStatus(day.date, def._id);
-                                                return (
-                                                    <div key={def._id} className="mini-item">
-                                                        <div className={`mini-check ${completed ? 'checked' : ''}`} />
-                                                        <span>{def.name}</span>
-                                                    </div>
-                                                );
-                                            })}
-                                            {definitions.length > 3 && (
-                                                <div className="more-count">+{definitions.length - 3} more</div>
+                                            {habitDay?.entries.filter(e => e.completed).slice(0, 3).map(entry => (
+                                                <div key={entry.habitId} className="mini-item">
+                                                    <div className="mini-check checked" />
+                                                    <span>{entry.name}</span>
+                                                </div>
+                                            ))}
+                                            {(habitDay?.entries.filter(e => e.completed).length || 0) > 3 && (
+                                                <div className="more-count">+{(habitDay?.entries.filter(e => e.completed).length || 0) - 3} more</div>
                                             )}
                                         </div>
                                     </div>
