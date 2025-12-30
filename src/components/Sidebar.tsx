@@ -40,6 +40,7 @@ const navItems = [
     { name: 'Routine', href: '/routine', icon: BookMarked },
     { name: 'Journal', href: '/journal', icon: BookOpen },
     { name: 'Password Vault', href: '/passwords', icon: Key },
+    { name: 'Profile', href: '/profile', icon: User },
 ];
 
 export default function Sidebar() {

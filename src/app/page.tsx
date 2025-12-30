@@ -17,7 +17,11 @@ import {
   TrendingUp,
   BookOpen,
   Bookmark,
-  Sparkles
+  Sparkles,
+  ChevronRight,
+  LayoutDashboard,
+  Activity,
+  History
 } from 'lucide-react';
 
 interface DashStats {
@@ -29,13 +33,18 @@ interface DashStats {
   booksReading: number;
 }
 
+interface UserProfile {
+  profileImage?: string;
+  backgroundImage?: string;
+}
+
 const quickLinks = [
-  { name: 'Habits', href: '/habit', icon: Calendar, desc: 'Track daily habits', color: '#10b981' },
-  { name: 'Tasks', href: '/todo', icon: CheckSquare, desc: 'Manage your todos', color: '#f59e0b' },
-  { name: 'Schedule', href: '/schedule', icon: Clock, desc: 'Class timetable', color: '#8b5cf6' },
-  { name: 'Notes', href: '/notepad', icon: PenTool, desc: 'Quick notes', color: '#ec4899' },
-  { name: 'Books', href: '/books', icon: Book, desc: 'Reading tracker', color: '#06b6d4' },
-  { name: 'Journal', href: '/journal', icon: BookOpen, desc: 'Daily reflections', color: '#f97316' },
+  { name: 'Habits', href: '/habit', icon: Calendar, desc: 'Daily consistency' },
+  { name: 'Tasks', href: '/todo', icon: CheckSquare, desc: 'Action items' },
+  { name: 'Schedule', href: '/schedule', icon: Clock, desc: 'Time management' },
+  { name: 'Notes', href: '/notepad', icon: PenTool, desc: 'Capture thoughts' },
+  { name: 'Books', href: '/books', icon: Book, desc: 'Knowledge base' },
+  { name: 'Journal', href: '/journal', icon: BookOpen, desc: 'Self reflection' },
 ];
 
 export default function Home() {
@@ -43,19 +52,41 @@ export default function Home() {
   const router = useRouter();
   const [stats, setStats] = useState<DashStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  const today = new Date();
-  const greeting = today.getHours() < 12 ? 'Good morning' : today.getHours() < 18 ? 'Good afternoon' : 'Good evening';
-  const formattedDate = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const greeting = currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 18 ? 'Afternoon' : 'Evening';
+  const formattedDate = currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   const userName = session?.user?.name?.split(' ')[0] || session?.user?.email?.split('@')[0] || 'there';
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     } else if (status === 'authenticated') {
       fetchStats();
+      fetchProfile();
     }
   }, [status, router]);
+
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch('/api/profile');
+      if (res.ok) {
+        const data = await res.json();
+        setUserProfile({
+          profileImage: data.user?.profileImage,
+          backgroundImage: data.user?.backgroundImage,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
 
   const fetchStats = async () => {
     setIsLoading(true);
@@ -63,14 +94,14 @@ export default function Home() {
       const [habitsRes, todosRes, routinesRes, booksRes] = await Promise.all([
         fetch('/api/habits'),
         fetch('/api/todos'),
-        fetch(`/api/routines?date=${today.toISOString().split('T')[0]}`),
+        fetch(`/api/routines?date=${new Date().toISOString().split('T')[0]}`),
         fetch('/api/books'),
       ]);
       const [habitsData, todosData, routinesData, booksData] = await Promise.all([
         habitsRes.json(), todosRes.json(), routinesRes.json(), booksRes.json(),
       ]);
 
-      const todayStr = today.toISOString().split('T')[0];
+      const todayStr = new Date().toISOString().split('T')[0];
       setStats({
         habitsToday: habitsData.entries?.filter((e: any) => e.date === todayStr && e.completed).length || 0,
         totalHabits: habitsData.habits?.length || 0,
@@ -91,7 +122,7 @@ export default function Home() {
   if (status === 'loading') {
     return (
       <div className="loading-screen">
-        <Loader2 size={24} className="animate-spin" />
+        <Loader2 size={24} className="animate-spin" strokeWidth={1.5} />
       </div>
     );
   }
@@ -99,236 +130,551 @@ export default function Home() {
   const taskProgress = stats?.totalTodos ? Math.round((stats.completedTodos / stats.totalTodos) * 100) : 0;
 
   return (
-    <div className="dashboard">
-      <header className="hero">
-        <div className="hero-content">
-          <p className="hero-date">{formattedDate}</p>
-          <h1 className="hero-title">{greeting}, {userName}</h1>
-          <p className="hero-subtitle">Here's your productivity overview</p>
-        </div>
-      </header>
+    <div className="dashboard-container">
+      <main className="dashboard-content">
+        {/* Hero Section */}
+        <section className="hero-section">
+          <div className="hero-header">
+            <span className="date-badge">{formattedDate}</span>
+            <div className="greeting-row">
+              <h1 className="main-greeting">Good {greeting}, <span className="user-name">{userName}</span></h1>
+              <Sparkles className="sparkle-icon" size={20} />
+            </div>
+            <p className="hero-intro">Focus on what matters today. Your mind is clear.</p>
+          </div>
 
-      <section className="stats-section">
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon habits"><Zap size={18} /></div>
-            <div className="stat-content">
-              <span className="stat-value">{isLoading ? '—' : `${stats?.habitsToday}/${stats?.totalHabits}`}</span>
-              <span className="stat-label">Habits today</span>
+          <div className="stats-strip">
+            <div className="stat-item">
+              <div className="stat-header">
+                <span className="stat-title">Focus Rate</span>
+                <Activity size={14} className="stat-icon-mini" />
+              </div>
+              <div className="stat-body">
+                <span className="stat-value">{isLoading ? '—' : `${taskProgress}%`}</span>
+                <div className="stat-progress-bg">
+                  <div className="stat-progress-fill" style={{ width: `${taskProgress}%` }} />
+                </div>
+              </div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-header">
+                <span className="stat-title">Habit Flow</span>
+                <Zap size={14} className="stat-icon-mini" />
+              </div>
+              <div className="stat-body">
+                <span className="stat-value">{isLoading ? '—' : `${stats?.habitsToday}/${stats?.totalHabits}`}</span>
+                <span className="stat-sub">daily target</span>
+              </div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-header">
+                <span className="stat-title">Reading</span>
+                <BookOpen size={14} className="stat-icon-mini" />
+              </div>
+              <div className="stat-body">
+                <span className="stat-value">{isLoading ? '—' : stats?.booksReading}</span>
+                <span className="stat-sub">active books</span>
+              </div>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-icon tasks"><Target size={18} /></div>
-            <div className="stat-content">
-              <span className="stat-value">{isLoading ? '—' : `${taskProgress}%`}</span>
-              <span className="stat-label">Tasks complete</span>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon routine"><TrendingUp size={18} /></div>
-            <div className="stat-content">
-              <span className="stat-value">{isLoading ? '—' : `${stats?.routineProgress}%`}</span>
-              <span className="stat-label">Routine done</span>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon books"><Bookmark size={18} /></div>
-            <div className="stat-content">
-              <span className="stat-value">{isLoading ? '—' : stats?.booksReading}</span>
-              <span className="stat-label">Reading now</span>
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="quick-section">
-        <div className="section-header">
-          <h2>Quick Access</h2>
-          <Sparkles size={16} />
-        </div>
-        <div className="quick-grid">
-          {quickLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="quick-card">
-              <div className="quick-icon" style={{ '--accent': link.color } as any}>
-                <link.icon size={20} />
+        <div className="main-grid">
+          {/* Quick Access Grid */}
+          <section className="links-section">
+            <div className="section-title-row">
+              <h2 className="section-label">Command Center</h2>
+              <div className="title-line"></div>
+            </div>
+            <div className="quick-access-grid">
+              {quickLinks.map((link) => (
+                <Link key={link.href} href={link.href} className="modern-quick-card">
+                  <div className="card-inner">
+                    <div className="icon-box">
+                      <link.icon className="card-icon" size={20} strokeWidth={1.5} />
+                    </div>
+                    <div className="card-text">
+                      <span className="card-name">{link.name}</span>
+                      <span className="card-desc">{link.desc}</span>
+                    </div>
+                    <ChevronRight className="card-arrow" size={14} />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          {/* Perspective Section (Right Column) */}
+          <aside className="perspective-aside">
+            <div className="sidebar-card status-card">
+              <div className="sidebar-header">
+                <LayoutDashboard size={14} />
+                <span>Productivity Score</span>
               </div>
-              <div className="quick-content">
-                <span className="quick-name">{link.name}</span>
-                <span className="quick-desc">{link.desc}</span>
+              <div className="score-viz">
+                <svg viewBox="0 0 100 100" className="circular-progress">
+                  <circle className="bg" cx="50" cy="50" r="45" />
+                  <circle
+                    className="fg"
+                    cx="50" cy="50" r="45"
+                    style={{ strokeDasharray: `${(stats?.routineProgress || 0) * 2.82}, 282.6` }}
+                  />
+                </svg>
+                <div className="score-text">
+                  <span className="score-num">{stats?.routineProgress || 0}%</span>
+                  <span className="score-label">Continuity</span>
+                </div>
               </div>
-              <ArrowRight size={16} className="quick-arrow" />
-            </Link>
-          ))}
+            </div>
+
+            <div className="sidebar-card mini-quote">
+              <p>"Simplicity is the ultimate sophistication."</p>
+              <span className="quote-author">— Leonardo da Vinci</span>
+            </div>
+
+            <div className="sidebar-card action-item">
+              <div className="action-header">
+                <History size={14} />
+                <span>Next up</span>
+              </div>
+              <div className="action-content">
+                <span className="action-title">Review Daily Journal</span>
+                <span className="action-time">Available now</span>
+              </div>
+              <Link href="/journal" className="action-btn">
+                Launch <ArrowRight size={14} />
+              </Link>
+            </div>
+          </aside>
         </div>
-      </section>
+      </main>
 
       <style jsx>{`
-        .dashboard {
-          max-width: 960px;
-          margin: 0 auto;
-          padding: 1.5rem;
-          animation: fadeUp 0.4s ease-out;
+        .dashboard-container {
+          min-height: 100vh;
+          background: #050505;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+          background-size: 150px 150px;
+          color: #f5f5f5;
+          font-family: 'Inter', sans-serif;
+          position: relative;
         }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(10px); }
+
+        .dashboard-container::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: #050505;
+          opacity: 0.97;
+          z-index: 0;
+        }
+
+        .dashboard-content {
+          position: relative;
+          z-index: 1;
+          max-width: 1100px;
+          margin: 0 auto;
+          animation: pageReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes pageReveal {
+          from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
 
-        .hero {
-          margin-bottom: 2.5rem;
-          padding: 2rem 0;
-        }
-        .hero-date {
-          font-size: 0.8rem;
-          color: #666;
-          margin-bottom: 0.5rem;
-          font-weight: 500;
-        }
-        .hero-title {
-          font-size: 2rem;
-          font-weight: 700;
-          color: #fff;
-          letter-spacing: -0.03em;
-          margin-bottom: 0.25rem;
-        }
-        .hero-subtitle {
-          font-size: 0.9rem;
-          color: #555;
+        /* Hero Styling */
+        .hero-section {
+          margin-bottom: 3.5rem;
         }
 
-        .stats-section {
+        .hero-header {
           margin-bottom: 2.5rem;
         }
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 1rem;
+
+        .date-badge {
+          display: inline-block;
+          font-size: 0.7rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.15em;
+          color: #666;
+          margin-bottom: 1rem;
         }
-        .stat-card {
-          background: #0a0a0a;
-          border: 1px solid #181818;
-          border-radius: 14px;
-          padding: 1.25rem;
-          display: flex;
-          align-items: flex-start;
-          gap: 0.875rem;
-          transition: border-color 0.2s, transform 0.2s;
-        }
-        .stat-card:hover {
-          border-color: #252525;
-          transform: translateY(-2px);
-        }
-        .stat-icon {
-          width: 38px;
-          height: 38px;
-          border-radius: 10px;
+
+        .greeting-row {
           display: flex;
           align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-        .stat-icon.habits { background: rgba(16, 185, 129, 0.12); color: #10b981; }
-        .stat-icon.tasks { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
-        .stat-icon.routine { background: rgba(139, 92, 246, 0.12); color: #8b5cf6; }
-        .stat-icon.books { background: rgba(6, 182, 212, 0.12); color: #06b6d4; }
-        
-        .stat-content {
-          display: flex;
-          flex-direction: column;
-        }
-        .stat-value {
-          font-size: 1.375rem;
-          font-weight: 700;
-          color: #fff;
-          line-height: 1.2;
-        }
-        .stat-label {
-          font-size: 0.75rem;
-          color: #666;
-          margin-top: 0.125rem;
+          gap: 1rem;
+          margin-bottom: 0.5rem;
         }
 
-        .quick-section {
-          margin-bottom: 2rem;
+        .main-greeting {
+          font-size: 3rem;
+          font-weight: 800;
+          letter-spacing: -0.04em;
+          background: linear-gradient(180deg, #fff 0%, #a1a1a1 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
         }
-        .section-header {
+
+        .user-name {
+          font-weight: 400;
+          opacity: 0.8;
+        }
+
+        .sparkle-icon {
+          color: #444;
+          animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
+
+        .hero-intro {
+          font-size: 1.1rem;
+          color: #888;
+          font-weight: 400;
+        }
+
+        /* Stats Strip */
+        .stats-strip {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 1.5rem;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 20px;
+          padding: 1.5rem;
+        }
+
+        .stat-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .stat-header {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          margin-bottom: 1rem;
-        }
-        .section-header h2 {
-          font-size: 0.875rem;
-          font-weight: 600;
-          color: #888;
-        }
-        .section-header :global(svg) {
-          color: #444;
+          color: #666;
         }
 
-        .quick-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 0.75rem;
+        .stat-title {
+          font-size: 0.75rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
         }
-        .quick-card {
+
+        .stat-body {
           display: flex;
           align-items: center;
           gap: 1rem;
-          padding: 1rem 1.25rem;
+        }
+
+        .stat-value {
+          font-size: 1.75rem;
+          font-weight: 700;
+          color: #fff;
+        }
+
+        .stat-progress-bg {
+          flex: 1;
+          height: 4px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 2px;
+          overflow: hidden;
+        }
+
+        .stat-progress-fill {
+          height: 100%;
+          background: #fff;
+          border-radius: 2px;
+          transition: width 1s ease-out;
+        }
+
+        .stat-sub {
+          font-size: 0.75rem;
+          color: #444;
+        }
+
+        /* Main Grid Layout */
+        .main-grid {
+          display: grid;
+          grid-template-columns: 1fr 320px;
+          gap: 3rem;
+        }
+
+        /* Quick Access */
+        .section-title-row {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          margin-bottom: 2rem;
+        }
+
+        .section-label {
+          font-size: 0.8rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          color: #444;
+          white-space: nowrap;
+        }
+
+        .title-line {
+          height: 1px;
+          flex: 1;
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .quick-access-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1rem;
+        }
+
+        .modern-quick-card {
           background: #0a0a0a;
-          border: 1px solid #181818;
+          border: 1px solid #1a1a1a;
+          border-radius: 16px;
+          padding: 1.25rem;
+          transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .modern-quick-card:hover {
+          background: #0f0f0f;
+          border-color: #333;
+          transform: translateY(-4px);
+        }
+
+        .card-inner {
+          display: flex;
+          align-items: center;
+          gap: 1.25rem;
+        }
+
+        .icon-box {
+          width: 44px;
+          height: 44px;
           border-radius: 12px;
-          transition: all 0.2s ease;
-        }
-        .quick-card:hover {
-          border-color: #252525;
-          background: #0e0e0e;
-        }
-        .quick-card:hover .quick-arrow {
-          opacity: 1;
-          transform: translateX(3px);
-        }
-        .quick-icon {
-          width: 42px;
-          height: 42px;
-          border-radius: 10px;
+          background: rgba(255, 255, 255, 0.03);
           display: flex;
           align-items: center;
           justify-content: center;
-          background: color-mix(in srgb, var(--accent) 12%, transparent);
-          color: var(--accent);
-          flex-shrink: 0;
+          color: #888;
+          transition: all 0.3s ease;
         }
-        .quick-content {
+
+        .modern-quick-card:hover .icon-box {
+          background: #fff;
+          color: #000;
+        }
+
+        .card-text {
           flex: 1;
-          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 0.1rem;
         }
-        .quick-name {
-          display: block;
+
+        .card-name {
+          font-size: 1rem;
           font-weight: 600;
-          font-size: 0.9rem;
           color: #fff;
         }
-        .quick-desc {
-          display: block;
+
+        .card-desc {
           font-size: 0.75rem;
-          color: #666;
-          margin-top: 0.125rem;
+          color: #555;
         }
-        .quick-arrow {
-          color: #444;
+
+        .card-arrow {
+          color: #333;
           opacity: 0;
-          transition: all 0.2s ease;
-          flex-shrink: 0;
+          transform: translateX(-10px);
+          transition: all 0.3s ease;
+        }
+
+        .modern-quick-card:hover .card-arrow {
+          opacity: 1;
+          transform: translateX(0);
+        }
+
+        /* Perspective Aside */
+        .perspective-aside {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .sidebar-card {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 20px;
+          padding: 1.5rem;
+        }
+
+        .sidebar-header {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #666;
+          margin-bottom: 1.5rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .score-viz {
+          display: flex;
+          align-items: center;
+          gap: 1.5rem;
+        }
+
+        .circular-progress {
+          width: 70px;
+          height: 70px;
+          transform: rotate(-90deg);
+        }
+
+        .circular-progress .bg {
+          fill: none;
+          stroke: rgba(255, 255, 255, 0.05);
+          stroke-width: 8;
+        }
+
+        .circular-progress .fg {
+          fill: none;
+          stroke: #fff;
+          stroke-width: 8;
+          stroke-linecap: round;
+          transition: stroke-dasharray 1s ease-out;
+        }
+
+        .score-text {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .score-num {
+          font-size: 1.5rem;
+          font-weight: 700;
+        }
+
+        .score-label {
+          font-size: 0.7rem;
+          color: #555;
+        }
+
+        .mini-quote {
+          background: transparent;
+          border-style: dashed;
+          text-align: center;
+        }
+
+        .mini-quote p {
+          font-size: 0.9rem;
+          font-style: italic;
+          color: #888;
+          margin-bottom: 0.5rem;
+          line-height: 1.5;
+        }
+
+        .quote-author {
+          font-size: 0.7rem;
+          color: #444;
+          font-weight: 600;
+        }
+
+        .action-item {
+          background: #fff;
+          color: #000;
+        }
+
+        .action-header {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.7rem;
+          font-weight: 700;
+          margin-bottom: 1rem;
+          opacity: 0.6;
+        }
+
+        .action-content {
+          margin-bottom: 1.5rem;
+        }
+
+        .action-title {
+          display: block;
+          font-size: 1.1rem;
+          font-weight: 700;
+          margin-bottom: 0.2rem;
+        }
+
+        .action-time {
+          font-size: 0.75rem;
+          opacity: 0.5;
+        }
+
+        .action-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: #000;
+          color: #fff;
+          padding: 0.6rem 1.25rem;
+          border-radius: 10px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          transition: transform 0.2s ease;
+        }
+
+        .action-btn:hover {
+          transform: scale(1.05);
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+          height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #050505;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+          .main-grid {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+          }
+          .main-greeting {
+            font-size: 2.5rem;
+          }
         }
 
         @media (max-width: 768px) {
-          .dashboard { padding: 1rem; }
-          .hero { padding: 1.5rem 0; margin-bottom: 2rem; }
-          .hero-title { font-size: 1.5rem; }
-          .stats-grid { grid-template-columns: repeat(2, 1fr); }
-          .quick-grid { grid-template-columns: 1fr; }
+          .dashboard-container {
+            padding: 1.5rem 1rem;
+          }
+          .stats-strip {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+          }
+          .quick-access-grid {
+            grid-template-columns: 1fr;
+          }
+          .main-greeting {
+            font-size: 2rem;
+          }
         }
       `}</style>
     </div>
