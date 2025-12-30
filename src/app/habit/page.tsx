@@ -268,51 +268,59 @@ export default function HabitPage() {
             )}
 
             <style jsx>{`
-        .habit-page { max-width: 1000px; margin: 0 auto; animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .habit-page { max-width: 960px; margin: 0 auto; padding: 1.5rem; animation: fadeUp 0.4s ease-out; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem; }
-        .breadcrumb { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
-        .page-header h1 { font-size: 2.5rem; font-weight: 700; margin: 0.25rem 0; }
-        .page-header p { color: var(--text-muted); font-size: 0.95rem; }
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
+        .breadcrumb { font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+        .page-header h1 { font-size: 1.75rem; font-weight: 700; margin: 0.25rem 0; color: #fff; letter-spacing: -0.02em; }
+        .page-header p { color: #666; font-size: 0.875rem; }
 
-        .primary-btn { background: #fff; color: #000; padding: 0.7rem 1.25rem; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+        .primary-btn { background: #fff; color: #000; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; transition: all 0.15s ease; }
+        .primary-btn:hover { transform: translateY(-1px); }
         
-        .habit-definitions { display: flex; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap; }
-        .habit-tag { background: #111; border: 1px solid var(--border-main); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.85rem; display: flex; align-items: center; gap: 0.6rem; color: var(--text-secondary); }
-        .habit-tag button { color: var(--text-dim); }
+        .habit-definitions { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .habit-tag { background: #0f0f0f; border: 1px solid #1f1f1f; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem; color: #999; }
+        .habit-tag button { color: #555; padding: 2px; }
         .habit-tag button:hover { color: #fff; }
 
-        .calendar-container { background: #000; border: 1px solid var(--border-main); border-radius: 12px; padding: 1.5rem; }
-        .calendar-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .month-picker { display: flex; align-items: center; gap: 1.25rem; }
-        .nav-btn { color: var(--text-muted); }
-        .current-month { font-weight: 600; font-size: 1rem; }
-        .today-btn { font-size: 0.85rem; color: var(--text-muted); border: 1px solid var(--border-main); padding: 0.4rem 0.75rem; border-radius: 6px; }
+        .calendar-container { background: #0a0a0a; border: 1px solid #181818; border-radius: 14px; padding: 1.25rem; }
+        .calendar-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+        .month-picker { display: flex; align-items: center; gap: 1rem; }
+        .nav-btn { color: #666; padding: 0.25rem; border-radius: 6px; transition: all 0.15s; }
+        .nav-btn:hover { color: #fff; background: #151515; }
+        .current-month { font-weight: 600; font-size: 0.9375rem; color: #fff; }
+        .today-btn { font-size: 0.8rem; color: #666; border: 1px solid #1f1f1f; padding: 0.375rem 0.75rem; border-radius: 6px; transition: all 0.15s; }
+        .today-btn:hover { color: #fff; border-color: #333; }
 
-        .weekday-header { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 1rem; }
-        .weekday { text-align: center; font-size: 0.7rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; }
+        .weekday-header { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 0.75rem; }
+        .weekday { text-align: center; font-size: 0.6875rem; font-weight: 600; color: #555; text-transform: uppercase; }
 
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border-dim); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; }
-        .day-card { background: #000; min-height: 100px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.75rem; }
-        .day-card.is-today { background: #070707; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #151515; border: 1px solid #181818; border-radius: 10px; overflow: hidden; }
+        .day-card { background: #0a0a0a; min-height: 90px; padding: 0.625rem; display: flex; flex-direction: column; gap: 0.5rem; transition: background 0.15s; }
+        .day-card:hover { background: #0e0e0e; }
+        .day-card.is-today { background: #0f0f0f; }
         
         .card-header { display: flex; justify-content: space-between; align-items: center; }
-        .day-num { font-size: 0.9rem; font-weight: 500; color: var(--text-muted); }
-        .is-today .day-num { color: #fff; font-weight: 700; }
-        .flame-icon { color: #fff; opacity: 0.5; }
+        .day-num { font-size: 0.8rem; font-weight: 500; color: #666; }
+        .is-today .day-num { color: #fff; font-weight: 600; }
+        .flame-icon { color: #f59e0b; }
 
-        .habit-dots { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; align-content: flex-start; }
-        .habit-dot { width: 100%; height: 6px; background: #111; border-radius: 2px; cursor: pointer; transition: background 0.2s; }
-        .habit-dot.done { background: #fff; }
+        .habit-dots { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; align-content: flex-start; }
+        .habit-dot { width: 100%; height: 5px; background: #1a1a1a; border-radius: 2px; cursor: pointer; transition: all 0.15s; }
+        .habit-dot:hover { background: #252525; }
+        .habit-dot.done { background: #10b981; }
 
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-box { background: #111; border: 1px solid var(--border-main); padding: 2rem; border-radius: 12px; width: 340px; }
-        .modal-box h3 { margin-bottom: 1.25rem; font-size: 1.1rem; }
-        .modal-box input { width: 100%; background: #000; border: 1px solid var(--border-main); padding: 0.75rem 1rem; border-radius: 8px; color: #fff; margin-bottom: 1.5rem; outline: none; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; }
-        .cancel-btn { color: var(--text-dim); font-size: 0.9rem; }
-        .confirm-btn { background: #fff; color: #000; padding: 0.5rem 1.25rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-box { background: #0f0f0f; border: 1px solid #1f1f1f; padding: 1.5rem; border-radius: 14px; width: 340px; animation: slideUp 0.2s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-box h3 { margin-bottom: 1rem; font-size: 1rem; color: #fff; }
+        .modal-box input { width: 100%; background: #080808; border: 1px solid #1f1f1f; padding: 0.625rem 0.875rem; border-radius: 8px; color: #fff; margin-bottom: 1.25rem; outline: none; font-size: 0.875rem; }
+        .modal-box input:focus { border-color: #333; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; }
+        .cancel-btn { color: #666; font-size: 0.8125rem; padding: 0.5rem 1rem; }
+        .cancel-btn:hover { color: #999; }
+        .confirm-btn { background: #fff; color: #000; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.8125rem; }
       `}</style>
         </div>
     );

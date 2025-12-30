@@ -120,41 +120,41 @@ export default function Sidebar() {
                     .sidebar {
                         width: var(--sidebar-width);
                         height: 100vh;
-                        background: var(--bg-card);
-                        border-right: 1px solid var(--border-default);
+                        background: #080808;
+                        border-right: 1px solid #151515;
                         position: fixed;
                         left: 0;
                         top: 0;
                         z-index: 100;
-                        transition: transform 0.3s var(--ease-out);
+                        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                     }
 
                     .sidebar-container {
                         display: flex;
                         flex-direction: column;
                         height: 100%;
-                        padding: 1.5rem 0.75rem;
+                        padding: 1.25rem 0.75rem;
                     }
 
                     .brand {
                         display: flex;
                         align-items: center;
-                        gap: 0.75rem;
-                        padding: 0 0.75rem;
-                        margin-bottom: 2rem;
+                        gap: 0.625rem;
+                        padding: 0.5rem 0.75rem;
+                        margin-bottom: 1.5rem;
                     }
 
                     .brand-logo {
-                        color: var(--text-primary);
+                        color: #fff;
                         display: flex;
                         align-items: center;
                         justify-content: center;
                     }
 
                     .brand-title {
-                        font-size: 1.25rem;
+                        font-size: 1.125rem;
                         font-weight: 700;
-                        color: var(--text-primary);
+                        color: #fff;
                         letter-spacing: -0.02em;
                     }
 
@@ -162,31 +162,31 @@ export default function Sidebar() {
                         flex: 1;
                         display: flex;
                         flex-direction: column;
-                        gap: 0.25rem;
+                        gap: 2px;
+                        overflow-y: auto;
                     }
 
                     .nav-item {
                         display: flex;
                         align-items: center;
                         gap: 0.75rem;
-                        padding: 0.6rem 0.75rem;
-                        color: var(--text-secondary);
+                        padding: 0.625rem 0.75rem;
+                        color: #777;
                         text-decoration: none;
-                        border-radius: var(--radius-md);
+                        border-radius: 8px;
                         font-weight: 500;
-                        font-size: 0.875rem;
-                        transition: all var(--transition-fast);
+                        font-size: 0.8125rem;
+                        transition: all 0.15s ease;
                     }
 
                     .nav-item:hover {
-                        color: var(--text-primary);
-                        background: var(--accent-muted);
+                        color: #ccc;
+                        background: #111;
                     }
 
                     .nav-item.active {
-                        color: var(--text-primary);
-                        background: var(--bg-elevated);
-                        font-weight: 600;
+                        color: #fff;
+                        background: #141414;
                     }
 
                     .sidebar-footer {
@@ -195,28 +195,34 @@ export default function Sidebar() {
 
                     .divider {
                         height: 1px;
-                        background: var(--border-default);
-                        margin: 1rem 0;
+                        background: #181818;
+                        margin: 0.75rem 0.5rem;
                     }
 
                     .user-profile {
                         display: flex;
                         align-items: center;
-                        gap: 0.75rem;
+                        gap: 0.625rem;
                         padding: 0.5rem 0.75rem;
+                        border-radius: 8px;
+                        transition: background 0.15s ease;
+                    }
+
+                    .user-profile:hover {
+                        background: #0c0c0c;
                     }
 
                     .avatar {
-                        width: 32px;
-                        height: 32px;
-                        background: var(--bg-elevated);
-                        border-radius: 50%;
+                        width: 30px;
+                        height: 30px;
+                        background: #1a1a1a;
+                        border-radius: 8px;
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        color: var(--text-primary);
+                        color: #999;
                         font-weight: 600;
-                        font-size: 0.8rem;
+                        font-size: 0.75rem;
                         flex-shrink: 0;
                     }
 
@@ -228,16 +234,16 @@ export default function Sidebar() {
                     }
 
                     .user-name {
-                        color: var(--text-primary);
+                        color: #ddd;
                         font-size: 0.8rem;
-                        font-weight: 600;
+                        font-weight: 500;
                         white-space: nowrap;
                         overflow: hidden;
                         text-overflow: ellipsis;
                     }
 
                     .user-email {
-                        color: var(--text-dim);
+                        color: #555;
                         font-size: 0.65rem;
                         white-space: nowrap;
                         overflow: hidden;
@@ -245,18 +251,18 @@ export default function Sidebar() {
                     }
 
                     .logout-btn-icon {
-                        color: var(--text-dim);
+                        color: #444;
                         background: none;
                         border: none;
                         cursor: pointer;
                         padding: 0.375rem;
-                        border-radius: var(--radius-sm);
-                        transition: all var(--transition-fast);
+                        border-radius: 6px;
+                        transition: all 0.15s ease;
                     }
 
                     .logout-btn-icon:hover {
-                        color: var(--error);
-                        background: var(--error-muted);
+                        color: #ef4444;
+                        background: rgba(239, 68, 68, 0.1);
                     }
 
                     .mobile-toggle {
@@ -265,12 +271,12 @@ export default function Sidebar() {
                         top: 1rem;
                         right: 1rem;
                         z-index: 1000;
-                        background: var(--bg-card);
-                        color: var(--text-primary);
+                        background: #0a0a0a;
+                        color: #fff;
                         width: 40px;
                         height: 40px;
-                        border-radius: var(--radius-md);
-                        border: 1px solid var(--border-default);
+                        border-radius: 10px;
+                        border: 1px solid #1f1f1f;
                         align-items: center;
                         justify-content: center;
                         cursor: pointer;
@@ -279,8 +285,8 @@ export default function Sidebar() {
                     .mobile-overlay {
                         position: fixed;
                         inset: 0;
-                        background: rgba(0, 0, 0, 0.75);
-                        backdrop-filter: blur(4px);
+                        background: rgba(0, 0, 0, 0.8);
+                        backdrop-filter: blur(8px);
                         z-index: 90;
                     }
 
@@ -292,7 +298,7 @@ export default function Sidebar() {
                         }
                         .sidebar.open {
                             transform: translateX(0);
-                            box-shadow: 20px 0 40px rgba(0,0,0,0.6);
+                            box-shadow: 20px 0 60px rgba(0,0,0,0.5);
                         }
                     }
                 `}</style>

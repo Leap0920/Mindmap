@@ -175,7 +175,7 @@ export default function NotepadPage() {
                 <Loader2 size={32} className="animate-spin" />
                 <span>Loading notes...</span>
                 <style jsx>{`
-          .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 1rem; color: var(--text-muted); }
+          .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 1rem; color: #555; }
           @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
           .animate-spin { animation: spin 1s linear infinite; }
         `}</style>
@@ -337,46 +337,60 @@ export default function NotepadPage() {
             )}
 
             <style jsx>{`
-        .notepad-container { display: flex; height: calc(100vh - 5rem); border: 1px solid var(--border-main); border-radius: 16px; overflow: hidden; background: var(--bg-card); }
-        .notes-sidebar { width: 300px; border-right: 1px solid var(--border-main); display: flex; flex-direction: column; background: var(--bg-main); }
-        .sidebar-header { padding: 1rem; display: flex; gap: 0.75rem; border-bottom: 1px solid var(--border-dim); }
-        .search-box { flex: 1; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background: var(--bg-deep); border-radius: 8px; border: 1px solid var(--border-dim); color: var(--text-muted); }
-        .search-box input { flex: 1; background: none; border: none; color: var(--text-primary); font-size: 0.9rem; }
-        .add-note-btn { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; background: var(--text-primary); color: var(--bg-deep); border-radius: 8px; }
+        .notepad-container { display: flex; height: calc(100vh - 5rem); border: 1px solid #181818; border-radius: 14px; overflow: hidden; background: #0a0a0a; animation: fadeUp 0.4s ease-out; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .notes-sidebar { width: 280px; border-right: 1px solid #181818; display: flex; flex-direction: column; background: #080808; }
+        .sidebar-header { padding: 0.875rem; display: flex; gap: 0.625rem; border-bottom: 1px solid #151515; }
+        .search-box { flex: 1; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background: #0a0a0a; border-radius: 8px; border: 1px solid #1a1a1a; color: #555; }
+        .search-box input { flex: 1; background: none; border: none; color: #fff; font-size: 0.8125rem; outline: none; }
+        .search-box input::placeholder { color: #444; }
+        .add-note-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: #fff; color: #000; border-radius: 8px; transition: all 0.15s; }
+        .add-note-btn:hover { transform: translateY(-1px); }
         .notes-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
-        .note-item { padding: 1rem; border-radius: 10px; cursor: pointer; margin-bottom: 0.5rem; transition: background 0.15s; }
-        .note-item:hover { background: rgba(255,255,255,0.03); }
-        .note-item.active { background: var(--accent-soft); }
+        .note-item { padding: 0.875rem; border-radius: 8px; cursor: pointer; margin-bottom: 0.375rem; transition: all 0.15s; border: 1px solid transparent; }
+        .note-item:hover { background: #0c0c0c; border-color: #1a1a1a; }
+        .note-item.active { background: #111; border-color: #1f1f1f; }
         .note-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem; }
-        .note-item h4 { font-size: 0.95rem; font-weight: 600; }
-        .note-item p { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .note-date { font-size: 0.7rem; color: var(--text-dim); }
-        .empty-notes { text-align: center; padding: 2rem 1rem; color: var(--text-muted); }
-        .empty-notes button { margin-top: 0.5rem; color: var(--text-primary); text-decoration: underline; }
-        .note-editor { flex: 1; display: flex; flex-direction: column; }
-        .editor-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-dim); }
-        .title-input { flex: 1; background: none; border: none; font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
+        .note-item-header svg { color: #555; }
+        .note-item h4 { font-size: 0.875rem; font-weight: 600; color: #eee; }
+        .note-item p { font-size: 0.75rem; color: #555; margin-bottom: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .note-date { font-size: 0.625rem; color: #444; }
+        .empty-notes { text-align: center; padding: 2rem 1rem; color: #555; }
+        .empty-notes button { margin-top: 0.5rem; color: #888; font-size: 0.8125rem; }
+        .empty-notes button:hover { color: #fff; }
+        .note-editor { flex: 1; display: flex; flex-direction: column; background: #0a0a0a; }
+        .editor-header { display: flex; align-items: center; justify-content: space-between; padding: 0.875rem 1.25rem; border-bottom: 1px solid #151515; }
+        .title-input { flex: 1; background: none; border: none; font-size: 1.125rem; font-weight: 600; color: #fff; outline: none; }
+        .title-input::placeholder { color: #333; }
         .editor-actions { display: flex; gap: 0.5rem; }
-        .save-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--text-primary); color: var(--bg-deep); border-radius: 8px; font-weight: 600; font-size: 0.9rem; }
-        .delete-btn { display: flex; padding: 0.5rem; color: var(--text-muted); border-radius: 8px; }
-        .delete-btn:hover { color: #f87171; background: rgba(239,68,68,0.1); }
-        .content-area { flex: 1; padding: 1.5rem; background: none; border: none; resize: none; font-size: 1rem; line-height: 1.8; color: var(--text-primary); font-family: inherit; }
-        .content-area::placeholder { color: var(--text-dim); }
-        .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; color: var(--text-muted); }
-        .empty-state button { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: var(--text-primary); color: var(--bg-deep); border-radius: 10px; font-weight: 600; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-box { background: var(--bg-card); border: 1px solid var(--border-main); border-radius: 16px; padding: 1.5rem; width: 90%; max-width: 400px; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .modal-header h3 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem; }
-        .unlock-text { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; }
+        .save-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.875rem; background: #fff; color: #000; border-radius: 8px; font-weight: 600; font-size: 0.8125rem; transition: all 0.15s; }
+        .save-btn:hover { transform: translateY(-1px); }
+        .delete-btn { display: flex; padding: 0.5rem; color: #555; border-radius: 6px; transition: all 0.15s; }
+        .delete-btn:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+        .content-area { flex: 1; padding: 1.25rem; background: none; border: none; resize: none; font-size: 0.9375rem; line-height: 1.8; color: #ddd; font-family: inherit; outline: none; }
+        .content-area::placeholder { color: #333; }
+        .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; color: #444; }
+        .empty-state button { display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; background: #fff; color: #000; border-radius: 8px; font-weight: 600; font-size: 0.8125rem; transition: all 0.15s; }
+        .empty-state button:hover { transform: translateY(-1px); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-box { background: #0f0f0f; border: 1px solid #1f1f1f; border-radius: 14px; padding: 1.5rem; width: 90%; max-width: 380px; animation: slideUp 0.2s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+        .modal-header h3 { display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; color: #fff; }
+        .modal-header button { color: #555; padding: 0.25rem; }
+        .modal-header button:hover { color: #999; }
+        .unlock-text { color: #666; font-size: 0.8125rem; margin-bottom: 1rem; }
         .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.4rem; }
-        .form-group input[type="text"], .form-group input[type="password"] { width: 100%; padding: 0.75rem 1rem; background: var(--bg-deep); border: 1px solid var(--border-main); border-radius: 10px; color: var(--text-primary); }
-        .checkbox-group label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
-        .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem; }
-        .primary-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; background: var(--text-primary); color: var(--bg-deep); border-radius: 8px; font-weight: 600; }
-        .secondary-btn { padding: 0.6rem 1rem; background: transparent; border: 1px solid var(--border-main); color: var(--text-secondary); border-radius: 8px; }
+        .form-group label { display: block; font-size: 0.6875rem; font-weight: 600; color: #666; margin-bottom: 0.375rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .form-group input[type="text"], .form-group input[type="password"] { width: 100%; padding: 0.625rem 0.875rem; background: #080808; border: 1px solid #1f1f1f; border-radius: 8px; color: #fff; font-size: 0.875rem; outline: none; transition: border-color 0.15s; }
+        .form-group input:focus { border-color: #333; }
+        .checkbox-group label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.8125rem; color: #888; }
+        .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; accent-color: #fff; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 0.625rem; margin-top: 1.25rem; }
+        .primary-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #fff; color: #000; border-radius: 8px; font-weight: 600; font-size: 0.8125rem; transition: all 0.15s; }
+        .primary-btn:hover { transform: translateY(-1px); }
+        .secondary-btn { padding: 0.5rem 1rem; background: transparent; border: 1px solid #1f1f1f; color: #777; border-radius: 8px; font-size: 0.8125rem; transition: all 0.15s; }
+        .secondary-btn:hover { border-color: #333; color: #999; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
         @media (max-width: 768px) { .notes-sidebar { width: 100%; position: absolute; inset: 0; z-index: 10; } .notepad-container { position: relative; } }

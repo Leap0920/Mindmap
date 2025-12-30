@@ -94,7 +94,7 @@ export default function LoginPage() {
         .login-screen {
           position: fixed;
           inset: 0;
-          background: var(--bg-deep);
+          background: #050505;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -103,33 +103,33 @@ export default function LoginPage() {
 
         .login-content {
           width: 100%;
-          max-width: 380px;
+          max-width: 360px;
           padding: 1.5rem;
         }
 
         .login-box {
-          background: var(--bg-card);
-          border: 1px solid var(--border-default);
+          background: #0a0a0a;
+          border: 1px solid #181818;
           padding: 2.5rem 2rem;
-          border-radius: var(--radius-xl);
+          border-radius: 16px;
         }
 
         .login-header {
           text-align: center;
-          margin-bottom: 2.5rem;
+          margin-bottom: 2rem;
         }
 
         .login-header h1 {
-          font-size: 1.75rem;
+          font-size: 1.5rem;
           font-weight: 700;
           letter-spacing: -0.03em;
           margin-bottom: 0.5rem;
-          color: var(--text-primary);
+          color: #fff;
         }
 
         .login-header p {
-          color: var(--text-muted);
-          font-size: 0.85rem;
+          color: #666;
+          font-size: 0.875rem;
         }
 
         .error-banner {
@@ -137,61 +137,61 @@ export default function LoginPage() {
           align-items: center;
           gap: 0.5rem;
           padding: 0.75rem 1rem;
-          background: var(--error-muted);
+          background: rgba(239, 68, 68, 0.1);
           border: 1px solid rgba(239, 68, 68, 0.2);
-          border-radius: var(--radius-md);
-          color: var(--error);
+          border-radius: 8px;
+          color: #ef4444;
           font-size: 0.8rem;
-          margin-bottom: 1.5rem;
+          margin-bottom: 1.25rem;
         }
 
         .login-form {
           display: flex;
           flex-direction: column;
-          gap: 1.25rem;
+          gap: 1rem;
         }
 
         .field {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
+          gap: 0.375rem;
         }
 
         .field label {
           font-size: 0.75rem;
           font-weight: 500;
-          color: var(--text-secondary);
+          color: #888;
         }
 
         .field input {
-          background: var(--bg-deep);
-          border: 1px solid var(--border-default);
-          padding: 0.75rem 1rem;
-          border-radius: var(--radius-md);
-          color: var(--text-primary);
-          font-size: 0.9rem;
+          background: #050505;
+          border: 1px solid #1f1f1f;
+          padding: 0.75rem 0.875rem;
+          border-radius: 8px;
+          color: #fff;
+          font-size: 0.875rem;
           outline: none;
-          transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+          transition: border-color 0.15s, box-shadow 0.15s;
         }
 
         .field input:focus {
-          border-color: var(--border-strong);
-          box-shadow: 0 0 0 3px var(--accent-muted);
+          border-color: #333;
+          box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
         }
 
         .field input::placeholder {
-          color: var(--text-dim);
+          color: #444;
         }
 
         .login-btn {
-          background: var(--text-primary);
-          color: var(--bg-deep);
-          padding: 0.875rem;
-          border-radius: var(--radius-md);
+          background: #fff;
+          color: #000;
+          padding: 0.75rem;
+          border-radius: 8px;
           font-weight: 600;
           font-size: 0.875rem;
           margin-top: 0.5rem;
-          transition: opacity var(--transition-fast), transform var(--transition-fast);
+          transition: opacity 0.15s, transform 0.15s;
         }
 
         .login-btn:hover:not(:disabled) {
@@ -200,20 +200,20 @@ export default function LoginPage() {
         }
 
         .login-btn:disabled {
-          opacity: 0.7;
+          opacity: 0.5;
           cursor: not-allowed;
         }
 
         .login-footer {
-          margin-top: 2rem;
+          margin-top: 1.5rem;
           text-align: center;
-          font-size: 0.85rem;
-          color: var(--text-muted);
+          font-size: 0.8rem;
+          color: #666;
         }
 
         .login-footer a {
-          color: var(--text-primary);
-          font-weight: 600;
+          color: #fff;
+          font-weight: 500;
         }
 
         .login-footer a:hover {

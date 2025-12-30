@@ -16,8 +16,8 @@ import {
   Target,
   TrendingUp,
   BookOpen,
-  Key,
-  Bookmark
+  Bookmark,
+  Sparkles
 } from 'lucide-react';
 
 interface DashStats {
@@ -30,12 +30,12 @@ interface DashStats {
 }
 
 const quickLinks = [
-  { name: 'Habits', href: '/habit', icon: Calendar, desc: 'Track daily habits' },
-  { name: 'Tasks', href: '/todo', icon: CheckSquare, desc: 'Manage your todos' },
-  { name: 'Schedule', href: '/schedule', icon: Clock, desc: 'School timetable' },
-  { name: 'Notes', href: '/notepad', icon: PenTool, desc: 'Quick notes' },
-  { name: 'Books', href: '/books', icon: Book, desc: 'Reading tracker' },
-  { name: 'Journal', href: '/journal', icon: BookOpen, desc: 'Daily reflections' },
+  { name: 'Habits', href: '/habit', icon: Calendar, desc: 'Track daily habits', color: '#10b981' },
+  { name: 'Tasks', href: '/todo', icon: CheckSquare, desc: 'Manage your todos', color: '#f59e0b' },
+  { name: 'Schedule', href: '/schedule', icon: Clock, desc: 'Class timetable', color: '#8b5cf6' },
+  { name: 'Notes', href: '/notepad', icon: PenTool, desc: 'Quick notes', color: '#ec4899' },
+  { name: 'Books', href: '/books', icon: Book, desc: 'Reading tracker', color: '#06b6d4' },
+  { name: 'Journal', href: '/journal', icon: BookOpen, desc: 'Daily reflections', color: '#f97316' },
 ];
 
 export default function Home() {
@@ -46,7 +46,7 @@ export default function Home() {
 
   const today = new Date();
   const greeting = today.getHours() < 12 ? 'Good morning' : today.getHours() < 18 ? 'Good afternoon' : 'Good evening';
-  const formattedDate = today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const formattedDate = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   const userName = session?.user?.name?.split(' ')[0] || session?.user?.email?.split('@')[0] || 'there';
 
   useEffect(() => {
@@ -99,140 +99,236 @@ export default function Home() {
   const taskProgress = stats?.totalTodos ? Math.round((stats.completedTodos / stats.totalTodos) * 100) : 0;
 
   return (
-    <div className="page animate-slide">
-      <header className="header">
-        <div>
-          <p className="date">{formattedDate}</p>
-          <h1 className="title">{greeting}, {userName}</h1>
+    <div className="dashboard">
+      <header className="hero">
+        <div className="hero-content">
+          <p className="hero-date">{formattedDate}</p>
+          <h1 className="hero-title">{greeting}, {userName}</h1>
+          <p className="hero-subtitle">Here's your productivity overview</p>
         </div>
       </header>
 
-      <section className="metrics">
-        <div className="metric-card">
-          <div className="metric-icon"><Zap size={18} /></div>
-          <div className="metric-data">
-            <span className="metric-value">{isLoading ? '—' : stats?.habitsToday}/{stats?.totalHabits}</span>
-            <span className="metric-label">Habits completed</span>
+      <section className="stats-section">
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-icon habits"><Zap size={18} /></div>
+            <div className="stat-content">
+              <span className="stat-value">{isLoading ? '—' : `${stats?.habitsToday}/${stats?.totalHabits}`}</span>
+              <span className="stat-label">Habits today</span>
+            </div>
           </div>
-        </div>
-        <div className="metric-card">
-          <div className="metric-icon"><Target size={18} /></div>
-          <div className="metric-data">
-            <span className="metric-value">{isLoading ? '—' : `${taskProgress}%`}</span>
-            <span className="metric-label">Tasks done</span>
+          <div className="stat-card">
+            <div className="stat-icon tasks"><Target size={18} /></div>
+            <div className="stat-content">
+              <span className="stat-value">{isLoading ? '—' : `${taskProgress}%`}</span>
+              <span className="stat-label">Tasks complete</span>
+            </div>
           </div>
-        </div>
-        <div className="metric-card">
-          <div className="metric-icon"><TrendingUp size={18} /></div>
-          <div className="metric-data">
-            <span className="metric-value">{isLoading ? '—' : `${stats?.routineProgress}%`}</span>
-            <span className="metric-label">Routine progress</span>
+          <div className="stat-card">
+            <div className="stat-icon routine"><TrendingUp size={18} /></div>
+            <div className="stat-content">
+              <span className="stat-value">{isLoading ? '—' : `${stats?.routineProgress}%`}</span>
+              <span className="stat-label">Routine done</span>
+            </div>
           </div>
-        </div>
-        <div className="metric-card">
-          <div className="metric-icon"><Bookmark size={18} /></div>
-          <div className="metric-data">
-            <span className="metric-value">{isLoading ? '—' : stats?.booksReading}</span>
-            <span className="metric-label">Books reading</span>
+          <div className="stat-card">
+            <div className="stat-icon books"><Bookmark size={18} /></div>
+            <div className="stat-content">
+              <span className="stat-value">{isLoading ? '—' : stats?.booksReading}</span>
+              <span className="stat-label">Reading now</span>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="quick-access">
-        <h2>Quick Access</h2>
-        <div className="links-grid">
+      <section className="quick-section">
+        <div className="section-header">
+          <h2>Quick Access</h2>
+          <Sparkles size={16} />
+        </div>
+        <div className="quick-grid">
           {quickLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="link-card">
-              <div className="link-icon"><link.icon size={20} /></div>
-              <div className="link-info">
-                <span className="link-name">{link.name}</span>
-                <span className="link-desc">{link.desc}</span>
+            <Link key={link.href} href={link.href} className="quick-card">
+              <div className="quick-icon" style={{ '--accent': link.color } as any}>
+                <link.icon size={20} />
               </div>
-              <ArrowRight size={16} className="link-arrow" />
+              <div className="quick-content">
+                <span className="quick-name">{link.name}</span>
+                <span className="quick-desc">{link.desc}</span>
+              </div>
+              <ArrowRight size={16} className="quick-arrow" />
             </Link>
           ))}
         </div>
       </section>
 
       <style jsx>{`
-        .page { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
-        .header { margin-bottom: 2.5rem; }
-        .date { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.25rem; }
-        .title { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; }
-        
-        .metrics {
+        .dashboard {
+          max-width: 960px;
+          margin: 0 auto;
+          padding: 1.5rem;
+          animation: fadeUp 0.4s ease-out;
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero {
+          margin-bottom: 2.5rem;
+          padding: 2rem 0;
+        }
+        .hero-date {
+          font-size: 0.8rem;
+          color: #666;
+          margin-bottom: 0.5rem;
+          font-weight: 500;
+        }
+        .hero-title {
+          font-size: 2rem;
+          font-weight: 700;
+          color: #fff;
+          letter-spacing: -0.03em;
+          margin-bottom: 0.25rem;
+        }
+        .hero-subtitle {
+          font-size: 0.9rem;
+          color: #555;
+        }
+
+        .stats-section {
+          margin-bottom: 2.5rem;
+        }
+        .stats-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
           gap: 1rem;
-          margin-bottom: 3rem;
         }
-        .metric-card {
-          background: var(--bg-card);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-lg);
+        .stat-card {
+          background: #0a0a0a;
+          border: 1px solid #181818;
+          border-radius: 14px;
           padding: 1.25rem;
           display: flex;
           align-items: flex-start;
-          gap: 1rem;
+          gap: 0.875rem;
+          transition: border-color 0.2s, transform 0.2s;
         }
-        .metric-icon {
-          width: 36px;
-          height: 36px;
-          background: var(--accent-muted);
-          border-radius: var(--radius-md);
+        .stat-card:hover {
+          border-color: #252525;
+          transform: translateY(-2px);
+        }
+        .stat-icon {
+          width: 38px;
+          height: 38px;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--text-secondary);
+          flex-shrink: 0;
         }
-        .metric-data { display: flex; flex-direction: column; }
-        .metric-value { font-size: 1.25rem; font-weight: 700; }
-        .metric-label { font-size: 0.75rem; color: var(--text-muted); }
+        .stat-icon.habits { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+        .stat-icon.tasks { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+        .stat-icon.routine { background: rgba(139, 92, 246, 0.12); color: #8b5cf6; }
+        .stat-icon.books { background: rgba(6, 182, 212, 0.12); color: #06b6d4; }
         
-        .quick-access h2 {
-          font-size: 0.9rem;
-          font-weight: 600;
-          color: var(--text-secondary);
+        .stat-content {
+          display: flex;
+          flex-direction: column;
+        }
+        .stat-value {
+          font-size: 1.375rem;
+          font-weight: 700;
+          color: #fff;
+          line-height: 1.2;
+        }
+        .stat-label {
+          font-size: 0.75rem;
+          color: #666;
+          margin-top: 0.125rem;
+        }
+
+        .quick-section {
+          margin-bottom: 2rem;
+        }
+        .section-header {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
           margin-bottom: 1rem;
         }
-        .links-grid {
+        .section-header h2 {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #888;
+        }
+        .section-header :global(svg) {
+          color: #444;
+        }
+
+        .quick-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
           gap: 0.75rem;
         }
-        .link-card {
+        .quick-card {
           display: flex;
           align-items: center;
           gap: 1rem;
           padding: 1rem 1.25rem;
-          background: var(--bg-card);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-lg);
-          transition: all var(--transition-base);
+          background: #0a0a0a;
+          border: 1px solid #181818;
+          border-radius: 12px;
+          transition: all 0.2s ease;
         }
-        .link-card:hover {
-          border-color: var(--border-default);
-          background: var(--bg-elevated);
+        .quick-card:hover {
+          border-color: #252525;
+          background: #0e0e0e;
         }
-        .link-card:hover .link-arrow { opacity: 1; transform: translateX(2px); }
-        .link-icon {
-          width: 40px;
-          height: 40px;
-          background: var(--accent-muted);
-          border-radius: var(--radius-md);
+        .quick-card:hover .quick-arrow {
+          opacity: 1;
+          transform: translateX(3px);
+        }
+        .quick-icon {
+          width: 42px;
+          height: 42px;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--text-secondary);
+          background: color-mix(in srgb, var(--accent) 12%, transparent);
+          color: var(--accent);
+          flex-shrink: 0;
         }
-        .link-info { flex: 1; }
-        .link-name { display: block; font-weight: 600; font-size: 0.9rem; }
-        .link-desc { font-size: 0.75rem; color: var(--text-muted); }
-        .link-arrow { color: var(--text-dim); opacity: 0; transition: all var(--transition-base); }
-        
+        .quick-content {
+          flex: 1;
+          min-width: 0;
+        }
+        .quick-name {
+          display: block;
+          font-weight: 600;
+          font-size: 0.9rem;
+          color: #fff;
+        }
+        .quick-desc {
+          display: block;
+          font-size: 0.75rem;
+          color: #666;
+          margin-top: 0.125rem;
+        }
+        .quick-arrow {
+          color: #444;
+          opacity: 0;
+          transition: all 0.2s ease;
+          flex-shrink: 0;
+        }
+
         @media (max-width: 768px) {
-          .metrics { grid-template-columns: repeat(2, 1fr); }
-          .links-grid { grid-template-columns: 1fr; }
+          .dashboard { padding: 1rem; }
+          .hero { padding: 1.5rem 0; margin-bottom: 2rem; }
+          .hero-title { font-size: 1.5rem; }
+          .stats-grid { grid-template-columns: repeat(2, 1fr); }
+          .quick-grid { grid-template-columns: 1fr; }
         }
       `}</style>
     </div>

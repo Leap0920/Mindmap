@@ -157,7 +157,7 @@ export default function RoutinePage() {
                 <Loader2 size={32} className="animate-spin" />
                 <span>Loading routine...</span>
                 <style jsx>{`
-          .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 1rem; color: var(--text-muted); }
+          .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 1rem; color: #555; }
           @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
           .animate-spin { animation: spin 1s linear infinite; }
         `}</style>
@@ -283,56 +283,68 @@ export default function RoutinePage() {
             )}
 
             <style jsx>{`
-        .routine-page { max-width: 800px; margin: 0 auto; animation: fadeUp 0.5s ease-out; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; flex-wrap: wrap; gap: 1.5rem; }
-        .page-badge { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.1em; margin-bottom: 0.5rem; }
-        .page-header h1 { font-size: 2.5rem; margin-bottom: 0.25rem; }
-        .header-date { font-size: 0.9rem; color: var(--text-muted); }
-        .progress-ring { position: relative; width: 100px; height: 100px; padding: 0; border-radius: 50%; }
+        .routine-page { max-width: 740px; margin: 0 auto; padding: 1.5rem; animation: fadeUp 0.4s ease-out; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1.25rem; }
+        .page-badge { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: #555; letter-spacing: 0.1em; margin-bottom: 0.375rem; }
+        .page-header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; color: #fff; letter-spacing: -0.02em; }
+        .header-date { font-size: 0.8125rem; color: #666; }
+        .progress-ring { position: relative; width: 90px; height: 90px; padding: 0; background: #0a0a0a; border: 1px solid #181818; border-radius: 50%; }
         .ring-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-        .ring-bg { fill: none; stroke: var(--border-dim); stroke-width: 8; }
-        .ring-progress { fill: none; stroke: var(--text-primary); stroke-width: 8; stroke-linecap: round; transition: stroke-dasharray 0.5s ease; }
+        .ring-bg { fill: none; stroke: #1a1a1a; stroke-width: 8; }
+        .ring-progress { fill: none; stroke: #fff; stroke-width: 8; stroke-linecap: round; transition: stroke-dasharray 0.5s ease; }
         .ring-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .ring-percent { font-size: 1.25rem; font-weight: 700; }
-        .ring-label { font-size: 0.7rem; color: var(--text-muted); }
-        .header-actions { display: flex; gap: 0.75rem; }
-        .reset-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; font-size: 0.85rem; color: var(--text-secondary); border-radius: 10px; }
-        .add-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: var(--text-primary); color: var(--bg-deep); font-weight: 600; border-radius: 10px; }
-        .routine-timeline { display: flex; flex-direction: column; gap: 2rem; }
+        .ring-percent { font-size: 1.125rem; font-weight: 700; color: #fff; }
+        .ring-label { font-size: 0.625rem; color: #555; }
+        .header-actions { display: flex; gap: 0.625rem; }
+        .reset-btn { display: flex; align-items: center; gap: 0.375rem; padding: 0.5rem 0.875rem; font-size: 0.8125rem; color: #666; background: #0a0a0a; border: 1px solid #181818; border-radius: 8px; transition: all 0.15s; }
+        .reset-btn:hover { border-color: #252525; color: #999; }
+        .add-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #fff; color: #000; font-weight: 600; border-radius: 8px; font-size: 0.8125rem; transition: all 0.15s; }
+        .add-btn:hover { transform: translateY(-1px); }
+        .routine-timeline { display: flex; flex-direction: column; gap: 1.5rem; }
         .period-section { position: relative; }
-        .period-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; color: var(--accent); }
-        .period-header h2 { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); }
-        .period-count { font-size: 0.75rem; padding: 0.2rem 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px; color: var(--text-muted); }
-        .empty-period { padding: 1.5rem; text-align: center; color: var(--text-dim); font-size: 0.9rem; border: 1px dashed var(--border-dim); border-radius: 12px; }
-        .period-items { display: flex; flex-direction: column; gap: 0.5rem; }
-        .routine-item { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; border-radius: 12px; transition: all 0.2s; }
-        .routine-item.completed { opacity: 0.6; }
-        .routine-item.completed .item-title { text-decoration: line-through; }
-        .check-btn { color: var(--text-dim); }
-        .check-btn .checked { color: #22c55e; }
-        .item-content { flex: 1; display: flex; align-items: center; gap: 1rem; }
-        .item-time { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); min-width: 50px; }
-        .item-title { font-size: 0.95rem; }
-        .delete-btn { color: var(--text-dim); padding: 0.4rem; border-radius: 6px; opacity: 0; transition: opacity 0.2s; }
+        .period-header { display: flex; align-items: center; gap: 0.625rem; margin-bottom: 0.875rem; color: var(--accent); }
+        .period-header svg { color: var(--accent); }
+        .period-header h2 { font-size: 1rem; font-weight: 600; color: #fff; }
+        .period-count { font-size: 0.6875rem; padding: 0.1875rem 0.5rem; background: #111; border-radius: 4px; color: #666; }
+        .empty-period { padding: 1.25rem; text-align: center; color: #444; font-size: 0.8125rem; border: 1px dashed #1f1f1f; border-radius: 10px; }
+        .period-items { display: flex; flex-direction: column; gap: 0.375rem; }
+        .routine-item { display: flex; align-items: center; gap: 0.875rem; padding: 0.875rem 1rem; background: #0a0a0a; border: 1px solid #181818; border-radius: 10px; transition: all 0.15s; }
+        .routine-item:hover { border-color: #252525; background: #0c0c0c; }
+        .routine-item.completed { opacity: 0.5; }
+        .routine-item.completed .item-title { text-decoration: line-through; color: #555; }
+        .check-btn { color: #444; transition: all 0.15s; }
+        .check-btn:hover { color: #666; }
+        .check-btn .checked { color: #10b981; }
+        .item-content { flex: 1; display: flex; align-items: center; gap: 0.875rem; }
+        .item-time { font-size: 0.75rem; font-weight: 600; color: #666; min-width: 48px; background: #111; padding: 0.125rem 0.375rem; border-radius: 4px; text-align: center; }
+        .item-title { font-size: 0.875rem; color: #eee; }
+        .delete-btn { color: #333; padding: 0.375rem; border-radius: 6px; opacity: 0; transition: all 0.15s; }
         .routine-item:hover .delete-btn { opacity: 1; }
-        .delete-btn:hover { color: #f87171; background: rgba(239,68,68,0.1); }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-box { background: var(--bg-card); border: 1px solid var(--border-main); border-radius: 16px; padding: 1.5rem; width: 90%; max-width: 400px; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .modal-header h3 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem; }
-        .form-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
-        .form-group label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); }
-        .form-group input, .form-group select { padding: 0.75rem 1rem; background: var(--bg-deep); border: 1px solid var(--border-main); border-radius: 10px; color: var(--text-primary); }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
-        .primary-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: var(--text-primary); color: var(--bg-deep); font-weight: 600; border-radius: 10px; }
-        .secondary-btn { padding: 0.75rem 1.25rem; background: transparent; border: 1px solid var(--border-main); color: var(--text-secondary); border-radius: 10px; }
+        .delete-btn:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-box { background: #0f0f0f; border: 1px solid #1f1f1f; border-radius: 14px; padding: 1.5rem; width: 90%; max-width: 380px; animation: slideUp 0.2s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+        .modal-header h3 { display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; color: #fff; }
+        .modal-header button { color: #555; padding: 0.25rem; }
+        .modal-header button:hover { color: #999; }
+        .form-group { display: flex; flex-direction: column; gap: 0.375rem; margin-bottom: 0.875rem; }
+        .form-group label { font-size: 0.6875rem; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+        .form-group input, .form-group select { padding: 0.625rem 0.875rem; background: #080808; border: 1px solid #1f1f1f; border-radius: 8px; color: #fff; font-size: 0.875rem; outline: none; transition: border-color 0.15s; }
+        .form-group input:focus, .form-group select:focus { border-color: #333; }
+        .form-group input::placeholder { color: #444; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 0.625rem; margin-top: 1.25rem; }
+        .primary-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #fff; color: #000; font-weight: 600; border-radius: 8px; font-size: 0.8125rem; transition: all 0.15s; }
+        .primary-btn:hover { transform: translateY(-1px); }
+        .secondary-btn { padding: 0.5rem 1rem; background: transparent; border: 1px solid #1f1f1f; color: #777; border-radius: 8px; font-size: 0.8125rem; transition: all 0.15s; }
+        .secondary-btn:hover { border-color: #333; color: #999; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
         @media (max-width: 768px) {
           .page-header { flex-direction: column; align-items: flex-start; }
-          .progress-ring { width: 80px; height: 80px; }
+          .progress-ring { width: 70px; height: 70px; }
         }
       `}</style>
         </div>

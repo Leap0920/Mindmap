@@ -123,7 +123,7 @@ export default function JournalPage() {
                 <Loader2 size={32} className="animate-spin" />
                 <span>Loading journal...</span>
                 <style jsx>{`
-          .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 1rem; color: var(--text-muted); }
+          .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 1rem; color: #555; }
           @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
           .animate-spin { animation: spin 1s linear infinite; }
         `}</style>
@@ -192,36 +192,38 @@ export default function JournalPage() {
             )}
 
             <style jsx>{`
-        .journal-page { max-width: 900px; margin: 0 auto; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .journal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; flex-wrap: wrap; gap: 1rem; }
-        .type-badge { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.1em; margin-bottom: 0.5rem; }
-        .header-left h1 { font-size: 2.5rem; }
-        .date-controller { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-radius: 12px; }
-        .nav-btn { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; color: var(--text-secondary); }
-        .nav-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
-        .current-date { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.9rem; font-weight: 500; cursor: pointer; border-radius: 8px; }
-        .current-date:hover { background: rgba(255,255,255,0.05); }
-        .save-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: var(--text-primary); color: var(--bg-deep); font-weight: 600; border-radius: 10px; }
-        .save-btn:hover:not(:disabled) { transform: translateY(-2px); }
-        .save-btn:disabled { opacity: 0.7; }
-        .loading-editor { display: flex; align-items: center; justify-content: center; min-height: 400px; }
-        .editor-container { padding: 2rem; border-radius: 20px; display: flex; flex-direction: column; min-height: 500px; }
-        .editor-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-dim); }
+        .journal-page { max-width: 820px; margin: 0 auto; padding: 1.5rem; animation: fadeUp 0.4s ease-out; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .journal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+        .type-badge { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; color: #555; letter-spacing: 0.1em; margin-bottom: 0.375rem; }
+        .header-left h1 { font-size: 1.75rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+        .date-controller { display: flex; align-items: center; gap: 0.375rem; padding: 0.375rem; background: #0a0a0a; border: 1px solid #181818; border-radius: 10px; }
+        .nav-btn { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 6px; color: #666; transition: all 0.15s; }
+        .nav-btn:hover { background: #151515; color: #fff; }
+        .current-date { display: flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.75rem; font-size: 0.8125rem; font-weight: 500; cursor: pointer; border-radius: 6px; color: #999; transition: all 0.15s; }
+        .current-date:hover { background: #0f0f0f; color: #fff; }
+        .save-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #fff; color: #000; font-weight: 600; border-radius: 8px; font-size: 0.8125rem; transition: all 0.15s; }
+        .save-btn:hover:not(:disabled) { transform: translateY(-1px); }
+        .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .loading-editor { display: flex; align-items: center; justify-content: center; min-height: 400px; color: #444; }
+        .editor-container { background: #0a0a0a; border: 1px solid #181818; padding: 1.5rem; border-radius: 14px; display: flex; flex-direction: column; min-height: 450px; }
+        .editor-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding-bottom: 0.875rem; border-bottom: 1px solid #151515; }
         .mood-selector { display: flex; align-items: center; gap: 0.5rem; }
-        .mood-selector select { background: var(--bg-deep); border: 1px solid var(--border-main); border-radius: 8px; padding: 0.5rem 1rem; color: var(--text-primary); font-size: 0.9rem; }
-        .word-count { font-size: 0.85rem; color: var(--text-muted); }
-        .journal-field { flex: 1; background: none; border: none; resize: none; font-size: 1.1rem; line-height: 2; color: var(--text-primary); font-family: inherit; }
-        .journal-field::placeholder { color: var(--text-dim); }
-        .editor-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-dim); }
-        .tags { font-size: 0.8rem; color: var(--text-muted); }
-        .auto-save { font-size: 0.75rem; color: var(--text-dim); }
+        .mood-selector select { background: #080808; border: 1px solid #1f1f1f; border-radius: 8px; padding: 0.5rem 0.875rem; color: #fff; font-size: 0.8125rem; outline: none; transition: border-color 0.15s; }
+        .mood-selector select:focus { border-color: #333; }
+        .text-muted { color: #555; }
+        .word-count { font-size: 0.75rem; color: #555; background: #111; padding: 0.25rem 0.625rem; border-radius: 4px; }
+        .journal-field { flex: 1; background: none; border: none; resize: none; font-size: 1rem; line-height: 1.9; color: #eee; font-family: inherit; outline: none; }
+        .journal-field::placeholder { color: #333; }
+        .editor-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; padding-top: 0.875rem; border-top: 1px solid #151515; }
+        .tags { font-size: 0.75rem; color: #444; }
+        .auto-save { font-size: 0.6875rem; color: #444; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
         @media (max-width: 768px) {
           .journal-header { flex-direction: column; align-items: flex-start; }
-          .header-left h1 { font-size: 2rem; }
-          .editor-container { padding: 1.5rem; }
+          .header-left h1 { font-size: 1.5rem; }
+          .editor-container { padding: 1.25rem; }
         }
       `}</style>
         </div>

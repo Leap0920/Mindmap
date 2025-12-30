@@ -119,7 +119,7 @@ export default function PasswordsPage() {
                 <Loader2 size={32} className="animate-spin" />
                 <span>Decrypting vault...</span>
                 <style jsx>{`
-          .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 1rem; color: var(--text-muted); }
+          .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 1rem; color: #555; }
           @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
           .animate-spin { animation: spin 1s linear infinite; }
         `}</style>
@@ -287,52 +287,64 @@ export default function PasswordsPage() {
             )}
 
             <style jsx>{`
-        .vault-page { max-width: 1000px; margin: 0 auto; animation: fadeIn 0.5s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; filter: blur(10px); } to { opacity: 1; filter: blur(0); } }
-        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; }
-        .security-badge { display: flex; align-items: center; gap: 0.5rem; font-size: 0.7rem; font-weight: 700; color: #4ade80; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
-        .page-header h1 { font-size: 2.5rem; margin-bottom: 0.25rem; }
-        .page-header p { color: var(--text-muted); }
-        .primary-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: var(--text-primary); color: var(--bg-deep); font-weight: 600; border-radius: 10px; }
-        .secondary-btn { padding: 0.75rem 1.25rem; background: transparent; border: 1px solid var(--border-main); color: var(--text-secondary); border-radius: 10px; }
-        .vault-container { padding: 1.5rem; border-radius: 16px; }
-        .vault-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-dim); }
-        .search-box { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 1rem; background: var(--bg-deep); border: 1px solid var(--border-main); border-radius: 10px; flex: 1; max-width: 300px; }
-        .search-box input { flex: 1; background: none; border: none; color: var(--text-primary); }
-        .vault-stats { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); }
-        .empty-vault { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; color: var(--text-muted); gap: 1rem; }
-        .empty-vault button { color: var(--text-primary); text-decoration: underline; }
-        .vault-list { display: flex; flex-direction: column; gap: 0.5rem; }
-        .vault-row { display: grid; grid-template-columns: 1.5fr 1fr 1.5fr auto; align-items: center; gap: 1rem; padding: 1rem 1.25rem; background: var(--bg-deep); border-radius: 12px; border: 1px solid var(--border-dim); }
-        .vault-row:hover { border-color: var(--border-main); }
-        .identity-cell { display: flex; align-items: center; gap: 0.75rem; }
-        .site-avatar { width: 40px; height: 40px; background: var(--bg-card); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
+        .vault-page { max-width: 960px; margin: 0 auto; padding: 1.5rem; animation: fadeUp 0.4s ease-out; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
+        .security-badge { display: flex; align-items: center; gap: 0.375rem; font-size: 0.625rem; font-weight: 600; color: #10b981; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.375rem; }
+        .page-header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; color: #fff; letter-spacing: -0.02em; }
+        .page-header p { color: #666; font-size: 0.875rem; }
+        .primary-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #fff; color: #000; font-weight: 600; border-radius: 8px; font-size: 0.8125rem; transition: all 0.15s; }
+        .primary-btn:hover { transform: translateY(-1px); }
+        .secondary-btn { padding: 0.5rem 1rem; background: transparent; border: 1px solid #1f1f1f; color: #777; border-radius: 8px; font-size: 0.8125rem; transition: all 0.15s; }
+        .secondary-btn:hover { border-color: #333; color: #999; }
+        .vault-container { background: #0a0a0a; border: 1px solid #181818; padding: 1.25rem; border-radius: 14px; }
+        .vault-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding-bottom: 0.875rem; border-bottom: 1px solid #151515; }
+        .search-box { display: flex; align-items: center; gap: 0.625rem; padding: 0.5rem 0.875rem; background: #080808; border: 1px solid #1f1f1f; border-radius: 8px; flex: 1; max-width: 280px; }
+        .search-box svg { color: #555; }
+        .search-box input { flex: 1; background: none; border: none; color: #fff; font-size: 0.8125rem; outline: none; }
+        .search-box input::placeholder { color: #444; }
+        .vault-stats { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: #555; }
+        .empty-vault { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1.5rem; color: #444; gap: 0.875rem; }
+        .empty-vault svg { color: #333; }
+        .empty-vault button { color: #888; font-size: 0.8125rem; }
+        .empty-vault button:hover { color: #fff; }
+        .vault-list { display: flex; flex-direction: column; gap: 0.375rem; }
+        .vault-row { display: grid; grid-template-columns: 1.5fr 1fr 1.5fr auto; align-items: center; gap: 0.875rem; padding: 0.875rem 1rem; background: #080808; border-radius: 10px; border: 1px solid #151515; transition: all 0.15s; }
+        .vault-row:hover { border-color: #1f1f1f; background: #0a0a0a; }
+        .identity-cell { display: flex; align-items: center; gap: 0.625rem; }
+        .site-avatar { width: 36px; height: 36px; background: #111; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #555; }
         .site-details { display: flex; flex-direction: column; }
-        .site-name { font-weight: 600; font-size: 0.95rem; }
-        .site-url { font-size: 0.75rem; color: var(--text-dim); }
-        .account-cell { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--text-secondary); }
-        .copy-btn { padding: 0.25rem; color: var(--text-dim); border-radius: 4px; }
-        .copy-btn:hover, .copy-btn.copied { color: var(--text-primary); }
+        .site-name { font-weight: 600; font-size: 0.875rem; color: #eee; }
+        .site-url { font-size: 0.6875rem; color: #444; }
+        .account-cell { display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: #888; }
+        .account-cell svg { color: #444; }
+        .copy-btn { padding: 0.25rem; color: #444; border-radius: 4px; transition: all 0.15s; }
+        .copy-btn:hover, .copy-btn.copied { color: #fff; }
         .credential-cell { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
-        .password-display { font-family: monospace; font-size: 0.9rem; color: var(--text-muted); }
+        .password-display { font-family: monospace; font-size: 0.8125rem; color: #666; }
         .pass-actions { display: flex; gap: 0.25rem; }
-        .pass-actions button { padding: 0.4rem; color: var(--text-dim); border-radius: 6px; }
-        .pass-actions button:hover, .pass-actions button.copied { color: var(--text-primary); background: rgba(255,255,255,0.05); }
-        .delete-btn { padding: 0.5rem; color: var(--text-dim); border-radius: 8px; }
-        .delete-btn:hover { color: #f87171; background: rgba(239,68,68,0.1); }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-box { background: var(--bg-card); border: 1px solid var(--border-main); border-radius: 16px; padding: 1.5rem; width: 90%; max-width: 480px; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .modal-header h3 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem; }
-        .form-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
-        .form-group label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); }
-        .form-group input, .form-group select { padding: 0.75rem 1rem; background: var(--bg-deep); border: 1px solid var(--border-main); border-radius: 10px; color: var(--text-primary); }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
+        .pass-actions button { padding: 0.375rem; color: #444; border-radius: 6px; transition: all 0.15s; }
+        .pass-actions button:hover, .pass-actions button.copied { color: #fff; background: #151515; }
+        .delete-btn { padding: 0.375rem; color: #333; border-radius: 6px; transition: all 0.15s; }
+        .delete-btn:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-box { background: #0f0f0f; border: 1px solid #1f1f1f; border-radius: 14px; padding: 1.5rem; width: 90%; max-width: 440px; animation: slideUp 0.2s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+        .modal-header h3 { display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; color: #fff; }
+        .modal-header button { color: #555; padding: 0.25rem; }
+        .modal-header button:hover { color: #999; }
+        .form-group { display: flex; flex-direction: column; gap: 0.375rem; margin-bottom: 0.875rem; }
+        .form-group label { font-size: 0.6875rem; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+        .form-group input, .form-group select { padding: 0.625rem 0.875rem; background: #080808; border: 1px solid #1f1f1f; border-radius: 8px; color: #fff; font-size: 0.875rem; outline: none; transition: border-color 0.15s; }
+        .form-group input:focus, .form-group select:focus { border-color: #333; }
+        .form-group input::placeholder { color: #444; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 0.625rem; margin-top: 1.25rem; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
         @media (max-width: 768px) {
-          .vault-row { grid-template-columns: 1fr; gap: 0.75rem; }
+          .vault-row { grid-template-columns: 1fr; gap: 0.625rem; }
           .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
         }
       `}</style>
