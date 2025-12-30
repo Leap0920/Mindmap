@@ -48,19 +48,23 @@ export default function TodoPage() {
         if (!session) return;
         setIsLoading(true);
         try {
-            const res = await fetch('/api/todos');
-            const data = await res.json();
-            const fetchedTodos = data.todos || [];
-            setTodos(fetchedTodos);
+            const [todosRes, categoriesRes] = await Promise.all([
+                fetch('/api/todos'),
+                fetch('/api/categories?type=todo')
+            ]);
 
-            // Extract unique categories from todos and add to categories list if not already there
-            const uniqueCats = Array.from(new Set(fetchedTodos.map((t: Todo) => t.category))) as string[];
-            setCategories(prev => {
-                const combined = Array.from(new Set([...prev, ...uniqueCats]));
-                return combined;
-            });
+            const todosData = await todosRes.json();
+            const categoriesData = await categoriesRes.json();
+
+            setTodos(todosData.todos || []);
+
+            if (categoriesData.categories && categoriesData.categories.length > 0) {
+                setCategories(categoriesData.categories.map((c: any) => c.name));
+            } else {
+                setCategories(INITIAL_CATEGORIES);
+            }
         } catch (error) {
-            console.error('Error fetching todos:', error);
+            console.error('Error fetching data:', error);
         } finally {
             setIsLoading(false);
         }
@@ -136,11 +140,21 @@ export default function TodoPage() {
         }
     };
 
-    const addCategory = () => {
-        if (newCategoryName.trim() && !categories.includes(newCategoryName.trim())) {
-            setCategories(prev => [...prev, newCategoryName.trim()]);
-            setNewCategoryName('');
-            setShowCategoryInput(false);
+    const addCategory = async () => {
+        if (!newCategoryName.trim()) return;
+        try {
+            const res = await fetch('/api/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newCategoryName.trim(), type: 'todo' }),
+            });
+            if (res.ok) {
+                setCategories(prev => [...prev, newCategoryName.trim()]);
+                setNewCategoryName('');
+                setShowCategoryInput(false);
+            }
+        } catch (err) {
+            console.error('Add category error:', err);
         }
     };
 
@@ -156,10 +170,10 @@ export default function TodoPage() {
         }
 
         try {
-            const res = await fetch('/api/todos', {
+            const res = await fetch('/api/categories', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'renameCategory', oldName, newName: tempCatName.trim() }),
+                body: JSON.stringify({ oldName, name: tempCatName.trim() }),
             });
 
             if (res.ok) {
@@ -178,10 +192,10 @@ export default function TodoPage() {
         if (!confirm(`Delete "${catName}"? Todos will be moved to General.`)) return;
 
         try {
-            const res = await fetch('/api/todos', {
-                method: 'PATCH',
+            const res = await fetch('/api/categories', {
+                method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'deleteCategory', oldName: catName }),
+                body: JSON.stringify({ name: catName }),
             });
 
             if (res.ok) {
@@ -224,23 +238,42 @@ export default function TodoPage() {
         }
     };
 
-    const addMockAttachment = async (type: 'image' | 'file') => {
-        if (!editingTodo) return;
-        const newAttachment = type === 'image'
-            ? { name: 'Dashboard_Mockup.png', url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80', fileType: 'image/png' }
-            : { name: 'Project_Requirements.pdf', url: '#', fileType: 'application/pdf' };
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !editingTodo) return;
 
-        const updatedAttachments = [...(editingTodo.attachments || []), newAttachment];
-        const res = await fetch('/api/todos', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: editingTodo._id, attachments: updatedAttachments }),
-        });
+        const formData = new FormData();
+        formData.append('file', file);
 
-        if (res.ok) {
-            const data = await res.json();
-            setTodos(prev => prev.map(t => t._id === editingTodo._id ? data.todo : t));
-            setEditingTodo(data.todo);
+        try {
+            const uploadRes = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (uploadRes.ok) {
+                const uploadData = await uploadRes.json();
+                const newAttachment = {
+                    name: uploadData.name,
+                    url: uploadData.url,
+                    fileType: uploadData.fileType
+                };
+
+                const updatedAttachments = [...(editingTodo.attachments || []), newAttachment];
+                const updateTodoRes = await fetch('/api/todos', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: editingTodo._id, attachments: updatedAttachments }),
+                });
+
+                if (updateTodoRes.ok) {
+                    const data = await updateTodoRes.json();
+                    setTodos(prev => prev.map(t => t._id === editingTodo._id ? data.todo : t));
+                    setEditingTodo(data.todo);
+                }
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
         }
     };
 
@@ -266,15 +299,17 @@ export default function TodoPage() {
     return (
         <div className="todo-page">
             <header className="page-header">
-                <div className="title-area">
-                    <span className="breadcrumb">Workspace / Focus</span>
-                    <h1>Tasks</h1>
-                    <p>{todos.filter(t => !t.completed).length} pending actions.</p>
+                <span className="breadcrumb">System / Core / Tasks</span>
+                <div className="header-main">
+                    <div>
+                        <h1>Action Center</h1>
+                        <p>Coordinate your objectives and systems.</p>
+                    </div>
+                    <button className="add-btn" onClick={handleOpenAddModal}>
+                        <Plus size={20} strokeWidth={3} />
+                        <span>Commit Task</span>
+                    </button>
                 </div>
-                <button className="add-btn" onClick={handleOpenAddModal}>
-                    <Plus size={18} />
-                    <span>Next Task</span>
-                </button>
             </header>
 
             <div className="main-layout">
@@ -364,30 +399,38 @@ export default function TodoPage() {
                                     className={`todo-item ${todo.completed ? 'done' : ''} ${selectedTodoId === todo._id ? 'selected' : ''}`}
                                     onClick={() => openDetails(todo)}
                                 >
-                                    <button className="check-btn" onClick={(e) => { e.stopPropagation(); toggleTodo(todo._id, todo.completed); }}>
-                                        {todo.completed ? <CheckCircle2 size={20} /> : <Circle size={20} />}
-                                    </button>
+                                    <div className="item-status">
+                                        <button className="check-btn" onClick={(e) => { e.stopPropagation(); toggleTodo(todo._id, todo.completed); }}>
+                                            {todo.completed ? <CheckCircle2 size={24} strokeWidth={2.5} /> : <Circle size={24} strokeWidth={2} />}
+                                        </button>
+                                    </div>
 
                                     <div className="todo-body">
                                         <h4>{todo.task}</h4>
                                         <div className="tags">
-                                            <span className="tag">{todo.category}</span>
-                                            <span className={`tag priority ${todo.priority.toLowerCase()}`}>{todo.priority}</span>
+                                            <div className="tag-group">
+                                                <span className="tag project">{todo.category}</span>
+                                                <span className={`tag priority ${todo.priority.toLowerCase()}`}>{todo.priority}</span>
+                                            </div>
                                             {todo.dueDate && (
-                                                <span className="tag">
-                                                    <Calendar size={10} /> {new Date(todo.dueDate).toLocaleDateString()}
+                                                <span className="tag date">
+                                                    <Calendar size={12} strokeWidth={2.5} />
+                                                    {new Date(todo.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                                 </span>
                                             )}
-                                            {todo.description && <span className="tag-icon"><FileText size={10} /></span>}
-                                            {todo.attachments && todo.attachments.length > 0 && <span className="tag-icon"><Paperclip size={10} /></span>}
                                         </div>
+                                    </div>
+
+                                    <div className="item-indicators">
+                                        {todo.description && <FileText size={14} className="indicator-icon" />}
+                                        {todo.attachments && todo.attachments.length > 0 && <Paperclip size={14} className="indicator-icon" />}
                                     </div>
 
                                     <div className="actions">
                                         <button className="delete-btn" onClick={(e) => { e.stopPropagation(); deleteTodo(todo._id); }}>
-                                            <Trash2 size={16} />
+                                            <Trash2 size={18} />
                                         </button>
-                                        <ChevronRight size={16} className="arrow-icon" />
+                                        <ChevronRight size={20} className="arrow-icon" />
                                     </div>
                                 </div>
                             ))}
@@ -479,10 +522,13 @@ export default function TodoPage() {
                                 <div className="section-header">
                                     <label className="section-label">Attachments</label>
                                     <div className="attachment-actions">
-                                        <button className="add-attachment" onClick={() => addMockAttachment('image')} title="Add Image">
-                                            <ImageIcon size={14} />
-                                        </button>
-                                        <button className="add-attachment" onClick={() => addMockAttachment('file')} title="Add File">
+                                        <input
+                                            type="file"
+                                            id="file-upload"
+                                            style={{ display: 'none' }}
+                                            onChange={handleFileUpload}
+                                        />
+                                        <button className="add-attachment" onClick={() => document.getElementById('file-upload')?.click()} title="Add Attachment">
                                             <Paperclip size={14} />
                                         </button>
                                     </div>
@@ -491,15 +537,15 @@ export default function TodoPage() {
                                     {editingTodo.attachments && editingTodo.attachments.length > 0 ? (
                                         editingTodo.attachments.map((file, i) => (
                                             <div key={i} className="attachment-card" onClick={() => file.url !== '#' && window.open(file.url)}>
-                                                {file.fileType.startsWith('image') ? <ImageIcon size={16} /> : <FileText size={16} />}
+                                                {file.fileType?.startsWith('image') ? <ImageIcon size={16} /> : <FileText size={16} />}
                                                 <div className="file-info">
                                                     <span className="file-name">{file.name}</span>
-                                                    <span className="file-size">2.4 MB</span>
+                                                    <span className="file-size">{file.fileType || 'File'}</span>
                                                 </div>
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="attachments-empty" onClick={() => addMockAttachment('image')}>
+                                        <div className="attachments-empty" onClick={() => document.getElementById('file-upload')?.click()}>
                                             <Paperclip size={24} />
                                             <p>No files attached. Click to add.</p>
                                         </div>
@@ -554,174 +600,185 @@ export default function TodoPage() {
             )}
 
             <style jsx>{`
-        .todo-page { max-width: 1000px; margin: 0 auto; padding: 2.5rem 1.5rem; animation: fadeUp 0.4s ease-out; color: #fff; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .todo-page { max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); color: #fff; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; }
-        .breadcrumb { font-size: 0.75rem; color: #444; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; margin-bottom: 0.5rem; display: block; }
-        .page-header h1 { font-size: 2.5rem; font-weight: 800; margin: 0; color: #fff; letter-spacing: -0.04em; }
-        .page-header p { color: #555; font-size: 0.9375rem; margin-top: 0.25rem; font-weight: 500; }
+        .page-header { margin-bottom: 5rem; }
+        .breadcrumb { font-size: 0.7rem; color: #333; text-transform: uppercase; letter-spacing: 0.3em; font-weight: 800; margin-bottom: 1rem; display: block; }
+        .header-main { display: flex; justify-content: space-between; align-items: center; }
+        .page-header h1 { font-size: 3.5rem; font-weight: 900; margin: 0; color: #fff; letter-spacing: -0.05em; line-height: 1; }
+        .page-header p { color: #444; font-size: 1rem; margin-top: 0.75rem; font-weight: 600; }
 
-        .add-btn { background: #fff; color: #000; padding: 0.625rem 1.25rem; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 0.625rem; font-size: 0.875rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(255,255,255,0.1); }
-        .add-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,255,255,0.15); }
-        .add-btn:active { transform: translateY(0); }
+        .add-btn { background: #fff; color: #000; padding: 0.875rem 1.75rem; border-radius: 14px; font-weight: 800; display: flex; align-items: center; gap: 0.75rem; font-size: 0.9375rem; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 10px 30px rgba(255,255,255,0.1); border: none; cursor: pointer; }
+        .add-btn:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 20px 40px rgba(255,255,255,0.15); }
+        .add-btn:active { transform: translateY(-1px); }
 
-        .main-layout { display: grid; grid-template-columns: 220px 1fr; gap: 3rem; }
+        .main-layout { display: grid; grid-template-columns: 260px 1fr; gap: 5rem; }
         
-        .search-box { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1rem; background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 10px; margin-bottom: 2rem; transition: border-color 0.2s; }
-        .search-box:focus-within { border-color: #333; }
-        .search-box input { background: none; border: none; font-size: 0.875rem; color: #fff; outline: none; width: 100%; font-weight: 500; }
-        .search-box input::placeholder { color: #555; }
-        .search-icon { color: #555; }
+        .search-box { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; margin-bottom: 3rem; transition: all 0.3s; }
+        .search-box:focus-within { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .search-box input { background: none; border: none; font-size: 0.9375rem; color: #fff; outline: none; width: 100%; font-weight: 600; }
+        .search-box input::placeholder { color: #222; }
+        .search-icon { color: #222; transition: color 0.3s; }
+        .search-box:focus-within .search-icon { color: #fff; }
 
-        .filter-group label { display: block; font-size: 0.6875rem; color: #666; text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em; margin-bottom: 1rem; }
-        .filter-nav { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 1.5rem; }
-        .filter-item { position: relative; group; display: flex; align-items: center; justify-content: space-between; border-radius: 8px; transition: background 0.2s; }
-        .filter-item:hover { background: #0d0d0d; }
-        .filter-link { flex: 1; text-align: left; padding: 0.625rem 1rem; font-size: 0.875rem; color: #444; transition: all 0.2s; font-weight: 600; border: none; background: none; cursor: pointer; }
+        .filter-group label { display: block; font-size: 0.65rem; color: #444; text-transform: uppercase; font-weight: 900; letter-spacing: 0.2em; margin-bottom: 1.5rem; padding-left: 0.5rem; }
+        .filter-nav { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 2rem; }
+        
+        .filter-item { position: relative; display: flex; align-items: center; justify-content: space-between; border-radius: 12px; transition: all 0.3s; }
+        .filter-item:hover { background: rgba(255,255,255,0.03); }
+        .filter-link { flex: 1; text-align: left; padding: 0.875rem 1rem; font-size: 0.875rem; color: #444; transition: all 0.3s; font-weight: 700; border: none; background: none; cursor: pointer; }
         .filter-link:hover { color: #888; }
-        .filter-link.active { background: #111; color: #fff; border-left: 3px solid #fff; border-radius: 2px 8px 8px 2px; }
+        .filter-link.active { color: #fff; background: rgba(255,255,255,0.05); }
+        .filter-link.active::before { content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; background: #fff; border-radius: 0 4px 4px 0; }
         
-        .filter-actions { display: flex; gap: 0.5rem; opacity: 0; padding-right: 0.75rem; transition: opacity 0.2s; }
+        .filter-actions { display: flex; gap: 0.5rem; opacity: 0; padding-right: 1rem; transition: opacity 0.2s; }
         .filter-item:hover .filter-actions { opacity: 1; }
-        .filter-actions button { color: #333; transition: color 0.2s; }
-        .filter-actions button:hover { color: #fff; }
+        .filter-actions button { color: #222; transition: all 0.2s; background: none; border: none; cursor: pointer; }
+        .filter-actions button:hover { color: #fff; transform: scale(1.2); }
         
-        .cat-rename-input { background: #111; border: 1px solid #333; border-radius: 4px; color: #fff; padding: 2px 6px; font-size: 0.8125rem; font-weight: 600; width: 100%; outline: none; }
+        .cat-rename-input { background: #000; border: 1px solid #222; border-radius: 8px; color: #fff; padding: 6px 10px; font-size: 0.8125rem; font-weight: 700; width: 100%; outline: none; box-shadow: 0 0 20px rgba(255,255,255,0.05); }
 
-        .add-category-section { border-top: 1px solid #111; padding-top: 1.5rem; }
-        .add-cat-btn { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; color: #333; font-weight: 600; padding: 0.5rem 1rem; border-radius: 6px; transition: color 0.2s; }
-        .add-cat-btn:hover { color: #888; }
+        .add-category-section { border-top: 1px solid rgba(255,255,255,0.05); padding-top: 2rem; margin-top: 1rem; }
+        .add-cat-btn { display: flex; align-items: center; gap: 0.75rem; font-size: 0.8125rem; color: #333; font-weight: 800; padding: 0.75rem 1rem; border-radius: 12px; transition: all 0.3s; background: none; border: 1px dashed rgba(255,255,255,0.05); width: 100%; cursor: pointer; }
+        .add-cat-btn:hover { color: #fff; background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.2); }
         
-        .category-input-group { display: flex; flex-direction: column; gap: 0.5rem; }
-        .category-input-group input { background: #0a0a0a; border: 1px solid #1a1a1a; padding: 0.5rem 0.75rem; border-radius: 6px; color: #fff; font-size: 0.8125rem; outline: none; }
-        .cat-btn-group { display: flex; gap: 0.5rem; }
-        .cat-confirm { background: #222; color: #fff; border-radius: 4px; padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 600; }
-        .cat-cancel { color: #444; font-size: 0.75rem; font-weight: 600; }
+        .category-input-group { display: flex; flex-direction: column; gap: 0.75rem; }
+        .category-input-group input { background: #000; border: 1px solid #222; padding: 0.875rem 1rem; border-radius: 12px; color: #fff; font-size: 0.875rem; outline: none; font-weight: 600; }
+        .cat-btn-group { display: flex; gap: 0.75rem; }
+        .cat-confirm { flex: 1; background: #fff; color: #000; border-radius: 10px; padding: 0.625rem; font-size: 0.75rem; font-weight: 800; border: none; cursor: pointer; }
+        .cat-cancel { flex: 1; background: #111; color: #444; border-radius: 10px; padding: 0.625rem; font-size: 0.75rem; font-weight: 800; border: none; cursor: pointer; transition: all 0.2s; }
+        .cat-cancel:hover { color: #fff; }
 
-        .todo-stack { display: flex; flex-direction: column; gap: 0.75rem; }
-        .todo-item { display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem 1.5rem; background: #080808; border: 1px solid #111; border-radius: 12px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
-        .todo-item:hover { border-color: #333; transform: translateX(4px); background: #0a0a0a; }
-        .todo-item.selected { border-color: #666; background: #0c0c0c; }
-        .todo-item.done { opacity: 0.3; }
+        .todo-stack { display: flex; flex-direction: column; gap: 1rem; }
+        .todo-item { display: flex; align-items: center; gap: 1.5rem; padding: 1.75rem 2rem; background: #050505; border: 1px solid #111; border-radius: 24px; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; position: relative; overflow: hidden; }
+        .todo-item:hover { border-color: #333; transform: translateX(8px); background: #080808; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+        .todo-item.selected { border-color: #fff; background: #0c0c0c; box-shadow: 0 0 40px rgba(255,255,255,0.03); }
+        .todo-item.done { opacity: 0.2; transform: scale(0.98); }
 
-        .check-btn { color: #222; transition: all 0.2s; flex-shrink: 0; }
-        .check-btn:hover { color: #fff; transform: scale(1.1); }
+        .check-btn { color: #111; transition: all 0.3s; flex-shrink: 0; background: none; border: none; cursor: pointer; }
+        .check-btn:hover { color: #fff; transform: scale(1.2); }
         .done .check-btn { color: #fff; }
 
         .todo-body { flex: 1; min-width: 0; }
-        .todo-body h4 { font-size: 1.0625rem; font-weight: 600; margin-bottom: 0.5rem; color: #fff; letter-spacing: -0.01em; transition: color 0.2s; }
-        .todo-item:hover h4 { color: #fff; }
-        .done h4 { text-decoration: line-through; color: #444; }
+        .todo-body h4 { font-size: 1.25rem; font-weight: 800; margin-bottom: 0.75rem; color: #fff; letter-spacing: -0.02em; transition: all 0.3s; }
+        .done h4 { text-decoration: line-through; color: #333; }
 
-        .tags { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
-        .tag { font-size: 0.6875rem; color: #555; background: #0d0d0d; border: 1px solid #111; padding: 0.25rem 0.625rem; border-radius: 6px; display: flex; align-items: center; gap: 0.375rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
-        .tag-icon { color: #333; display: flex; align-items: center; }
+        .tags { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+        .tag { font-size: 0.6rem; color: #555; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 0.375rem 0.875rem; border-radius: 100px; display: flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 900; transition: all 0.3s; }
+        .todo-item:hover .tag { border-color: rgba(255,255,255,0.1); color: #888; }
+        .tag-icon { color: #222; display: flex; align-items: center; transition: color 0.3s; }
+        .todo-item:hover .tag-icon { color: #fff; }
         
-        .tag.priority.high { color: #fff; background: #222; border-color: #444; }
-        .tag.priority.medium { color: #888; background: #111; }
-        .tag.priority.low { color: #444; background: #050505; }
+        .tag.priority.high { color: #fff; background: rgba(255,255,255,0.1); border-color: #fff; }
+        .tag.priority.medium { color: #888; }
+        .tag.priority.low { color: #222; }
 
-        .actions { display: flex; align-items: center; gap: 1rem; opacity: 0; transition: all 0.2s; }
+        .actions { display: flex; align-items: center; gap: 1.5rem; opacity: 0; transition: all 0.3s; }
         .todo-item:hover .actions { opacity: 1; }
-        .delete-btn { color: #222; transition: all 0.2s; padding: 0.5rem; border-radius: 8px; }
-        .delete-btn:hover { color: #ff4444; background: rgba(255,68,68,0.1); }
-        .arrow-icon { color: #222; transition: transform 0.2s; }
-        .todo-item:hover .arrow-icon { transform: translateX(2px); color: #fff; }
+        .delete-btn { color: #1a1a1a; transition: all 0.3s; padding: 0.75rem; border-radius: 14px; background: none; border: none; cursor: pointer; }
+        .delete-btn:hover { color: #ff4444; background: rgba(255,68,68,0.05); transform: rotate(15deg); }
+        .arrow-icon { color: #111; transition: all 0.3s; }
+        .todo-item:hover .arrow-icon { transform: translateX(5px); color: #fff; }
 
         .detail-sidebar {
             position: fixed;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            width: 500px;
-            background: #080808;
-            border-left: 1px solid #151515;
-            z-index: 100;
+            top: 1.5rem;
+            right: 1.5rem;
+            bottom: 1.5rem;
+            width: 560px;
+            background: #000;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 32px;
+            z-index: 1000;
             display: flex;
             flex-direction: column;
-            animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: -20px 0 50px rgba(0,0,0,0.5);
+            animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.9), inset 0 0 100px rgba(255,255,255,0.02);
+            backdrop-filter: blur(20px);
         }
+        @keyframes slideIn { from { transform: translateX(100%) scale(0.9); opacity: 0; } to { transform: translateX(0) scale(1); opacity: 1; } }
 
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        .detail-header { display: flex; justify-content: space-between; align-items: center; padding: 2.5rem 3rem; }
+        .close-sidebar { color: #222; transition: all 0.3s; background: rgba(255,255,255,0.02); pading: 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .close-sidebar:hover { color: #fff; background: #111; transform: rotate(90deg); }
+        .detail-delete { color: #222; transition: all 0.3s; background: none; border: none; cursor: pointer; }
+        .detail-delete:hover { color: #ff4444; transform: scale(1.2); }
 
-        .detail-header { display: flex; justify-content: space-between; align-items: center; padding: 32px; }
-        .close-sidebar { color: #666; transition: color 0.2s; cursor: pointer; }
-        .close-sidebar:hover { color: #fff; }
-        .detail-delete { color: #444; transition: color 0.2s; cursor: pointer; }
-        .detail-delete:hover { color: #ff4444; }
-
-        .detail-content { flex: 1; overflow-y: auto; padding: 0 48px 48px; }
+        .detail-content { flex: 1; overflow-y: auto; padding: 0 4rem 4rem; scrollbar-width: none; }
+        .detail-content::-webkit-scrollbar { display: none; }
         
         .detail-title-input {
             width: 100%;
             background: none;
             border: none;
-            font-size: 2.25rem;
-            font-weight: 800;
+            font-size: 2.75rem;
+            font-weight: 900;
             color: #fff;
-            letter-spacing: -0.04em;
-            margin-bottom: 40px;
+            letter-spacing: -0.05em;
+            margin-bottom: 3rem;
             outline: none;
             resize: none;
-            min-height: 2.75rem;
+            min-height: 3.5rem;
+            line-height: 1.1;
         }
+        .detail-title-input::placeholder { color: #111; }
 
-        .detail-meta { display: flex; flex-direction: column; gap: 12px; margin-bottom: 48px; }
-        .meta-row { display: grid; grid-template-columns: 140px 1fr; align-items: center; }
-        .meta-row label { display: flex; align-items: center; gap: 10px; color: #888; font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
-        .meta-row select, .meta-row input { background: none; border: none; color: #fff; font-size: 0.9375rem; font-weight: 600; outline: none; padding: 8px 0; border-bottom: 1px solid transparent; transition: all 0.2s; }
-        .meta-row select:hover, .meta-row input:hover { color: #fff; border-bottom: 1px solid #333; }
-        .meta-row select option { background: #080808; color: #fff; }
+        .detail-meta { display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 4rem; padding: 2rem; background: rgba(255,255,255,0.02); border-radius: 24px; border: 1px solid rgba(255,255,255,0.04); }
+        .meta-row { display: grid; grid-template-columns: 160px 1fr; align-items: center; }
+        .meta-row label { display: flex; align-items: center; gap: 12px; color: #333; font-size: 0.75rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; }
+        .meta-row select, .meta-row input { background: none; border: none; color: #fff; font-size: 1rem; font-weight: 700; outline: none; padding: 8px 0; border-bottom: 1px solid transparent; transition: all 0.3s; cursor: pointer; }
+        .meta-row select:hover, .meta-row input:hover { color: #fff; border-bottom: 1px solid #222; }
+        .meta-row select option { background: #000; color: #fff; }
 
-        .detail-section { margin-bottom: 48px; }
-        .section-label { display: block; font-size: 0.75rem; color: #888; text-transform: uppercase; font-weight: 800; letter-spacing: 0.15em; margin-bottom: 16px; }
-        .description-area { width: 100%; height: 200px; background: #0a0a0a; border: 1px solid #151515; border-radius: 16px; padding: 20px; color: #aaa; font-size: 1rem; line-height: 1.6; outline: none; transition: all 0.2s; resize: none; }
-        .description-area:focus { border-color: #333; background: #0d0d0d; color: #fff; }
+        .detail-section { margin-bottom: 4rem; }
+        .section-label { display: block; font-size: 0.75rem; color: #333; text-transform: uppercase; font-weight: 900; letter-spacing: 0.25em; margin-bottom: 1.5rem; }
+        .description-area { width: 100%; height: 250px; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 24px; padding: 2rem; color: #888; font-size: 1.0625rem; line-height: 1.8; outline: none; transition: all 0.4s; resize: none; font-weight: 500; }
+        .description-area:focus { border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.02); color: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
 
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .attachment-actions { display: flex; gap: 12px; }
-        .add-attachment { color: #333; transition: all 0.2s; background: #0d0d0d; padding: 8px; border-radius: 8px; border: 1px solid #151515; }
-        .add-attachment:hover { color: #fff; border-color: #333; background: #111; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .attachment-actions { display: flex; gap: 1rem; }
+        .add-attachment { color: #222; transition: all 0.3s; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
+        .add-attachment:hover { color: #fff; border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); transform: translateY(-2px); }
 
-        .attachments-grid { display: flex; flex-direction: column; gap: 8px; }
-        .attachment-card { display: flex; align-items: center; gap: 16px; padding: 16px; background: #0a0a0a; border: 1px solid #151515; border-radius: 12px; color: #444; cursor: pointer; transition: all 0.2s; }
-        .attachment-card:hover { border-color: #333; color: #fff; background: #0d0d0d; transform: scale(1.02); }
+        .attachments-grid { display: flex; flex-direction: column; gap: 0.75rem; }
+        .attachment-card { display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem 1.5rem; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 20px; color: #444; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .attachment-card:hover { border-color: rgba(255,255,255,0.1); color: #fff; background: rgba(255,255,255,0.03); transform: scale(1.02) translateX(5px); }
         .file-info { display: flex; flex-direction: column; gap: 2px; }
-        .file-name { font-size: 0.8125rem; font-weight: 700; color: #fff; }
-        .file-size { font-size: 0.6875rem; color: #333; font-weight: 600; }
+        .file-name { font-size: 0.875rem; font-weight: 800; color: #fff; letter-spacing: -0.01em; }
+        .file-size { font-size: 0.7rem; color: #222; font-weight: 700; text-transform: uppercase; }
         
-        .attachments-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px; background: #0a0a0a; border: 1px dashed #151515; border-radius: 20px; color: #222; width: 100%; cursor: pointer; transition: all 0.2s; }
-        .attachments-empty:hover { border-color: #333; color: #444; background: #0d0d0d; }
-        .attachments-empty p { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 12px; }
+        .attachments-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem; background: rgba(255,255,255,0.01); border: 2px dashed rgba(255,255,255,0.03); border-radius: 32px; color: #111; width: 100%; cursor: pointer; transition: all 0.4s; }
+        .attachments-empty:hover { border-color: rgba(255,255,255,0.1); color: #444; background: rgba(255,255,255,0.02); }
+        .attachments-empty p { font-size: 0.75rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; margin-top: 1.25rem; }
 
-        .empty { text-align: center; padding: 6rem 0; color: #222; font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2em; }
+        .empty { text-align: center; padding: 10rem 0; color: #111; font-size: 1.25rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.4em; }
 
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-box { background: #080808; border: 1px solid #151515; padding: 2.5rem; border-radius: 20px; width: 440px; animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        @keyframes modalIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center; z-index: 2000; animation: fadeIn 0.4s ease; }
+        .modal-box { background: #000; border: 1px solid rgba(255,255,255,0.1); padding: 4rem; border-radius: 40px; width: 500px; animation: modalIn 0.6s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 50px 100px rgba(0,0,0,1); }
+        @keyframes modalIn { from { opacity: 0; transform: translateY(40px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; }
-        .modal-header h3 { font-size: 1.25rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
-        .modal-header button { color: #333; transition: color 0.2s; }
-        .modal-header button:hover { color: #fff; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3.5rem; }
+        .modal-header h3 { font-size: 2rem; font-weight: 900; color: #fff; letter-spacing: -0.04em; }
+        .modal-header button { color: #222; transition: all 0.3s; background: none; border: none; cursor: pointer; }
+        .modal-header button:hover { color: #fff; transform: rotate(90deg); }
 
-        .input-field { display: flex; flex-direction: column; gap: 0.625rem; margin-bottom: 1.5rem; }
-        .input-field label { font-size: 0.75rem; color: #888; text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em; }
-        .input-field input, .input-field select { background: #050505; border: 1px solid #151515; padding: 0.875rem 1.125rem; border-radius: 10px; color: #fff; outline: none; font-size: 1rem; transition: all 0.2s; font-weight: 500; }
-        .input-field input:focus, .input-field select:focus { border-color: #333; background: #080808; }
+        .input-field { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; }
+        .input-field label { font-size: 0.75rem; color: #444; text-transform: uppercase; font-weight: 900; letter-spacing: 0.2rem; }
+        .input-field input, .input-field select { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 1.25rem 1.5rem; border-radius: 18px; color: #fff; outline: none; font-size: 1.125rem; transition: all 0.3s; font-weight: 600; }
+        .input-field input:focus, .input-field select:focus { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04); }
         
-        .grid-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .modal-footer { display: flex; justify-content: flex-end; margin-top: 2rem; }
-        .save-btn { background: #fff; color: #000; padding: 0.875rem 2.5rem; border-radius: 10px; font-weight: 800; font-size: 0.9375rem; transition: all 0.2s; box-shadow: 0 4px 12px rgba(255,255,255,0.1); }
-        .save-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,255,255,0.2); }
-        .save-btn:disabled { opacity: 0.5; transform: none; box-shadow: none; }
+        .grid-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .modal-footer { display: flex; justify-content: flex-end; margin-top: 3rem; }
+        .save-btn { background: #fff; color: #000; padding: 1.25rem 3.5rem; border-radius: 18px; font-weight: 900; font-size: 1.125rem; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 10px 40px rgba(255,255,255,0.1); border: none; cursor: pointer; }
+        .save-btn:hover { transform: translateY(-5px); box-shadow: 0 20px 50px rgba(255,255,255,0.2); }
+        .save-btn:disabled { opacity: 0.5; transform: none; box-shadow: none; cursor: not-allowed; }
 
-        @media (max-width: 850px) {
-          .main-layout { grid-template-columns: 1fr; gap: 2rem; }
+        @media (max-width: 1100px) {
+          .main-layout { grid-template-columns: 1fr; gap: 3rem; }
           .filters { display: none; }
-          .page-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+          .header-main { flex-direction: column; align-items: flex-start; gap: 2rem; }
+          .detail-sidebar { width: calc(100% - 3rem); left: 1.5rem; }
         }
       `}</style>
         </div>

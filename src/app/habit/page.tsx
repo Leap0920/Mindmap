@@ -237,9 +237,9 @@ export default function HabitPage() {
                 </div>
                 <div className="nav-actions">
                     <div className="step-controls">
-                        <button onClick={() => changeMonth(-1)}><ChevronLeft size={20} /></button>
+                        <button className="nav-btn" onClick={() => changeMonth(-1)}><ChevronLeft size={20} /></button>
                         <button className="today-txt" onClick={goToToday}>Today</button>
-                        <button onClick={() => changeMonth(1)}><ChevronRight size={20} /></button>
+                        <button className="nav-btn" onClick={() => changeMonth(1)}><ChevronRight size={20} /></button>
                     </div>
                     <button className="new-btn" onClick={() => setShowDefModal(true)}>
                         New Habit <Plus size={14} />
@@ -278,7 +278,7 @@ export default function HabitPage() {
                                     <div className="habit-card">
                                         <div className="habit-card-header">
                                             <div className="status-box">
-                                                <Check size={12} strokeWidth={3} />
+                                                <CheckCircle2 size={12} strokeWidth={3} />
                                             </div>
                                             <span className="card-title">Daily Habits</span>
                                         </div>
@@ -307,46 +307,39 @@ export default function HabitPage() {
             {selectedDay && (
                 <div className="modal-overlay" onClick={() => setSelectedDay(null)}>
                     <div className="detail-modal" onClick={e => e.stopPropagation()}>
-                        <div className="modal-top">
-                            <div className="large-check-icon">
-                                <Check size={32} strokeWidth={3} />
+                        <div className="modal-header">
+                            <div className="status-box" style={{ width: '48px', height: '48px', borderRadius: '16px' }}>
+                                <Check size={24} strokeWidth={3} />
                             </div>
-                            <button className="close-btn" onClick={() => setSelectedDay(null)}><X size={20} /></button>
+                            <button className="close-btn" onClick={() => setSelectedDay(null)}><X size={24} /></button>
                         </div>
 
                         <div className="modal-content">
                             <h1 className="editable-title">Daily Habits</h1>
-
-                            <div className="info-row">
-                                <div className="info-label">
-                                    <CalIcon size={16} />
-                                    <span>Date</span>
-                                </div>
-                                <div className="info-value">
-                                    {selectedDay.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                                </div>
+                            <div style={{ color: '#444', fontSize: '0.875rem', fontWeight: '800', marginBottom: '2.5rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                                {selectedDay.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                             </div>
 
-                            <div className="habit-checklist">
+                            <div className="habit-grid">
                                 {definitions.length === 0 ? (
-                                    <div className="no-habits">
+                                    <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '3rem', color: '#333' }}>
                                         <p>No habits defined yet.</p>
-                                        <button onClick={() => { setShowDefModal(true); setSelectedDay(null); }}>Create your first habit</button>
                                     </div>
                                 ) : (
                                     definitions.map(def => {
                                         const completed = getHabitStatus(selectedDay, def._id);
                                         return (
-                                            <div key={def._id} className="checklist-item">
-                                                <div className="item-label">
-                                                    <CalIcon size={16} className="item-icon" />
-                                                    <span>{def.name}</span>
+                                            <div
+                                                key={def._id}
+                                                className={`entry-card ${completed ? 'completed' : ''}`}
+                                                onClick={() => toggleHabit(selectedDay, def._id, completed)}
+                                            >
+                                                <div className="entry-info">
+                                                    <CheckCircle2 size={18} />
+                                                    <span className="entry-name">{def.name}</span>
                                                 </div>
-                                                <div
-                                                    className={`item-checkbox ${completed ? 'checked' : ''}`}
-                                                    onClick={() => toggleHabit(selectedDay, def._id, completed)}
-                                                >
-                                                    {completed && <Check size={12} strokeWidth={4} />}
+                                                <div className={`mini-check ${completed ? 'checked' : ''}`}>
+                                                    {completed && <Check size={10} strokeWidth={4} />}
                                                 </div>
                                             </div>
                                         );
@@ -361,40 +354,47 @@ export default function HabitPage() {
             {/* New Habit Definition Modal */}
             {showDefModal && (
                 <div className="modal-overlay" onClick={() => { setShowDefModal(false); setEditingDef(null); setNewHabitName(''); }}>
-                    <div className="definition-modal" onClick={e => e.stopPropagation()}>
-                        <h2>{editingDef ? 'Edit Habit' : 'New Habit Definition'}</h2>
-                        <p className="modal-sub">{editingDef ? 'Modify the habit name.' : 'This will add a new habit to your daily list.'}</p>
-                        <input
-                            type="text"
-                            placeholder="What's the habit?"
-                            value={newHabitName}
-                            onChange={e => setNewHabitName(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && saveHabitDefinition()}
-                            autoFocus
-                        />
-                        <div className="modal-actions">
-                            <button className="secondary-btn" onClick={() => { setShowDefModal(false); setEditingDef(null); setNewHabitName(''); }}>Cancel</button>
-                            <button className="primary-btn" onClick={saveHabitDefinition} disabled={isSaving}>
-                                {isSaving ? <Loader2 size={16} className="spinner" /> : (editingDef ? 'Update Habit' : 'Create Habit')}
-                            </button>
+                    <div className="detail-modal" style={{ maxWidth: '440px' }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: '900' }}>{editingDef ? 'Edit Habit' : 'New Habit'}</h2>
+                            <button className="close-btn" onClick={() => { setShowDefModal(false); setEditingDef(null); setNewHabitName(''); }}><X size={20} /></button>
                         </div>
-
-                        {!editingDef && definitions.length > 0 && (
-                            <div className="existing-defs">
-                                <h3>Active Habits</h3>
-                                <div className="def-list">
-                                    {definitions.map(def => (
-                                        <div key={def._id} className="def-item">
-                                            <span>{def.name}</span>
-                                            <div className="def-actions">
-                                                <button onClick={() => { setEditingDef(def); setNewHabitName(def.name); }} title="Edit"><PenTool size={14} /></button>
-                                                <button onClick={() => deleteHabitDefinition(def._id)} title="Delete"><X size={14} /></button>
-                                            </div>
-                                        </div>
-                                    ))}
+                        <div className="modal-content">
+                            <div className="def-management">
+                                <div className="def-input-group">
+                                    <label>Habit Name</label>
+                                    <input
+                                        type="text"
+                                        placeholder="E.g. Morning Meditation"
+                                        value={newHabitName}
+                                        onChange={e => setNewHabitName(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && saveHabitDefinition()}
+                                        autoFocus
+                                    />
                                 </div>
+
+                                <button className="add-def-btn" onClick={saveHabitDefinition} disabled={isSaving}>
+                                    {isSaving ? <Loader2 size={16} className="spinner" /> : (editingDef ? 'Update Habit' : 'Create Habit')}
+                                </button>
+
+                                {!editingDef && definitions.length > 0 && (
+                                    <div className="existing-defs">
+                                        <h3>Active Habits</h3>
+                                        <div className="def-list">
+                                            {definitions.map(def => (
+                                                <div key={def._id} className="def-item">
+                                                    <span>{def.name}</span>
+                                                    <div className="def-actions">
+                                                        <button onClick={() => { setEditingDef(def); setNewHabitName(def.name); }} title="Edit"><PenTool size={14} /></button>
+                                                        <button onClick={() => deleteHabitDefinition(def._id)} title="Delete"><X size={14} /></button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
             )}
@@ -402,448 +402,381 @@ export default function HabitPage() {
             <style jsx>{`
                 .habit-workspace {
                     min-height: 100vh;
-                    background: #080808;
+                    background: #000;
                     color: #fff;
                     display: flex;
                     flex-direction: column;
+                    animation: fadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
                 }
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-                /* Calendar Nav */
                 .calendar-nav {
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    padding: 40px 32px 24px;
-                    background: #080808;
+                    padding: 4rem 3rem 2rem;
+                    background: #000;
                 }
 
                 .month-display h2 {
-                    font-size: 24px;
-                    font-weight: 800;
-                    letter-spacing: -0.03em;
+                    font-size: 2.5rem;
+                    font-weight: 900;
+                    letter-spacing: -0.05em;
+                    color: #fff;
                 }
 
                 .nav-actions {
                     display: flex;
                     align-items: center;
-                    gap: 32px;
+                    gap: 3rem;
                 }
 
                 .step-controls {
                     display: flex;
                     align-items: center;
-                    gap: 16px;
+                    gap: 0.75rem;
+                    background: rgba(255,255,255,0.02);
+                    padding: 0.5rem;
+                    border-radius: 12px;
+                    border: 1px solid rgba(255,255,255,0.05);
                 }
 
-                .step-controls button {
-                    color: #555;
-                    transition: color 0.2s;
+                .nav-btn {
+                    color: #333;
+                    transition: all 0.3s;
+                    padding: 8px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: none;
+                    border: none;
+                    cursor: pointer;
                 }
 
-                .step-controls button:hover {
+                .nav-btn:hover {
                     color: #fff;
+                    background: rgba(255,255,255,0.05);
                 }
 
                 .today-txt {
-                    font-size: 14px;
-                    font-weight: 700;
-                    color: #fff !important;
+                    font-size: 0.7rem;
+                    font-weight: 900;
+                    color: #333 !important;
+                    text-transform: uppercase;
+                    letter-spacing: 0.1em;
+                    margin: 0 0.5rem;
+                    cursor: pointer;
+                    transition: color 0.3s;
                 }
+                .today-txt:hover { color: #fff !important; }
 
                 .new-btn {
                     background: #fff;
                     color: #000;
-                    padding: 10px 24px;
-                    border-radius: 10px;
-                    font-size: 0.8125rem;
-                    font-weight: 800;
+                    padding: 0.875rem 1.75rem;
+                    border-radius: 14px;
+                    font-size: 0.875rem;
+                    font-weight: 900;
                     display: flex;
                     align-items: center;
-                    gap: 8px;
-                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-                    box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+                    gap: 0.75rem;
+                    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                    box-shadow: 0 10px 30px rgba(255,255,255,0.1);
+                    border: none;
+                    cursor: pointer;
                 }
 
                 .new-btn:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 8px 20px rgba(255,255,255,0.2);
+                    transform: translateY(-4px) scale(1.02);
+                    box-shadow: 0 20px 40px rgba(255,255,255,0.2);
                 }
 
-                /* Calendar Grid */
                 .calendar-board {
                     flex: 1;
                     display: flex;
                     flex-direction: column;
-                    padding: 0 32px 32px;
+                    padding: 0 3rem 3rem;
                 }
 
                 .grid-header {
                     display: grid;
                     grid-template-columns: repeat(7, 1fr);
-                    border-bottom: 1px solid #151515;
+                    border-bottom: 1px solid rgba(255,255,255,0.03);
+                    margin-bottom: 1rem;
                 }
 
                 .header-cell {
-                    padding: 12px;
-                    text-align: right;
-                    font-size: 12px;
-                    color: #444;
-                    font-weight: 600;
+                    padding: 1rem;
+                    text-align: center;
+                    font-size: 0.65rem;
+                    color: #222;
+                    font-weight: 900;
                     text-transform: uppercase;
-                    letter-spacing: 0.05em;
+                    letter-spacing: 0.2em;
                 }
 
                 .grid-body {
                     display: grid;
                     grid-template-columns: repeat(7, 1fr);
-                    grid-auto-rows: minmax(160px, 1fr);
-                    border-left: 1px solid #151515;
-                    border-top: 1px solid #151515;
+                    grid-auto-rows: minmax(180px, 1fr);
+                    gap: 1.5rem;
                 }
 
                 .calendar-cell {
-                    border-right: 1px solid #151515;
-                    border-bottom: 1px solid #151515;
-                    padding: 16px;
+                    position: relative;
+                    border-radius: 24px;
+                    padding: 1.5rem;
                     display: flex;
                     flex-direction: column;
-                    gap: 12px;
+                    gap: 1.5rem;
                     cursor: pointer;
-                    transition: background 0.2s;
-                    background: #080808;
+                    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                    background: rgba(255,255,255,0.01);
+                    border: 1px solid rgba(255,255,255,0.03);
                 }
 
                 .calendar-cell:hover {
-                    background: #0c0c0c;
+                    background: rgba(255,255,255,0.02);
+                    border-color: rgba(255,255,255,0.1);
+                    transform: translateY(-8px);
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
                 }
 
                 .off-month {
-                    opacity: 0.2;
+                    opacity: 0.1;
+                    pointer-events: none;
+                    background: none;
+                    border-style: dashed;
+                }
+
+                .is-today {
+                    background: rgba(255,255,255,0.02);
+                    border-color: rgba(255,255,255,0.2);
+                }
+                .is-today::before {
+                    content: '';
+                    position: absolute;
+                    inset: -2px;
+                    border: 1px solid #fff;
+                    border-radius: 26px;
+                    opacity: 0.1;
                 }
 
                 .is-today .day-number {
                     color: #fff;
-                    background: #222;
-                    padding: 2px 8px;
-                    border-radius: 6px;
+                    font-weight: 900;
                 }
 
                 .day-number {
-                    font-size: 14px;
-                    font-weight: 600;
-                    color: #666;
+                    font-size: 1.25rem;
+                    font-weight: 800;
+                    color: #222;
+                    letter-spacing: -0.02em;
+                    transition: color 0.3s;
                 }
+                .calendar-cell:hover .day-number { color: #555; }
 
-                /* Habit Card in Cell */
                 .habit-card {
-                    background: #0f0f0f;
-                    border: 1px solid #1f1f1f;
-                    border-radius: 10px;
-                    padding: 12px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    background: #000;
+                    border: 1px solid rgba(255,255,255,0.08);
+                    border-radius: 16px;
+                    padding: 1.25rem;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                    position: relative;
+                    overflow: hidden;
                 }
+                .habit-card::after {
+                    content: '';
+                    position: absolute;
+                    top: -50%; left: -50%; width: 200%; height: 200%;
+                    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.02), transparent);
+                    transform: rotate(45deg);
+                    transition: all 0.6s;
+                }
+                .habit-card:hover::after { transform: rotate(45deg) translateY(-20%); }
 
                 .habit-card-header {
                     display: flex;
                     align-items: center;
-                    gap: 10px;
-                    margin-bottom: 10px;
+                    gap: 12px;
+                    margin-bottom: 1rem;
                 }
 
                 .status-box {
-                    width: 20px;
-                    height: 20px;
+                    width: 24px;
+                    height: 24px;
                     background: #fff;
-                    border-radius: 5px;
+                    border-radius: 8px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     color: #000;
+                    box-shadow: 0 4px 12px rgba(255,255,255,0.1);
                 }
 
                 .card-title {
-                    font-size: 13px;
-                    font-weight: 700;
+                    font-size: 0.8125rem;
+                    font-weight: 900;
                     color: #fff;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
                 }
 
                 .habit-mini-list {
                     display: flex;
                     flex-direction: column;
-                    gap: 8px;
+                    gap: 0.75rem;
                 }
 
                 .mini-item {
                     display: flex;
                     align-items: center;
-                    gap: 10px;
-                    font-size: 12px;
-                    color: #bbb;
+                    gap: 12px;
+                    font-size: 0.75rem;
+                    color: #444;
+                    font-weight: 600;
+                    transition: all 0.3s;
                 }
+                .mini-item:hover { color: #888; }
 
                 .mini-check {
-                    width: 14px;
-                    height: 14px;
-                    border: 1.5px solid #333;
-                    border-radius: 3px;
+                    width: 18px;
+                    height: 18px;
+                    border: 1.5px solid #111;
+                    border-radius: 6px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    background: #111;
+                    background: #050505;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }
 
                 .mini-check.checked {
                     background: #fff;
                     border-color: #fff;
                     color: #000;
+                    transform: scale(1.1);
+                    box-shadow: 0 0 15px rgba(255,255,255,0.1);
                 }
 
                 .more-count {
-                    font-size: 11px;
-                    color: #444;
-                    margin-top: 4px;
+                    font-size: 0.65rem;
+                    color: #222;
+                    font-weight: 900;
+                    text-align: center;
+                    margin-top: 0.5rem;
                 }
 
-                /* Modal UI */
+                /* Modal Unified Design */
                 .modal-overlay {
                     position: fixed;
                     inset: 0;
-                    background: rgba(0,0,0,0.7);
-                    backdrop-filter: blur(4px);
+                    background: rgba(0,0,0,0.8);
+                    backdrop-filter: blur(20px);
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     z-index: 1000;
+                    animation: modalFadeIn 0.4s ease;
                 }
+                @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-                /* Detail Modal */
                 .detail-modal {
-                    background: #191919;
-                    width: 100%;
-                    max-width: 600px;
-                    border-radius: 12px;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-                    animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    background: #000;
+                    border: 1px solid rgba(255,255,255,0.1);
+                    width: 600px;
+                    max-width: 95%;
+                    border-radius: 40px;
+                    box-shadow: 0 50px 100px rgba(0,0,0,1);
+                    animation: modalIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                    overflow: hidden;
                 }
+                @keyframes modalIn { from { transform: translateY(40px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
 
-                @keyframes modalPop {
-                    from { opacity: 0; transform: scale(0.95) translateY(10px); }
-                    to { opacity: 1; transform: scale(1) translateY(0); }
-                }
-
-                .modal-top {
+                .modal-header {
                     display: flex;
                     justify-content: space-between;
-                    padding: 16px 24px;
-                }
-
-                .large-check-icon {
-                    width: 64px;
-                    height: 64px;
-                    background: #fff;
-                    border-radius: 12px;
-                    display: flex;
                     align-items: center;
-                    justify-content: center;
-                    color: #000;
+                    padding: 3rem 4rem 2rem;
                 }
 
                 .close-btn {
-                    align-self: flex-start;
-                    color: #777;
+                    color: #222;
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    transition: all 0.3s;
                 }
+                .close-btn:hover { color: #fff; transform: rotate(90deg); }
 
                 .modal-content {
-                    padding: 0 64px 64px;
+                    padding: 0 4rem 4rem;
                 }
 
                 .editable-title {
-                    font-size: 42px;
-                    font-weight: 800;
-                    margin-bottom: 24px;
-                    letter-spacing: -1px;
-                }
-
-                .info-row {
-                    display: flex;
-                    align-items: center;
-                    gap: 48px;
-                    margin-bottom: 24px;
-                }
-
-                .info-label {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    color: #888;
-                    font-size: 14px;
-                    width: 100px;
-                }
-
-                .info-value {
-                    font-size: 14px;
-                    font-weight: 500;
-                }
-
-                .habit-checklist {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 12px;
-                    margin-top: 32px;
-                }
-
-                .checklist-item {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    padding: 8px 0;
-                }
-
-                .item-label {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                }
-
-                .item-icon {
-                    color: #888;
-                }
-
-                .item-checkbox {
-                    width: 20px;
-                    height: 20px;
-                    border: 2px solid #333;
-                    border-radius: 4px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                }
-
-                .item-checkbox.checked {
-                    background: #fff;
-                    border-color: #fff;
-                    color: #000;
-                }
-
-                /* Definition Modal */
-                .definition-modal {
-                    background: #191919;
-                    padding: 32px;
-                    border-radius: 12px;
-                    width: 100%;
-                    max-width: 440px;
-                }
-
-                .definition-modal h2 {
-                    font-size: 18px;
-                    font-weight: 700;
-                    margin-bottom: 8px;
-                }
-
-                .modal-sub {
-                    color: #777;
-                    font-size: 14px;
-                    margin-bottom: 24px;
-                }
-
-                .definition-modal input {
-                    width: 100%;
-                    background: #111;
-                    border: 1px solid #333;
-                    padding: 12px;
-                    border-radius: 8px;
+                    font-size: 2.5rem;
+                    font-weight: 900;
                     color: #fff;
-                    font-size: 15px;
-                    margin-bottom: 24px;
+                    letter-spacing: -0.05em;
+                    margin-bottom: 2rem;
+                    background: none;
+                    border: none;
                     outline: none;
+                    width: 100%;
                 }
 
-                .definition-modal input:focus {
-                    border-color: #2383e2;
+                .habit-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 1.5rem;
+                    margin-top: 2rem;
                 }
 
-                .secondary-btn {
-                    color: #777;
-                    font-size: 14px;
-                    font-weight: 600;
-                    padding: 8px 16px;
-                }
-
-                .primary-btn {
-                    background: #fff;
-                    color: #000;
-                    padding: 8px 16px;
-                    border-radius: 8px;
-                    font-size: 14px;
-                    font-weight: 700;
-                }
-
-                .existing-defs {
-                    margin-top: 48px;
-                    border-top: 1px solid #151515;
-                    padding-top: 32px;
-                }
-
-                .def-list {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 10px;
-                }
-
-                .def-item {
+                .entry-card {
+                    background: rgba(255,255,255,0.02);
+                    border: 1px solid rgba(255,255,255,0.05);
+                    border-radius: 20px;
+                    padding: 1.5rem;
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    padding: 12px 16px;
-                    background: #0a0a0a;
-                    border: 1px solid #151515;
-                    border-radius: 10px;
-                    font-size: 0.875rem;
-                    font-weight: 600;
-                    color: #888;
+                    cursor: pointer;
+                    transition: all 0.3s;
                 }
+                .entry-card:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04); }
+                .entry-card.completed { background: #fff; color: #000; border-color: #fff; }
 
-                .existing-defs h3 {
-                    font-size: 12px;
-                    color: #888;
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-                    margin-bottom: 12px;
-                }
+                .entry-info { display: flex; align-items: center; gap: 1rem; }
+                .entry-name { font-weight: 700; font-size: 0.9375rem; }
 
-                .def-actions {
-                    display: flex;
-                    gap: 8px;
-                }
+                /* Definition Management Modal */
+                .def-management { display: flex; flex-direction: column; gap: 2rem; }
+                .def-input-group { display: flex; flex-direction: column; gap: 0.75rem; }
+                .def-input-group label { font-size: 0.75rem; color: #444; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; }
+                .def-input-group input { background: #0a0a0a; border: 1px solid #1a1a1a; padding: 1.25rem; border-radius: 16px; color: #fff; font-size: 1.125rem; outline: none; transition: border-color 0.3s; }
+                .def-input-group input:focus { border-color: #333; }
 
-                .def-item button {
-                    color: #666;
-                    transition: all 0.2s;
-                    padding: 6px;
-                    border-radius: 8px;
-                }
+                .add-def-btn { background: #fff; color: #000; padding: 1.25rem; border-radius: 16px; font-weight: 900; border: none; cursor: pointer; transition: all 0.3s; }
+                .add-def-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 40px rgba(255,255,255,0.1); }
 
-                .def-item button:hover {
-                    color: #e25555;
-                }
+                .existing-defs { border-top: 1px solid rgba(255,255,255,0.05); padding-top: 2rem; margin-top: 1rem; }
+                .existing-defs h3 { font-size: 0.75rem; color: #444; font-weight: 900; text-transform: uppercase; letter-spacing: 0.25em; margin-bottom: 1.5rem; }
+                .def-list { display: flex; flex-direction: column; gap: 0.75rem; }
+                .def-item { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 1rem 1.5rem; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; }
+                .def-item span { font-weight: 700; color: #fff; }
+                .def-actions { display: flex; gap: 0.5rem; }
+                .def-actions button { color: #222; transition: all 0.2s; background: none; border: none; cursor: pointer; }
+                .def-actions button:hover { color: #fff; transform: scale(1.2); }
 
-                .spinner {
-                    animation: spin 1s linear infinite;
-                }
-
-                @keyframes spin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
+                .spinner { animation: spin 1s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
                 @media (max-width: 1024px) {
-                    .calendar-board { padding: 0 16px 16px; }
-                    .grid-body { grid-auto-rows: minmax(100px, 1fr); }
-                    .detail-modal { max-width: 90%; }
-                    .modal-content { padding: 0 32px 32px; }
-                    .editable-title { font-size: 32px; }
+                    .calendar-board { padding: 0 1rem 1rem; }
+                    .grid-body { grid-auto-rows: minmax(120px, 1fr); gap: 0.75rem; }
+                    .calendar-cell { padding: 1rem; border-radius: 16px; }
+                    .month-display h2 { font-size: 1.75rem; }
                 }
             `}</style>
         </div>
