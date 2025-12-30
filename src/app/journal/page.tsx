@@ -1,204 +1,229 @@
 "use client";
 
-import { useState } from 'react';
-import { BookOpen, Calendar as CalendarIcon, Save, ChevronLeft, ChevronRight, Minimize2, Maximize2, Sparkles } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { BookOpen, Calendar as CalendarIcon, Save, ChevronLeft, ChevronRight, Loader2, Sparkles } from 'lucide-react';
+
+interface JournalEntry {
+    _id: string;
+    title: string;
+    content: string;
+    mood?: string;
+    date: string;
+    tags: string[];
+}
+
+const MOODS = ['😊 Happy', '😐 Neutral', '😔 Sad', '😤 Frustrated', '🤔 Thoughtful', '😴 Tired', '🔥 Motivated'];
 
 export default function JournalPage() {
-  const [content, setContent] = useState('');
-  const [date, setDate] = useState(new Date());
+    const { data: session, status } = useSession();
+    const router = useRouter();
+    const [date, setDate] = useState(new Date());
+    const [entry, setEntry] = useState<JournalEntry | null>(null);
+    const [content, setContent] = useState('');
+    const [mood, setMood] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-  const formattedDate = date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+    const formattedDate = date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
 
-  return (
-    <div className="journal-page">
-      <header className="journal-header">
-        <div className="header-left">
-          <div className="type-badge">Personal Journal</div>
-          <h1 className="text-gradient">Daily Reflection</h1>
-        </div>
-
-        <div className="date-controller glass-panel">
-          <button className="nav-btn"><ChevronLeft size={18} /></button>
-          <div className="current-date">
-            <CalendarIcon size={16} />
-            <span>{formattedDate}</span>
-          </div>
-          <button className="nav-btn"><ChevronRight size={18} /></button>
-        </div>
-
-        <div className="header-actions">
-          <button className="icon-btn"><Minimize2 size={20} /></button>
-          <button className="save-btn">
-            <Save size={18} />
-            <span>Archive Entry</span>
-          </button>
-        </div>
-      </header>
-
-      <div className="editor-container premium-card glass-panel">
-        <div className="editor-top">
-          <div className="mood-selector">
-            <Sparkles size={20} className="text-muted" />
-            <span>Deep reflection mode active</span>
-          </div>
-          <div className="word-count">
-            {content.trim().split(/\s+/).filter(x => x).length} words
-          </div>
-        </div>
-
-        <textarea
-          placeholder="Release your thoughts into the void..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="journal-field"
-        />
-
-        <div className="editor-footer">
-          <div className="tags">#reflection #productivity #mindset</div>
-          <div className="auto-save">All changes saved to cloud</div>
-        </div>
-      </div>
-
-      <style jsx>{`
-        .journal-page {
-          max-width: 900px;
-          margin: 0 auto;
-          animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    const fetchEntry = useCallback(async () => {
+        if (!session) return;
+        setIsLoading(true);
+        try {
+            const dateStr = date.toISOString().split('T')[0];
+            const res = await fetch(`/api/notes?type=journal&date=${dateStr}`);
+            const data = await res.json();
+            if (data.notes?.length > 0) {
+                const existingEntry = data.notes[0];
+                setEntry(existingEntry);
+                setContent(existingEntry.content);
+                setMood(existingEntry.mood || '');
+            } else {
+                setEntry(null);
+                setContent('');
+                setMood('');
+            }
+        } catch (error) {
+            console.error('Error fetching entry:', error);
+        } finally {
+            setIsLoading(false);
         }
+    }, [session, date]);
 
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
+    useEffect(() => {
+        if (status === 'unauthenticated') {
+            router.push('/login');
+        } else if (status === 'authenticated') {
+            fetchEntry();
         }
+    }, [status, router, fetchEntry]);
 
-        .journal-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 4rem;
+    const saveEntry = async () => {
+        setIsSaving(true);
+        try {
+            const dateStr = date.toISOString().split('T')[0];
+            if (entry) {
+                // Update existing
+                await fetch('/api/notes', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: entry._id,
+                        content,
+                        mood,
+                    }),
+                });
+            } else {
+                // Create new
+                const res = await fetch('/api/notes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: `Journal - ${formattedDate}`,
+                        content,
+                        mood,
+                        type: 'journal',
+                        date: dateStr,
+                    }),
+                });
+                const data = await res.json();
+                setEntry(data.note);
+            }
+            setLastSaved(new Date());
+        } catch (error) {
+            console.error('Error saving entry:', error);
+        } finally {
+            setIsSaving(false);
         }
+    };
 
-        .type-badge {
-          font-size: 0.7rem;
-          font-weight: 800;
-          text-transform: uppercase;
-          color: var(--text-dim);
-          letter-spacing: 0.1em;
-          margin-bottom: 0.5rem;
-        }
+    const changeDate = (delta: number) => {
+        const newDate = new Date(date);
+        newDate.setDate(newDate.getDate() + delta);
+        setDate(newDate);
+    };
 
-        .header-left h1 {
-          font-size: 3rem;
-        }
+    const goToToday = () => {
+        setDate(new Date());
+    };
 
-        .date-controller {
-          display: flex;
-          align-items: center;
-          gap: 1.25rem;
-          padding: 0.6rem 1.25rem;
-          border-radius: 100px;
-        }
+    const wordCount = content.trim().split(/\s+/).filter(x => x).length;
 
-        .current-date {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          font-size: 0.95rem;
-          font-weight: 700;
-        }
+    if (status === 'loading') {
+        return (
+            <div className="loading-screen">
+                <Loader2 size={32} className="animate-spin" />
+                <span>Loading journal...</span>
+                <style jsx>{`
+          .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 1rem; color: var(--text-muted); }
+          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          .animate-spin { animation: spin 1s linear infinite; }
+        `}</style>
+            </div>
+        );
+    }
 
-        .nav-btn {
-          color: var(--text-dim);
-        }
+    return (
+        <div className="journal-page">
+            <header className="journal-header">
+                <div className="header-left">
+                    <div className="type-badge">Personal Journal</div>
+                    <h1 className="text-gradient">Daily Reflection</h1>
+                </div>
 
-        .nav-btn:hover { color: var(--text-primary); }
+                <div className="date-controller glass-panel">
+                    <button className="nav-btn" onClick={() => changeDate(-1)}><ChevronLeft size={18} /></button>
+                    <div className="current-date" onClick={goToToday}>
+                        <CalendarIcon size={16} />
+                        <span>{formattedDate}</span>
+                    </div>
+                    <button className="nav-btn" onClick={() => changeDate(1)}><ChevronRight size={18} /></button>
+                </div>
 
-        .header-actions {
-          display: flex;
-          align-items: center;
-          gap: 1.5rem;
-        }
+                <div className="header-actions">
+                    <button className="save-btn" onClick={saveEntry} disabled={isSaving}>
+                        {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                        <span>{isSaving ? 'Saving...' : 'Save Entry'}</span>
+                    </button>
+                </div>
+            </header>
 
-        .icon-btn { color: var(--text-dim); }
-        .icon-btn:hover { color: var(--text-primary); }
+            {isLoading ? (
+                <div className="loading-editor">
+                    <Loader2 size={24} className="animate-spin" />
+                </div>
+            ) : (
+                <div className="editor-container premium-card glass-panel">
+                    <div className="editor-top">
+                        <div className="mood-selector">
+                            <Sparkles size={16} className="text-muted" />
+                            <select value={mood} onChange={e => setMood(e.target.value)}>
+                                <option value="">How are you feeling?</option>
+                                {MOODS.map(m => <option key={m} value={m}>{m}</option>)}
+                            </select>
+                        </div>
+                        <div className="word-count">{wordCount} words</div>
+                    </div>
 
-        .save-btn {
-          background: var(--text-primary);
-          color: var(--bg-deep);
-          padding: 0.8rem 1.75rem;
-          border-radius: 12px;
-          font-weight: 700;
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
+                    <textarea
+                        placeholder="Release your thoughts into the void..."
+                        value={content}
+                        onChange={e => setContent(e.target.value)}
+                        className="journal-field"
+                    />
 
-        .editor-container {
-          min-height: 700px;
-          display: flex;
-          flex-direction: column;
-          padding: 3rem;
-          border-radius: var(--border-radius-xl);
-          background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(0,0,0,0));
-        }
+                    <div className="editor-footer">
+                        <div className="tags">#reflection #productivity #mindset</div>
+                        {lastSaved && (
+                            <div className="auto-save">
+                                Last saved: {lastSaved.toLocaleTimeString()}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
 
-        .editor-top {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 3rem;
-          color: var(--text-muted);
-          font-size: 0.85rem;
-          font-weight: 600;
-        }
-
-        .mood-selector {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-
-        .journal-field {
-          flex: 1;
-          background: none;
-          border: none;
-          color: var(--text-primary);
-          font-size: 1.4rem;
-          line-height: 1.8;
-          resize: none;
-          outline: none;
-          font-family: inherit;
-        }
-
-        .journal-field::placeholder {
-          color: var(--text-dim);
-          opacity: 0.4;
-        }
-
-        .editor-footer {
-          margin-top: 3rem;
-          padding-top: 2rem;
-          border-top: 1px solid var(--border-dim);
-          display: flex;
-          justify-content: space-between;
-          font-size: 0.8rem;
-          font-weight: 700;
-        }
-
-        .tags { color: var(--text-dim); }
-        .auto-save { color: #00ff88; }
-
-        @media (max-width: 900px) {
-          .journal-header { flex-direction: column; align-items: flex-start; gap: 2rem; }
-          .editor-container { padding: 1.5rem; min-height: 500px; }
-          .header-left h1 { font-size: 2.5rem; }
+            <style jsx>{`
+        .journal-page { max-width: 900px; margin: 0 auto; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .journal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; flex-wrap: wrap; gap: 1rem; }
+        .type-badge { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+        .header-left h1 { font-size: 2.5rem; }
+        .date-controller { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; border-radius: 12px; }
+        .nav-btn { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; color: var(--text-secondary); }
+        .nav-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+        .current-date { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; font-size: 0.9rem; font-weight: 500; cursor: pointer; border-radius: 8px; }
+        .current-date:hover { background: rgba(255,255,255,0.05); }
+        .save-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: var(--text-primary); color: var(--bg-deep); font-weight: 600; border-radius: 10px; }
+        .save-btn:hover:not(:disabled) { transform: translateY(-2px); }
+        .save-btn:disabled { opacity: 0.7; }
+        .loading-editor { display: flex; align-items: center; justify-content: center; min-height: 400px; }
+        .editor-container { padding: 2rem; border-radius: 20px; display: flex; flex-direction: column; min-height: 500px; }
+        .editor-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-dim); }
+        .mood-selector { display: flex; align-items: center; gap: 0.5rem; }
+        .mood-selector select { background: var(--bg-deep); border: 1px solid var(--border-main); border-radius: 8px; padding: 0.5rem 1rem; color: var(--text-primary); font-size: 0.9rem; }
+        .word-count { font-size: 0.85rem; color: var(--text-muted); }
+        .journal-field { flex: 1; background: none; border: none; resize: none; font-size: 1.1rem; line-height: 2; color: var(--text-primary); font-family: inherit; }
+        .journal-field::placeholder { color: var(--text-dim); }
+        .editor-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-dim); }
+        .tags { font-size: 0.8rem; color: var(--text-muted); }
+        .auto-save { font-size: 0.75rem; color: var(--text-dim); }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .animate-spin { animation: spin 1s linear infinite; }
+        @media (max-width: 768px) {
+          .journal-header { flex-direction: column; align-items: flex-start; }
+          .header-left h1 { font-size: 2rem; }
+          .editor-container { padding: 1.5rem; }
         }
       `}</style>
-    </div>
-  );
+        </div>
+    );
 }

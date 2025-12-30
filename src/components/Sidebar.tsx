@@ -1,320 +1,298 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { signOut, useSession } from 'next-auth/react';
 import {
-  CheckSquare,
-  Calendar,
-  BookOpen,
-  PenTool,
-  Book,
-  Clock,
-  Image as ImageIcon,
-  Key,
-  LogOut,
-  Settings,
-  Menu,
-  X,
-  LayoutDashboard,
-  Search,
-  Bell
+    CheckSquare,
+    Calendar,
+    BookOpen,
+    PenTool,
+    Book,
+    Clock,
+    BookMarked,
+    Key,
+    LogOut,
+    Menu,
+    X,
+    LayoutDashboard,
+    User,
+    Settings,
+    Home,
+    PiggyBank,
+    HandCoins
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+    return twMerge(clsx(inputs));
 }
 
 const navItems = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Habit Tracker', href: '/habit', icon: Calendar },
-  { name: 'Todo List', href: '/todo', icon: CheckSquare },
-  { name: 'School Schedule', href: '/schedule', icon: Clock },
-  { name: 'Subject Notebook', href: '/notebook', icon: BookOpen },
-  { name: 'Notepad', href: '/notepad', icon: PenTool },
-  { name: 'Book Hub', href: '/books', icon: Book },
-  { name: 'Routine', href: '/routine', icon: Clock },
-  { name: 'Journal', href: '/journal', icon: ImageIcon },
-  { name: 'Password Vault', href: '/passwords', icon: Key },
+    { name: 'Home', href: '/', icon: Home },
+    { name: 'Habit Tracker', href: '/habit', icon: Calendar },
+    { name: 'Todo List', href: '/todo', icon: CheckSquare },
+    { name: 'School Schedule', href: '/schedule', icon: Clock },
+    { name: 'Notepad', href: '/notepad', icon: PenTool },
+    { name: 'Book Hub', href: '/books', icon: Book },
+    { name: 'Routine', href: '/routine', icon: BookMarked },
+    { name: 'Journal', href: '/journal', icon: BookOpen },
+    { name: 'Password Vault', href: '/passwords', icon: Key },
 ];
 
 export default function Sidebar() {
-  const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
+    const pathname = usePathname();
+    const [isOpen, setIsOpen] = useState(false);
+    const { data: session } = useSession();
+    const [isMounted, setIsMounted] = useState(false);
 
-  return (
-    <>
-      <button className="mobile-toggle" onClick={() => setIsOpen(!isOpen)}>
-        {isOpen ? <X size={20} /> : <Menu size={20} />}
-      </button>
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
-      <aside className={cn("sidebar", isOpen && "mobile-open")}>
-        <div className="sidebar-brand">
-          <div className="logo-box">M</div>
-          <span className="brand-name">Mindmap</span>
-        </div>
+    if (pathname === '/login' || pathname === '/signup') {
+        return null;
+    }
 
-        <div className="search-trigger">
-          <Search size={16} />
-          <span>Quick search...</span>
-          <kbd>⌘K</kbd>
-        </div>
+    if (!isMounted) return null;
 
-        <nav className="nav-group">
-          <span className="group-label">Workspace</span>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn("nav-link", isActive && "active")}
-                onClick={() => setIsOpen(false)}
-              >
-                <div className="icon-wrapper">
-                  <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+    const handleSignOut = () => {
+        signOut({ callbackUrl: '/login' });
+    };
+
+    const userInitial = session?.user?.name ? session.user.name.charAt(0).toUpperCase() : 'U';
+
+    return (
+        <>
+            <button className={cn("mobile-toggle", isOpen && "active")} onClick={() => setIsOpen(!isOpen)}>
+                {isOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+
+            {isOpen && <div className="mobile-overlay" onClick={() => setIsOpen(false)} />}
+
+            <aside className={cn("sidebar", isOpen && "open")}>
+                <div className="sidebar-container">
+                    <div className="brand">
+                        <div className="brand-logo">
+                            <Book size={32} strokeWidth={2.5} />
+                        </div>
+                        <span className="brand-title">Mindmap</span>
+                    </div>
+
+                    <nav className="nav-links">
+                        {navItems.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = pathname === item.href;
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={cn("nav-item", isActive && "active")}
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                                    <span>{item.name}</span>
+                                </Link>
+                            );
+                        })}
+                    </nav>
+
+                    <div className="sidebar-footer">
+                        <div className="divider" />
+                        <div className="user-profile">
+                            <div className="avatar">
+                                {userInitial}
+                            </div>
+                            <div className="user-details">
+                                <span className="user-name">{session?.user?.name || 'User'}</span>
+                                <span className="user-email">{session?.user?.email || 'user@example.com'}</span>
+                            </div>
+                            <button className="logout-btn" onClick={handleSignOut} title="Sign Out">
+                                <LogOut size={16} />
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <span className="link-text">{item.name}</span>
-                {isActive && <div className="active-dot" />}
-              </Link>
-            );
-          })}
-        </nav>
 
-        <div className="sidebar-footer">
-          <Link href="/settings" className="footer-link">
-            <Settings size={18} />
-            <span>Settings</span>
-          </Link>
-          <button className="footer-link logout">
-            <LogOut size={18} />
-            <span>Sign Out</span>
-          </button>
-        </div>
+                <style jsx>{`
+                    .sidebar {
+                        width: var(--sidebar-width);
+                        height: 100vh;
+                        background: #0f0f0f;
+                        border-right: 1px solid #1a1a1a;
+                        position: fixed;
+                        left: 0;
+                        top: 0;
+                        z-index: 100;
+                        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    }
 
-        <style jsx>{`
-          .sidebar {
-            width: var(--sidebar-width);
-            height: 100vh;
-            background: var(--bg-main);
-            border-right: 1px solid var(--border-main);
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            left: 0;
-            top: 0;
-            z-index: 100;
-            padding: 2rem 1rem;
-            transition: var(--transition-base);
-          }
+                    .sidebar-container {
+                        display: flex;
+                        flex-direction: column;
+                        height: 100%;
+                        padding: 2.5rem 1.25rem;
+                    }
 
-          .sidebar-brand {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0 1rem;
-            margin-bottom: 2.5rem;
-          }
+                    .brand {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.85rem;
+                        padding: 0 0.5rem;
+                        margin-bottom: 3rem;
+                    }
 
-          .logo-box {
-            width: 32px;
-            height: 32px;
-            background: var(--text-primary);
-            color: var(--bg-deep);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            border-radius: 8px;
-            font-size: 1.2rem;
-          }
+                    .brand-logo {
+                        color: #fff;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
 
-          .brand-name {
-            font-size: 1.25rem;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-          }
+                    .brand-title {
+                        font-size: 1.5rem;
+                        font-weight: 800;
+                        color: #fff;
+                        letter-spacing: -0.02em;
+                    }
 
-          .search-trigger {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.6rem 0.75rem;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-dim);
-            border-radius: 10px;
-            margin: 0 0.5rem 2rem;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: var(--transition-fast);
-          }
+                    .nav-links {
+                        flex: 1;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 0.5rem;
+                    }
 
-          .search-trigger:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: var(--border-main);
-          }
+                    .nav-item {
+                        display: flex;
+                        align-items: center;
+                        gap: 1rem;
+                        padding: 0.85rem 1rem;
+                        color: #888;
+                        text-decoration: none;
+                        border-radius: 12px;
+                        font-weight: 600;
+                        font-size: 1rem;
+                        transition: all 0.2s ease;
+                    }
 
-          .search-trigger kbd {
-            margin-left: auto;
-            font-family: inherit;
-            font-size: 0.7rem;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 0.1rem 0.3rem;
-            border-radius: 4px;
-            color: var(--text-dim);
-          }
+                    .nav-item:hover {
+                        color: #fff;
+                        background: rgba(255, 255, 255, 0.03);
+                    }
 
-          .nav-group {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-            overflow-y: auto;
-          }
+                    .nav-item.active {
+                        color: #fff;
+                        background: #1a1a1a;
+                    }
 
-          .group-label {
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--text-dim);
-            margin: 0 1rem 0.75rem;
-          }
+                    .sidebar-footer {
+                        margin-top: auto;
+                    }
 
-          .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.75rem 1rem;
-            border-radius: 12px;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            font-weight: 500;
-            position: relative;
-            transition: var(--transition-fast);
-          }
+                    .divider {
+                        height: 1px;
+                        background: #1a1a1a;
+                        margin-bottom: 1.5rem;
+                        width: 100%;
+                    }
 
-          .nav-link:hover {
-            background: rgba(255, 255, 255, 0.03);
-            color: var(--text-primary);
-          }
+                    .user-profile {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.85rem;
+                        padding: 0.5rem;
+                        position: relative;
+                    }
 
-          .nav-link.active {
-            background: var(--accent-soft);
-            color: var(--text-primary);
-            font-weight: 600;
-          }
+                    .avatar {
+                        width: 42px;
+                        height: 42px;
+                        background: #2a2a2a;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: #fff;
+                        font-weight: 700;
+                        font-size: 1rem;
+                        flex-shrink: 0;
+                    }
 
-          .icon-wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
+                    .user-details {
+                        display: flex;
+                        flex-direction: column;
+                        min-width: 0;
+                        flex: 1;
+                    }
 
-          .active-dot {
-            width: 4px;
-            height: 4px;
-            background: var(--text-primary);
-            border-radius: 50%;
-            margin-left: auto;
-          }
+                    .user-name {
+                        color: #fff;
+                        font-size: 0.95rem;
+                        font-weight: 700;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
 
-          .sidebar-footer {
-            margin-top: auto;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border-dim);
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-          }
+                    .user-email {
+                        color: #666;
+                        font-size: 0.75rem;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
 
-          .footer-link {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.75rem 1rem;
-            border-radius: 10px;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            transition: var(--transition-fast);
-          }
+                    .logout-btn {
+                        color: #444;
+                        transition: color 0.2s;
+                    }
 
-          .footer-link:hover {
-            color: var(--text-primary);
-            background: rgba(255, 255, 255, 0.03);
-          }
+                    .logout-btn:hover {
+                        color: #f87171;
+                    }
 
-          .logout:hover {
-            color: #ff4444;
-            background: rgba(255, 68, 68, 0.05);
-          }
+                    .mobile-toggle {
+                        display: none;
+                        position: fixed;
+                        top: 1.25rem;
+                        right: 1.25rem;
+                        z-index: 1000;
+                        background: #111;
+                        color: #fff;
+                        width: 44px;
+                        height: 44px;
+                        border-radius: 12px;
+                        border: 1px solid #222;
+                        align-items: center;
+                        justify-content: center;
+                        cursor: pointer;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+                    }
 
-          .mobile-toggle {
-            display: none;
-            position: fixed;
-            top: 1.25rem;
-            right: 1.25rem;
-            z-index: 1000;
-            background: var(--bg-card);
-            color: var(--text-primary);
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            border: 1px solid var(--border-main);
-            align-items: center;
-            justify-content: center;
-          }
+                    .mobile-overlay {
+                        position: fixed;
+                        inset: 0;
+                        background: rgba(0, 0, 0, 0.7);
+                        backdrop-filter: blur(4px);
+                        z-index: 90;
+                    }
 
-          @media (max-width: 1024px) {
-            .sidebar {
-              width: var(--sidebar-collapsed);
-              padding: 2rem 0.5rem;
-            }
-            .brand-name, .link-text, .search-trigger span, .search-trigger kbd, .group-label, .active-dot, .footer-link span {
-              display: none;
-            }
-            .sidebar-brand, .search-trigger, .nav-link, .footer-link {
-              justify-content: center;
-              padding: 0.75rem;
-            }
-            .nav-link {
-              width: 48px;
-              height: 48px;
-              margin: 0 auto;
-            }
-          }
-
-          @media (max-width: 768px) {
-            .mobile-toggle {
-              display: flex;
-            }
-            .sidebar {
-              transform: translateX(-100%);
-              width: 280px;
-              padding: 2rem 1rem;
-            }
-            .sidebar.mobile-open {
-              transform: translateX(0);
-              box-shadow: 20px 0 50px rgba(0,0,0,0.8);
-            }
-            .brand-name, .link-text, .search-trigger span, .search-trigger kbd, .group-label, .footer-link span {
-              display: block;
-            }
-            .sidebar-brand, .search-trigger, .nav-link, .footer-link {
-              justify-content: flex-start;
-              padding: 0.75rem 1rem;
-            }
-            .nav-link {
-              width: auto;
-              height: auto;
-            }
-          }
-        `}</style>
-      </aside>
-    </>
-  );
+                    @media (max-width: 768px) {
+                        .mobile-toggle { display: flex; }
+                        .sidebar {
+                            transform: translateX(-100%);
+                            width: 280px;
+                        }
+                        .sidebar.open {
+                            transform: translateX(0);
+                            box-shadow: 20px 0 50px rgba(0,0,0,0.8);
+                        }
+                    }
+                `}</style>
+            </aside>
+        </>
+    );
 }

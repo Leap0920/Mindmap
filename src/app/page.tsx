@@ -1,5 +1,8 @@
 "use client";
 
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Calendar,
@@ -11,15 +14,84 @@ import {
   TrendingUp,
   Activity,
   Zap,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 
+interface DashStats {
+  habitsToday: number;
+  totalHabits: number;
+  completedTodos: number;
+  totalTodos: number;
+  routineProgress: number;
+  booksReading: number;
+}
+
 export default function Home() {
-  const stats = [
-    { name: 'Weekly Focus', value: 'Productivity', icon: Activity, detail: '12% increase' },
-    { name: 'Habit Streak', value: '8 Days', icon: Zap, detail: 'Personal Best' },
-    { name: 'Task Progress', value: '64%', icon: TrendingUp, detail: '24 done this week' },
-  ];
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [stats, setStats] = useState<DashStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const today = new Date();
+  const greeting = today.getHours() < 12 ? 'Good morning' : today.getHours() < 18 ? 'Good afternoon' : 'Good evening';
+  const formattedDate = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const userName = session?.user?.name || session?.user?.email?.split('@')[0] || 'there';
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+      return;
+    }
+    if (status === 'authenticated') {
+      fetchStats();
+    }
+  }, [status, router]);
+
+  const fetchStats = async () => {
+    setIsLoading(true);
+    try {
+      const [habitsRes, todosRes, routinesRes, booksRes] = await Promise.all([
+        fetch('/api/habits'),
+        fetch('/api/todos'),
+        fetch(`/api/routines?date=${today.toISOString().split('T')[0]}`),
+        fetch('/api/books'),
+      ]);
+
+      const [habitsData, todosData, routinesData, booksData] = await Promise.all([
+        habitsRes.json(),
+        todosRes.json(),
+        routinesRes.json(),
+        booksRes.json(),
+      ]);
+
+      const todayStr = today.toISOString().split('T')[0];
+      const todayHabits = habitsData.entries?.filter((e: any) => e.date === todayStr && e.completed).length || 0;
+      const totalHabits = habitsData.habits?.length || 0;
+
+      const completedTodos = todosData.todos?.filter((t: any) => t.completed).length || 0;
+      const totalTodos = todosData.todos?.length || 0;
+
+      const routineItems = routinesData.routines?.length || 0;
+      const routineCompleted = routinesData.logs?.filter((l: any) => l.completed).length || 0;
+      const routineProgress = routineItems > 0 ? Math.round((routineCompleted / routineItems) * 100) : 0;
+
+      const booksReading = booksData.books?.filter((b: any) => b.status === 'reading').length || 0;
+
+      setStats({
+        habitsToday: todayHabits,
+        totalHabits,
+        completedTodos,
+        totalTodos,
+        routineProgress,
+        booksReading,
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const categories = [
     { title: 'Rituals', items: ['Habit Tracker', 'Daily Routine', 'Journal'], icon: Calendar, href: '/habit' },
@@ -27,31 +99,58 @@ export default function Home() {
     { title: 'Security', items: ['Password Vault'], icon: Clock, href: '/passwords' },
   ];
 
+  if (status === 'loading') {
+    return (
+      <div className="loading-screen">
+        <Loader2 size={32} className="animate-spin" />
+        <style jsx>{`
+          .loading-screen { display: flex; align-items: center; justify-content: center; min-height: 60vh; }
+          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          .animate-spin { animation: spin 1s linear infinite; }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard">
       <header className="dash-header">
         <div className="welcome-text">
-          <div className="date-pill">Tuesday, December 30</div>
-          <h1 className="text-gradient">Good morning, John.</h1>
+          <div className="date-pill">{formattedDate}</div>
+          <h1 className="text-gradient">{greeting}, {userName}.</h1>
           <p>What are we building today?</p>
         </div>
         <div className="action-buttons">
-          <button className="secondary-btn">View Stats</button>
-          <button className="primary-btn">Start Session</button>
+          <Link href="/todo" className="secondary-btn">View Tasks</Link>
+          <Link href="/habit" className="primary-btn">Track Habits</Link>
         </div>
       </header>
 
       <section className="stats-grid">
-        {stats.map((stat, i) => (
-          <div key={i} className="stat-card glass-panel hover-glow">
-            <div className="stat-icon-box"><stat.icon size={20} /></div>
-            <div className="stat-content">
-              <span className="stat-label">{stat.name}</span>
-              <span className="stat-value">{stat.value}</span>
-              <span className="stat-detail">{stat.detail}</span>
-            </div>
+        <div className="stat-card glass-panel hover-glow">
+          <div className="stat-icon-box"><Zap size={20} /></div>
+          <div className="stat-content">
+            <span className="stat-label">Habits Today</span>
+            <span className="stat-value">{isLoading ? '—' : `${stats?.habitsToday}/${stats?.totalHabits}`}</span>
+            <span className="stat-detail">{stats?.habitsToday === stats?.totalHabits && stats?.totalHabits! > 0 ? 'Perfect Day! 🔥' : 'Keep pushing'}</span>
           </div>
-        ))}
+        </div>
+        <div className="stat-card glass-panel hover-glow">
+          <div className="stat-icon-box"><TrendingUp size={20} /></div>
+          <div className="stat-content">
+            <span className="stat-label">Task Progress</span>
+            <span className="stat-value">{isLoading ? '—' : `${stats?.completedTodos}/${stats?.totalTodos}`}</span>
+            <span className="stat-detail">{stats?.totalTodos ? `${Math.round((stats?.completedTodos! / stats?.totalTodos!) * 100)}% complete` : 'Add some tasks'}</span>
+          </div>
+        </div>
+        <div className="stat-card glass-panel hover-glow">
+          <div className="stat-icon-box"><Activity size={20} /></div>
+          <div className="stat-content">
+            <span className="stat-label">Daily Routine</span>
+            <span className="stat-value">{isLoading ? '—' : `${stats?.routineProgress}%`}</span>
+            <span className="stat-detail">{stats?.booksReading ? `${stats.booksReading} books in progress` : 'Start your day'}</span>
+          </div>
+        </div>
       </section>
 
       <div className="main-grid">
@@ -146,6 +245,10 @@ export default function Home() {
           padding: 0.9rem 1.75rem;
           border-radius: 12px;
           font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-decoration: none;
         }
 
         .secondary-btn {
@@ -154,6 +257,11 @@ export default function Home() {
           border-radius: 12px;
           border: 1px solid var(--border-main);
           font-weight: 600;
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--text-primary);
         }
 
         .stats-grid {

@@ -20,8 +20,8 @@
   --accent-soft: rgba(255, 255, 255, 0.1);
 
   /* Layout */
-  --sidebar-width: 280px;
-  --sidebar-collapsed: 80px;
+  --sidebar-width: 220px;
+  --sidebar-collapsed: 60px;
   --border-radius-sm: 8px;
   --border-radius-md: 12px;
   --border-radius-lg: 20px;
