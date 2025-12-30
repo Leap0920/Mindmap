@@ -1,150 +1,223 @@
 "use client";
 
 import { useState } from 'react';
-import { Plus, CheckCircle2, Circle, MoreVertical, Flag, Calendar } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, MoreVertical, Calendar, Hash, ChevronDown, ListFilter, Search } from 'lucide-react';
 
 export default function TodoPage() {
-    const [todos, setTodos] = useState([
-        { id: '1', task: 'Complete Math Assignment', category: 'School', priority: 'High', due: 'Today', completed: false },
-        { id: '2', task: 'Buy Groceries', category: 'Personal', priority: 'Medium', due: 'Tomorrow', completed: false },
-        { id: '3', task: 'Read React Docs', category: 'Work', priority: 'Low', due: 'Dec 31', completed: true },
-    ]);
+  const [todos, setTodos] = useState([
+    { id: '1', task: 'Complete Advanced Mathematics Thesis', category: 'Academic', priority: 'High', due: 'Today', completed: false },
+    { id: '2', task: 'Review Mindmap System Architecture', category: 'Technical', priority: 'Medium', due: 'Tomorrow', completed: false },
+    { id: '3', task: 'Weekly Grocery Inventory', category: 'Essential', priority: 'Low', due: 'Dec 31', completed: true },
+  ]);
 
-    const toggle = (id: string) => {
-        setTodos(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
-    };
+  const toggle = (id: string) => {
+    setTodos(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+  };
 
-    return (
-        <div className="todo-page">
-            <header className="page-header">
-                <div>
-                    <h1>Tasks</h1>
-                    <p>Organize your work and life</p>
-                </div>
-                <button className="add-btn"><Plus size={18} /><span>Add Task</span></button>
-            </header>
+  return (
+    <div className="todo-page">
+      <header className="page-header">
+        <div className="title-area">
+          <div className="status-badge">12 Tasks Total</div>
+          <h1 className="text-gradient">Task Matrix</h1>
+          <p>Prioritize your focus and eliminate distractions.</p>
+        </div>
+        <button className="primary-btn">
+          <Plus size={18} />
+          <span>New Task</span>
+        </button>
+      </header>
 
-            <div className="todo-layout">
-                <aside className="todo-categories">
-                    <div className="cat-group">
-                        <h3>Lists</h3>
-                        <button className="cat-link active">All Tasks</button>
-                        <button className="cat-link">Personal</button>
-                        <button className="cat-link">School</button>
-                        <button className="cat-link">Work</button>
-                    </div>
-                    <div className="cat-group">
-                        <h3>Filters</h3>
-                        <button className="cat-link">Today</button>
-                        <button className="cat-link">Upcoming</button>
-                        <button className="cat-link">Completed</button>
-                    </div>
-                </aside>
+      <div className="todo-layout">
+        <aside className="todo-nav">
+          <div className="search-bar glass-panel">
+            <Search size={16} />
+            <input type="text" placeholder="Filter tasks..." />
+          </div>
 
-                <main className="todo-main">
-                    <div className="todo-list">
-                        {todos.map(todo => (
-                            <div
-                                key={todo.id}
-                                className={`todo-item glass ${todo.completed ? 'completed' : ''}`}
-                                onClick={() => toggle(todo.id)}
-                            >
-                                <div className="todo-left">
-                                    <div className="check-wrapper">
-                                        {todo.completed ? <CheckCircle2 size={22} className="check-icon done" /> : <Circle size={22} className="check-icon" />}
-                                    </div>
-                                    <div className="todo-content">
-                                        <h4>{todo.task}</h4>
-                                        <div className="todo-tags">
-                                            <span className="tag category">{todo.category}</span>
-                                            <span className={`tag priority ${todo.priority.toLowerCase()}`}>{todo.priority}</span>
-                                            <span className="tag due"><Calendar size={12} /> {todo.due}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button className="more-btn"><MoreVertical size={18} /></button>
-                            </div>
-                        ))}
-                    </div>
-                </main>
+          <div className="nav-section">
+            <span className="section-label">Perspective</span>
+            <button className="nav-btn active">Inbox</button>
+            <button className="nav-btn">Today</button>
+            <button className="nav-btn">Scheduled</button>
+          </div>
+
+          <div className="nav-section">
+            <span className="section-label">Category</span>
+            <button className="nav-btn"><Hash size={14} /> Academic</button>
+            <button className="nav-btn"><Hash size={14} /> Technical</button>
+            <button className="nav-btn"><Hash size={14} /> Essential</button>
+          </div>
+        </aside>
+
+        <main className="todo-content">
+          <div className="list-controls">
+            <div className="active-filters">
+              <span>Sort by Priority</span>
+              <ChevronDown size={14} />
             </div>
+            <button className="icon-btn"><ListFilter size={18} /></button>
+          </div>
 
-            <style jsx>{`
+          <div className="todo-list">
+            {todos.map(todo => (
+              <div
+                key={todo.id}
+                className={`todo-row premium-card ${todo.completed ? 'is-done' : ''}`}
+                onClick={() => toggle(todo.id)}
+              >
+                <div className="check-zone">
+                  {todo.completed ? <CheckCircle2 size={24} className="check-success" /> : <Circle size={24} className="check-idle" />}
+                </div>
+                <div className="todo-info">
+                  <h4>{todo.task}</h4>
+                  <div className="meta-info">
+                    <span className="category-tag">{todo.category}</span>
+                    <span className={`priority-tag ${todo.priority.toLowerCase()}`}>{todo.priority}</span>
+                    <span className="due-tag"><Calendar size={12} /> {todo.due}</span>
+                  </div>
+                </div>
+                <button className="action-btn" onClick={(e) => e.stopPropagation()}><MoreVertical size={18} /></button>
+              </div>
+            ))}
+          </div>
+        </main>
+      </div>
+
+      <style jsx>{`
         .todo-page {
-          max-width: 1000px;
-          margin: 0 auto;
+          animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         .page-header {
           display: flex;
           justify-content: space-between;
           align-items: flex-end;
-          margin-bottom: 3rem;
+          margin-bottom: 4rem;
+        }
+
+        .status-badge {
+          display: inline-block;
+          background: rgba(255,255,255,0.05);
+          padding: 2px 8px;
+          border-radius: 4px;
+          font-size: 0.7rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 1rem;
         }
 
         .page-header h1 {
-          font-size: 2.5rem;
-          font-weight: 800;
+          font-size: 3rem;
+          margin-bottom: 0.5rem;
         }
 
         .page-header p {
-          color: var(--muted);
+          color: var(--text-secondary);
+          font-size: 1.1rem;
         }
 
-        .add-btn {
-          background: var(--foreground);
-          color: var(--background);
-          padding: 0.75rem 1.5rem;
-          border-radius: 8px;
-          font-weight: 600;
+        .primary-btn {
+          background: var(--text-primary);
+          color: var(--bg-deep);
+          padding: 0.8rem 1.75rem;
+          border-radius: 12px;
+          font-weight: 700;
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.75rem;
         }
 
         .todo-layout {
           display: grid;
-          grid-template-columns: 200px 1fr;
-          gap: 3rem;
+          grid-template-columns: 260px 1fr;
+          gap: 4rem;
         }
 
-        .todo-categories {
+        .todo-nav {
           display: flex;
           flex-direction: column;
-          gap: 2rem;
+          gap: 2.5rem;
         }
 
-        .cat-group h3 {
-          font-size: 0.75rem;
-          text-transform: uppercase;
-          color: var(--muted);
-          letter-spacing: 0.1em;
-          margin-bottom: 1rem;
-          padding-left: 0.75rem;
+        .search-bar {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 1rem;
+          border-radius: 10px;
+          color: var(--text-muted);
         }
 
-        .cat-link {
-          display: block;
+        .search-bar input {
+          background: none;
+          border: none;
+          color: var(--text-primary);
+          font-size: 0.9rem;
           width: 100%;
+        }
+
+        .nav-section {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .section-label {
+          font-size: 0.7rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          color: var(--text-dim);
+          letter-spacing: 0.1em;
+          margin-bottom: 0.5rem;
+        }
+
+        .nav-btn {
           text-align: left;
-          padding: 0.75rem;
-          font-size: 0.95rem;
-          font-weight: 500;
-          color: var(--muted);
+          padding: 0.6rem 0.75rem;
           border-radius: 8px;
-          transition: all 0.2s;
+          font-size: 0.95rem;
+          color: var(--text-secondary);
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          transition: var(--transition-fast);
         }
 
-        .cat-link:hover {
-          background: rgba(255, 255, 255, 0.05);
-          color: var(--foreground);
+        .nav-btn:hover {
+          background: rgba(255,255,255,0.03);
+          color: var(--text-primary);
         }
 
-        .cat-link.active {
-          background: var(--card-bg);
-          color: var(--foreground);
+        .nav-btn.active {
+          background: var(--bg-card);
+          color: var(--text-primary);
           font-weight: 700;
-          border: 1px solid var(--card-border);
+          border: 1px solid var(--border-main);
+        }
+
+        .list-controls {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1.5rem;
+          padding: 0 0.5rem;
+        }
+
+        .active-filters {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.85rem;
+          font-weight: 700;
+          color: var(--text-muted);
+          cursor: pointer;
         }
 
         .todo-list {
@@ -153,96 +226,76 @@ export default function TodoPage() {
           gap: 1rem;
         }
 
-        .todo-item {
-          padding: 1.25rem;
-          border-radius: 12px;
-          border: 1px solid var(--card-border);
+        .todo-row {
           display: flex;
-          justify-content: space-between;
           align-items: center;
+          gap: 1.5rem;
           cursor: pointer;
-          transition: all 0.2s;
+          position: relative;
         }
 
-        .todo-item:hover {
-          background: rgba(255, 255, 255, 0.04);
+        .todo-row:hover {
+          background: rgba(255,255,255,0.03);
+          border-color: var(--border-bright);
           transform: translateX(4px);
         }
 
-        .todo-left {
-          display: flex;
-          gap: 1.25rem;
-          align-items: flex-start;
+        .check-idle { color: var(--text-dim); }
+        .check-success { color: var(--text-primary); }
+
+        .todo-info {
+          flex: 1;
         }
 
-        .check-icon {
-          color: var(--muted);
-          margin-top: 2px;
-        }
-
-        .check-icon.done {
-          color: var(--foreground);
-        }
-
-        .todo-content h4 {
+        .todo-info h4 {
           font-size: 1.1rem;
-          font-weight: 600;
           margin-bottom: 0.5rem;
+          transition: var(--transition-base);
         }
 
-        .todo-item.completed h4 {
-          color: var(--muted);
+        .is-done h4 {
+          color: var(--text-dim);
           text-decoration: line-through;
         }
 
-        .todo-tags {
+        .meta-info {
           display: flex;
-          gap: 0.75rem;
+          gap: 1rem;
           align-items: center;
         }
 
-        .tag {
-          font-size: 0.75rem;
-          font-weight: 600;
-          padding: 0.2rem 0.6rem;
-          border-radius: 4px;
-          background: rgba(255, 255, 255, 0.05);
-          color: var(--muted);
+        .tag, .category-tag, .priority-tag, .due-tag {
+          font-size: 0.7rem;
+          font-weight: 700;
+          text-transform: uppercase;
         }
 
-        .tag.priority.high { color: #ff4444; background: rgba(255, 68, 68, 0.1); }
-        .tag.priority.medium { color: #ffbb33; background: rgba(255, 187, 51, 0.1); }
-        .tag.priority.low { color: #00C851; background: rgba(0, 200, 81, 0.1); }
+        .category-tag { color: var(--text-muted); }
+        
+        .priority-tag.high { color: #ff5555; }
+        .priority-tag.medium { color: #ffaa00; }
+        .priority-tag.low { color: #55ff55; }
 
-        .tag.due {
+        .due-tag {
           display: flex;
           align-items: center;
-          gap: 0.3rem;
+          gap: 0.4rem;
+          color: var(--text-dim);
         }
 
-        .more-btn {
-          color: var(--muted);
+        .action-btn {
+          color: var(--text-dim);
+          padding: 0.5rem;
         }
 
-        @media (max-width: 800px) {
-          .todo-layout {
-            grid-template-columns: 1fr;
-          }
-          .todo-categories {
-            flex-direction: row;
-            overflow-x: auto;
-            padding-bottom: 1rem;
-          }
-          .cat-group {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-          }
-          .cat-group h3 {
-            margin-bottom: 0;
-          }
+        .action-btn:hover { color: var(--text-primary); }
+
+        @media (max-width: 900px) {
+          .todo-layout { grid-template-columns: 1fr; }
+          .todo-nav { display: none; }
+          .page-header h1 { font-size: 2.5rem; }
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }

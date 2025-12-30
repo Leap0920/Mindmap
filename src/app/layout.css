@@ -1,21 +1,29 @@
 .layout-container {
     display: flex;
     min-height: 100vh;
+    background: var(--bg-deep);
 }
 
 .main-content {
     flex: 1;
     margin-left: var(--sidebar-width);
-    padding: 2rem;
+    padding: 2.5rem;
     min-height: 100vh;
-    background: var(--background);
+    background: radial-gradient(circle at top right, #0f0f0f, var(--bg-deep));
+    position: relative;
+}
+
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: var(--sidebar-collapsed);
+        padding: 2rem;
+    }
 }
 
 @media (max-width: 768px) {
     .main-content {
         margin-left: 0;
-        padding: 1rem;
-        padding-top: 4rem;
-        /* Space for mobile menu toggle */
+        padding: 1.5rem;
+        padding-top: 5rem;
     }
 }

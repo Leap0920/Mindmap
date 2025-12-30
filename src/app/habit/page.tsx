@@ -2,202 +2,264 @@
 
 import { useState } from 'react';
 import HabitCard from '@/components/HabitCard';
-import { ChevronLeft, ChevronRight, Plus, Settings2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Settings2, Calendar as CalIcon, Filter, LayoutGrid, List } from 'lucide-react';
 
-// Mock data for initial view
 const INITIAL_HABITS = [
-    { id: '1', name: 'Reading', completed: false },
-    { id: '2', name: 'Study', completed: true },
-    { id: '3', name: 'Workout', completed: false },
+  { id: '1', name: 'Reading', completed: false },
+  { id: '2', name: 'Study', completed: true },
+  { id: '3', name: 'Workout', completed: false },
 ];
 
 export default function HabitPage() {
-    const [currentDate, setCurrentDate] = useState(new Date(2025, 1, 1)); // Feb 2025 like in the image
-    const [habits, setHabits] = useState(INITIAL_HABITS);
+  const [currentDate, setCurrentDate] = useState(new Date(2025, 1, 1));
+  const [habits, setHabits] = useState(INITIAL_HABITS);
 
-    // Helper to get days in month
-    const getDaysInMonth = (year: number, month: number) => {
-        return new Date(year, month + 1, 0).getDate();
-    };
+  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
+  const daysInMonth = getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth());
+  const monthName = currentDate.toLocaleDateString('en-US', { month: 'long' });
+  const currentYear = currentDate.getFullYear();
 
-    const daysInMonth = getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth());
-    const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const toggleHabit = (id: string) => {
+    setHabits(prev => prev.map(h => h.id === id ? { ...h, completed: !h.completed } : h));
+  };
 
-    const toggleHabit = (id: string) => {
-        setHabits(prev => prev.map(h => h.id === id ? { ...h, completed: !h.completed } : h));
-    };
+  return (
+    <div className="habit-page">
+      <header className="page-header">
+        <div className="title-section">
+          <div className="breadcrumb">Workspace / Productivity</div>
+          <h1 className="text-gradient">Habit Journey</h1>
+          <p>Small steps lead to big change.</p>
+        </div>
 
-    return (
-        <div className="habit-page">
-            <header className="page-header">
-                <div className="header-left">
-                    <button className="view-selector">Monthly</button>
-                    <div className="month-display">
-                        <h2>{monthName}</h2>
-                    </div>
-                </div>
-                <div className="header-right">
-                    <div className="controls">
-                        <button className="icon-btn"><ChevronLeft size={20} /></button>
-                        <button className="text-btn">Today</button>
-                        <button className="icon-btn"><ChevronRight size={20} /></button>
-                    </div>
-                    <button className="new-btn">
-                        <Plus size={18} />
-                        <span>New</span>
-                    </button>
-                    <button className="icon-btn settings"><Settings2 size={20} /></button>
-                </div>
-            </header>
+        <div className="header-actions">
+          <div className="view-toggle glass-panel">
+            <button className="active"><LayoutGrid size={16} /></button>
+            <button><List size={16} /></button>
+          </div>
+          <button className="primary-btn">
+            <Plus size={18} />
+            <span>Add Habit</span>
+          </button>
+        </div>
+      </header>
 
-            <div className="calendar-grid">
-                <div className="weekday-header">
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                        <div key={d} className="weekday">{d}</div>
-                    ))}
-                </div>
-                <div className="grid-content">
-                    {/* We'd normally offset this for the starting day of the week, but for simplicity: */}
-                    {Array.from({ length: daysInMonth }).map((_, i) => (
-                        <HabitCard
-                            key={i}
-                            date={new Date(currentDate.getFullYear(), currentDate.getMonth(), i + 1)}
-                            habits={habits}
-                            onToggle={toggleHabit}
-                            isToday={i + 1 === 12} // Example today
-                        />
-                    ))}
-                </div>
+      <section className="calendar-container glass-panel">
+        <div className="calendar-toolbar">
+          <div className="month-picker">
+            <button className="nav-btn"><ChevronLeft size={20} /></button>
+            <div className="current-month">
+              <CalIcon size={18} className="text-muted" />
+              <span>{monthName} {currentYear}</span>
             </div>
+            <button className="nav-btn"><ChevronRight size={20} /></button>
+          </div>
+          <div className="toolbar-right">
+            <button className="secondary-btn">Today</button>
+            <button className="icon-btn"><Filter size={18} /></button>
+            <button className="icon-btn"><Settings2 size={18} /></button>
+          </div>
+        </div>
 
-            <style jsx>{`
+        <div className="weekday-header">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+            <div key={d} className="weekday">{d}</div>
+          ))}
+        </div>
+
+        <div className="calendar-grid">
+          {Array.from({ length: daysInMonth }).map((_, i) => (
+            <HabitCard
+              key={i}
+              date={new Date(currentDate.getFullYear(), currentDate.getMonth(), i + 1)}
+              habits={habits}
+              onToggle={toggleHabit}
+              isToday={i + 1 === 12}
+            />
+          ))}
+        </div>
+      </section>
+
+      <style jsx>{`
         .habit-page {
-          max-width: 1400px;
-          margin: 0 auto;
+          animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         .page-header {
           display: flex;
           justify-content: space-between;
-          align-items: center;
-          margin-bottom: 2rem;
+          align-items: flex-end;
+          margin-bottom: 3rem;
         }
 
-        .header-left, .header-right {
+        .breadcrumb {
+          font-size: 0.75rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          color: var(--text-muted);
+          margin-bottom: 0.5rem;
+          letter-spacing: 0.05em;
+        }
+
+        .page-header h1 {
+          font-size: 3rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+          color: var(--text-secondary);
+          font-size: 1.1rem;
+        }
+
+        .header-actions {
+          display: flex;
+          gap: 1rem;
+          align-items: center;
+        }
+
+        .view-toggle {
+          display: flex;
+          padding: 4px;
+          border-radius: 10px;
+        }
+
+        .view-toggle button {
+          padding: 8px 12px;
+          border-radius: 6px;
+          color: var(--text-muted);
+        }
+
+        .view-toggle button.active {
+          background: rgba(255,255,255,0.08);
+          color: var(--text-primary);
+        }
+
+        .primary-btn {
+          background: var(--text-primary);
+          color: var(--bg-deep);
+          padding: 0.75rem 1.5rem;
+          border-radius: var(--border-radius-md);
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-weight: 700;
+          box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .primary-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+        }
+
+        .calendar-container {
+          border-radius: var(--border-radius-xl);
+          overflow: hidden;
+        }
+
+        .calendar-toolbar {
+          padding: 1.5rem 2rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 1px solid var(--border-dim);
+        }
+
+        .month-picker {
           display: flex;
           align-items: center;
           gap: 1.5rem;
         }
 
-        .view-selector {
-          background: var(--card-bg);
-          border: 1px solid var(--card-border);
-          padding: 0.5rem 1rem;
-          border-radius: 6px;
-          font-size: 0.9rem;
-          font-weight: 600;
-        }
-
-        .month-display h2 {
-          font-size: 1.5rem;
+        .current-month {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          font-size: 1.25rem;
           font-weight: 700;
         }
 
-        .controls {
+        .toolbar-right {
           display: flex;
-          background: var(--card-bg);
-          border: 1px solid var(--card-border);
-          border-radius: 6px;
-          padding: 2px;
-        }
-
-        .icon-btn, .text-btn {
-          padding: 0.4rem 0.8rem;
-          display: flex;
+          gap: 0.75rem;
           align-items: center;
-          justify-content: center;
-          border-radius: 4px;
-          transition: background 0.2s;
         }
 
-        .icon-btn:hover, .text-btn:hover {
-          background: rgba(255, 255, 255, 0.05);
-        }
-
-        .text-btn {
+        .secondary-btn {
+          background: rgba(255,255,255,0.05);
+          padding: 0.5rem 1rem;
+          border-radius: 8px;
           font-size: 0.9rem;
-          font-weight: 500;
-        }
-
-        .new-btn {
-          background: var(--foreground);
-          color: var(--background);
-          padding: 0.5rem 1.25rem;
-          border-radius: 6px;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
           font-weight: 600;
-          font-size: 0.9rem;
+          border: 1px solid var(--border-dim);
         }
 
-        .calendar-grid {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
+        .icon-btn {
+          color: var(--text-muted);
+          padding: 0.5rem;
+        }
+
+        .icon-btn:hover {
+          color: var(--text-primary);
         }
 
         .weekday-header {
           display: grid;
           grid-template-columns: repeat(7, 1fr);
-          text-align: right;
-          padding-right: 1rem;
+          padding: 1rem 0;
+          background: rgba(255,255,255,0.02);
+          border-bottom: 1px solid var(--border-dim);
+          text-align: center;
         }
 
         .weekday {
-          font-size: 0.8rem;
-          color: var(--muted);
-          font-weight: 500;
+          font-size: 0.75rem;
+          color: var(--text-muted);
+          font-weight: 700;
           text-transform: uppercase;
+          letter-spacing: 0.1em;
         }
 
-        .grid-content {
+        .calendar-grid {
           display: grid;
           grid-template-columns: repeat(7, 1fr);
           gap: 1px;
-          background: var(--card-border);
-          border: 1px solid var(--card-border);
-          border-radius: 12px;
-          overflow: hidden;
+          background: var(--border-dim);
         }
 
-        /* We override the card background slightly when in the grid to see the borders */
-        .grid-content :global(.habit-card) {
+        .calendar-grid :global(.habit-card) {
           border-radius: 0;
           border: none;
-          background: var(--background);
+          background: var(--bg-deep);
         }
 
         @media (max-width: 1200px) {
-          .grid-content {
+          .calendar-grid {
             grid-template-columns: repeat(4, 1fr);
           }
-           .weekday-header {
-            display: none;
-          }
+          .weekday-header { display: none; }
         }
 
         @media (max-width: 768px) {
-          .grid-content {
+          .calendar-grid {
             grid-template-columns: repeat(1, 1fr);
           }
           .page-header {
             flex-direction: column;
             align-items: flex-start;
-            gap: 1rem;
           }
+          .header-actions {
+            margin-top: 1.5rem;
+            width: 100%;
+          }
+          .view-toggle { display: none; }
+          .primary-btn { flex: 1; justify-content: center; }
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }

@@ -2,250 +2,302 @@
 
 import { useState } from 'react';
 import ProtectedContent from '@/components/ProtectedContent';
-import { Key, Copy, Eye, EyeOff, Search, Plus, ExternalLink, MoreVertical } from 'lucide-react';
+import { Key, Copy, Eye, Search, Plus, MoreVertical, ShieldCheck, Globe, User, Fingerprint } from 'lucide-react';
 
 export default function PasswordsPage() {
-    const [passwords] = useState([
-        { id: '1', site: 'Google', username: 'john.doe@gmail.com', password: '••••••••', url: 'google.com' },
-        { id: '2', site: 'GitHub', username: 'johndoe_dev', password: '••••••••', url: 'github.com' },
-        { id: '3', site: 'Netflix', username: 'family_account', password: '••••••••', url: 'netflix.com' },
-    ]);
+  const [passwords] = useState([
+    { id: '1', site: 'Google Workspace', username: 'john.dev@gmail.com', password: '••••••••', url: 'accounts.google.com' },
+    { id: '2', site: 'GitHub Enterprise', username: 'john_syntax', password: '••••••••', url: 'github.com' },
+    { id: '3', site: 'DigitalOcean', username: 'admin@mindmap.io', password: '••••••••', url: 'digitalocean.com' },
+  ]);
 
-    return (
-        <div className="password-page">
-            <header className="page-header">
-                <div className="title-section">
-                    <h1>Password Vault</h1>
-                    <p>Securely store your credentials</p>
+  return (
+    <div className="vault-page">
+      <header className="page-header">
+        <div className="title-group">
+          <div className="security-badge">
+            <ShieldCheck size={14} />
+            <span>End-to-End Encrypted</span>
+          </div>
+          <h1 className="text-gradient">Secure Vault</h1>
+          <p>Military-grade storage for your digital keys.</p>
+        </div>
+        <button className="primary-btn">
+          <Plus size={18} />
+          <span>New Entry</span>
+        </button>
+      </header>
+
+      <ProtectedContent isInitiallyLocked={true}>
+        <div className="vault-container glass-panel">
+          <div className="vault-toolbar">
+            <div className="search-box">
+              <Search size={18} />
+              <input type="text" placeholder="Search decrypted vault..." />
+            </div>
+            <div className="toolbar-actions">
+              <button className="icon-btn"><Fingerprint size={18} /></button>
+              <button className="secondary-btn">Export</button>
+            </div>
+          </div>
+
+          <div className="vault-table">
+            <div className="table-head">
+              <span>Identity</span>
+              <span>Account</span>
+              <span>Credential</span>
+              <span className="actions-cell"></span>
+            </div>
+            {passwords.map(pw => (
+              <div key={pw.id} className="vault-row">
+                <div className="identity-cell">
+                  <div className="site-avatar"><Globe size={18} /></div>
+                  <div className="site-details">
+                    <span className="site-name">{pw.site}</span>
+                    <span className="site-url">{pw.url}</span>
+                  </div>
                 </div>
-                <button className="add-btn">
-                    <Plus size={18} />
-                    <span>Add Password</span>
-                </button>
-            </header>
-
-            <ProtectedContent isInitiallyLocked={true}>
-                <div className="vault-content glass">
-                    <div className="table-header">
-                        <div className="search-bar">
-                            <Search size={18} />
-                            <input type="text" placeholder="Search vault..." />
-                        </div>
-                    </div>
-
-                    <div className="password-list">
-                        <div className="list-heading">
-                            <span>Site</span>
-                            <span>Username</span>
-                            <span>Password</span>
-                            <span className="actions-col"></span>
-                        </div>
-                        {passwords.map(pw => (
-                            <div key={pw.id} className="password-row">
-                                <div className="site-cell">
-                                    <div className="site-icon"><Key size={16} /></div>
-                                    <div className="site-info">
-                                        <span className="name">{pw.site}</span>
-                                        <span className="url">{pw.url}</span>
-                                    </div>
-                                </div>
-                                <div className="user-cell">
-                                    <span>{pw.username}</span>
-                                    <button className="copy-btn"><Copy size={14} /></button>
-                                </div>
-                                <div className="pass-cell">
-                                    <span>{pw.password}</span>
-                                    <div className="cell-actions">
-                                        <button className="copy-btn"><Eye size={14} /></button>
-                                        <button className="copy-btn"><Copy size={14} /></button>
-                                    </div>
-                                </div>
-                                <div className="actions-col">
-                                    <button className="more-btn"><MoreVertical size={18} /></button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                <div className="account-cell">
+                  <User size={14} />
+                  <span>{pw.username}</span>
+                  <button className="copy-small"><Copy size={12} /></button>
                 </div>
-            </ProtectedContent>
+                <div className="credential-cell">
+                  <span className="pass-dots">{pw.password}</span>
+                  <div className="pass-actions">
+                    <button className="action-circle"><Eye size={12} /></button>
+                    <button className="action-circle"><Copy size={12} /></button>
+                  </div>
+                </div>
+                <div className="actions-cell">
+                  <button className="more-trigger"><MoreVertical size={18} /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </ProtectedContent>
 
-            <style jsx>{`
-        .password-page {
+      <style jsx>{`
+        .vault-page {
           max-width: 1000px;
           margin: 0 auto;
+          animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; filter: blur(10px); }
+          to { opacity: 1; filter: blur(0); }
         }
 
         .page-header {
           display: flex;
           justify-content: space-between;
           align-items: flex-end;
-          margin-bottom: 3rem;
+          margin-bottom: 4rem;
         }
 
-        .title-section h1 {
-          font-size: 2.5rem;
+        .security-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: rgba(0, 255, 136, 0.05);
+          color: #00ff88;
+          padding: 0.4rem 0.75rem;
+          border-radius: 6px;
+          font-size: 0.7rem;
           font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 1rem;
+          border: 1px solid rgba(0, 255, 136, 0.1);
+        }
+
+        .page-header h1 {
+          font-size: 3rem;
           margin-bottom: 0.5rem;
         }
 
-        .title-section p {
-          color: var(--muted);
+        .page-header p {
+          color: var(--text-secondary);
           font-size: 1.1rem;
         }
 
-        .add-btn {
-          background: var(--foreground);
-          color: var(--background);
-          padding: 0.75rem 1.5rem;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-weight: 600;
-        }
-
-        .vault-content {
-          border: 1px solid var(--card-border);
-          border-radius: 16px;
-          overflow: hidden;
-        }
-
-        .table-header {
-          padding: 1.5rem;
-          border-bottom: 1px solid var(--card-border);
-        }
-
-        .search-bar {
+        .primary-btn {
+          background: var(--text-primary);
+          color: var(--bg-deep);
+          padding: 0.8rem 1.75rem;
+          border-radius: 12px;
+          font-weight: 700;
           display: flex;
           align-items: center;
           gap: 0.75rem;
-          background: var(--background);
-          padding: 0.75rem 1rem;
-          border-radius: 8px;
-          border: 1px solid var(--card-border);
-          width: 100%;
-          max-width: 400px;
-          color: var(--muted);
         }
 
-        .search-bar input {
+        .vault-container {
+          border-radius: var(--border-radius-xl);
+          overflow: hidden;
+        }
+
+        .vault-toolbar {
+          padding: 1.5rem 2rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: rgba(255,255,255,0.02);
+          border-bottom: 1px solid var(--border-dim);
+        }
+
+        .search-box {
+          flex: 1;
+          max-width: 400px;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 1rem;
+          background: var(--bg-deep);
+          border: 1px solid var(--border-main);
+          border-radius: 10px;
+          color: var(--text-muted);
+        }
+
+        .search-box input {
           background: none;
           border: none;
-          color: var(--foreground);
+          color: var(--text-primary);
           width: 100%;
+          font-size: 0.9rem;
         }
 
-        .password-list {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .list-heading {
-          display: grid;
-          grid-template-columns: 2fr 2fr 1.5fr 60px;
-          padding: 1rem 1.5rem;
-          background: rgba(255, 255, 255, 0.02);
-          font-size: 0.8rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          color: var(--muted);
-          letter-spacing: 0.05em;
-        }
-
-        .password-row {
-          display: grid;
-          grid-template-columns: 2fr 2fr 1.5fr 60px;
-          padding: 1.25rem 1.5rem;
-          border-bottom: 1px solid var(--card-border);
-          align-items: center;
-          transition: background 0.2s;
-        }
-
-        .password-row:hover {
-          background: rgba(255, 255, 255, 0.03);
-        }
-
-        .site-cell {
+        .toolbar-actions {
           display: flex;
           align-items: center;
           gap: 1rem;
         }
 
-        .site-icon {
-          width: 40px;
-          height: 40px;
-          background: var(--card-bg);
-          border: 1px solid var(--card-border);
+        .secondary-btn {
+          background: rgba(255,255,255,0.05);
+          padding: 0.6rem 1.25rem;
           border-radius: 8px;
+          font-weight: 600;
+          border: 1px solid var(--border-main);
+        }
+
+        .table-head {
+          display: grid;
+          grid-template-columns: 2fr 1.5fr 1.5fr 60px;
+          padding: 1rem 2rem;
+          font-size: 0.7rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          color: var(--text-dim);
+          letter-spacing: 0.1em;
+          border-bottom: 1px solid var(--border-dim);
+        }
+
+        .vault-row {
+          display: grid;
+          grid-template-columns: 2fr 1.5fr 1.5fr 60px;
+          padding: 1.5rem 2rem;
+          align-items: center;
+          border-bottom: 1px solid var(--border-dim);
+          transition: var(--transition-base);
+        }
+
+        .vault-row:hover {
+          background: rgba(255,255,255,0.02);
+        }
+
+        .identity-cell {
+          display: flex;
+          align-items: center;
+          gap: 1.25rem;
+        }
+
+        .site-avatar {
+          width: 44px;
+          height: 44px;
+          background: var(--bg-card);
+          border: 1px solid var(--border-main);
+          border-radius: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--muted);
+          color: var(--text-muted);
         }
 
-        .site-info {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .site-info .name {
-          font-weight: 600;
+        .site-name {
+          display: block;
+          font-weight: 700;
           font-size: 1rem;
         }
 
-        .site-info .url {
+        .site-url {
           font-size: 0.8rem;
-          color: var(--muted);
+          color: var(--text-dim);
         }
 
-        .user-cell, .pass-cell {
+        .account-cell, .credential-cell {
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          padding-right: 1.5rem;
-          font-family: 'Monaco', 'Consolas', monospace;
+          gap: 0.75rem;
+          font-family: 'JetBrains Mono', monospace;
           font-size: 0.9rem;
+          color: var(--text-secondary);
         }
 
-        .copy-btn {
-          color: var(--muted);
+        .copy-small {
+          color: var(--text-dim);
           opacity: 0;
-          transition: opacity 0.2s;
+          transition: var(--transition-fast);
         }
 
-        .password-row:hover .copy-btn {
+        .vault-row:hover .copy-small {
           opacity: 1;
         }
 
-        .copy-btn:hover {
-          color: var(--foreground);
+        .pass-dots {
+          letter-spacing: 0.2em;
         }
 
-        .cell-actions {
+        .pass-actions {
           display: flex;
-          gap: 0.5rem;
+          gap: 0.4rem;
+          opacity: 0;
+          transition: var(--transition-fast);
         }
 
-        .more-btn {
-          color: var(--muted);
+        .vault-row:hover .pass-actions {
+          opacity: 1;
         }
 
-        @media (max-width: 800px) {
-          .list-heading, .actions-col {
-            display: none;
-          }
-          .password-row {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-          }
-          .user-cell, .pass-cell {
-            padding-right: 0;
-          }
-          .copy-btn {
-            opacity: 1;
-          }
+        .action-circle {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: var(--bg-card);
+          border: 1px solid var(--border-dim);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--text-muted);
+        }
+
+        .action-circle:hover {
+          color: var(--text-primary);
+          border-color: var(--border-main);
+        }
+
+        .more-trigger {
+          color: var(--text-dim);
+        }
+
+        @media (max-width: 900px) {
+          .table-head, .actions-cell { display: none; }
+          .vault-row { grid-template-columns: 1fr; gap: 1.5rem; }
+          .pass-actions, .copy-small { opacity: 1; }
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }

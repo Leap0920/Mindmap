@@ -1,164 +1,191 @@
 "use client";
 
-import { useState } from 'react';
-import { Check, Plus } from 'lucide-react';
+import { Check, Flame } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs));
 }
 
 interface HabitItem {
-    id: string;
-    name: string;
-    completed: boolean;
+  id: string;
+  name: string;
+  completed: boolean;
 }
 
 interface HabitCardProps {
-    date: Date;
-    habits: HabitItem[];
-    onToggle: (habitId: string) => void;
-    isToday?: boolean;
+  date: Date;
+  habits: HabitItem[];
+  onToggle: (habitId: string) => void;
+  isToday?: boolean;
 }
 
 export default function HabitCard({ date, habits, onToggle, isToday }: HabitCardProps) {
-    const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-    const dayNum = date.getDate();
-    const formattedDate = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+  const dayNum = date.getDate();
+  const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
-    return (
-        <div className={cn("habit-card glass", isToday && "today-card")}>
-            <div className="card-header">
-                <div className="date-badge">
-                    <span className="day-name">{dayName}</span>
-                    <span className="day-num">{dayNum}</span>
-                </div>
-                <div className="status-indicator">
-                    <Check size={14} className="icon" />
-                    <span>Daily Habits</span>
-                </div>
-            </div>
-            <div className="full-date">{formattedDate}</div>
-            <div className="habit-list">
-                {habits.map((habit) => (
-                    <div
-                        key={habit.id}
-                        className="habit-item"
-                        onClick={() => onToggle(habit.id)}
-                    >
-                        <div className={cn("checkbox", habit.completed && "checked")}>
-                            {habit.completed && <Check size={12} strokeWidth={3} />}
-                        </div>
-                        <span className={cn("habit-name", habit.completed && "completed")}>
-                            {habit.name}
-                        </span>
-                    </div>
-                ))}
-            </div>
+  return (
+    <div className={cn(
+      "habit-card transition-all",
+      isToday && "today",
+      isWeekend && "weekend"
+    )}>
+      <div className="card-top">
+        <div className="day-info">
+          <span className="num">{dayNum}</span>
+          <span className="label">{dayName}</span>
+        </div>
+        {isToday && <div className="today-badge">Today</div>}
+      </div>
 
-            <style jsx>{`
+      <div className="habit-items">
+        {habits.map((habit) => (
+          <div
+            key={habit.id}
+            className={cn("habit-row", habit.completed && "done")}
+            onClick={() => onToggle(habit.id)}
+          >
+            <div className="check-box">
+              {habit.completed && <Check size={10} strokeWidth={4} />}
+            </div>
+            <span className="name">{habit.name}</span>
+          </div>
+        ))}
+      </div>
+
+      {habits.every(h => h.completed) && habits.length > 0 && (
+        <div className="perfect-day">
+          <Flame size={12} fill="currentColor" />
+          <span>Perfect</span>
+        </div>
+      )}
+
+      <style jsx>{`
         .habit-card {
-          padding: 1rem;
-          border-radius: 12px;
-          border: 1px solid var(--card-border);
+          padding: 1.25rem;
+          min-height: 180px;
           display: flex;
           flex-direction: column;
-          gap: 0.75rem;
-          min-height: 200px;
-          transition: all 0.2s ease;
+          gap: 1rem;
+          background: var(--bg-deep);
+          position: relative;
+          border-bottom: 1px solid var(--border-dim);
+          border-right: 1px solid var(--border-dim);
+          transition: var(--transition-base);
         }
 
         .habit-card:hover {
-          background: rgba(255, 255, 255, 0.08);
-          border-color: var(--muted);
+          background: rgba(255, 255, 255, 0.02);
+          z-index: 10;
         }
 
-        .today-card {
-          border-color: var(--foreground);
-          box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+        .today {
+          background: rgba(255, 255, 255, 0.03);
+          box-shadow: inset 0 0 0 1px var(--border-main);
         }
 
-        .card-header {
+        .weekend .num {
+          color: var(--text-dim);
+        }
+
+        .card-top {
           display: flex;
           justify-content: space-between;
           align-items: flex-start;
         }
 
-        .date-badge {
+        .day-info {
           display: flex;
           flex-direction: column;
         }
 
-        .day-name {
+        .num {
+          font-size: 1.5rem;
+          font-weight: 800;
+          line-height: 1;
+        }
+
+        .label {
           font-size: 0.7rem;
-          text-transform: uppercase;
-          color: var(--muted);
-          font-weight: 600;
-        }
-
-        .day-num {
-          font-size: 1.25rem;
           font-weight: 700;
+          text-transform: uppercase;
+          color: var(--text-muted);
+          letter-spacing: 0.1em;
+          margin-top: 2px;
         }
 
-        .status-indicator {
-          display: flex;
-          align-items: center;
-          gap: 0.4rem;
-          background: rgba(255, 255, 255, 0.1);
-          padding: 0.2rem 0.6rem;
+        .today-badge {
+          background: var(--text-primary);
+          color: var(--bg-deep);
+          font-size: 0.6rem;
+          font-weight: 800;
+          padding: 2px 6px;
           border-radius: 4px;
-          font-size: 0.75rem;
-          font-weight: 600;
+          text-transform: uppercase;
         }
 
-        .full-date {
-          font-size: 0.75rem;
-          color: var(--muted);
-        }
-
-        .habit-list {
+        .habit-items {
           display: flex;
           flex-direction: column;
           gap: 0.5rem;
         }
 
-        .habit-item {
+        .habit-row {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
+          gap: 0.6rem;
           cursor: pointer;
-          user-select: none;
+          font-size: 0.85rem;
+          color: var(--text-secondary);
+          transition: var(--transition-fast);
         }
 
-        .checkbox {
-          width: 18px;
-          height: 18px;
-          border: 2px solid var(--muted);
+        .check-box {
+          width: 16px;
+          height: 16px;
+          border: 2px solid var(--border-bright);
           border-radius: 4px;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: all 0.15s ease;
+          transition: var(--transition-fast);
         }
 
-        .checkbox.checked {
-          background: var(--foreground);
-          border-color: var(--foreground);
-          color: var(--background);
+        .habit-row:hover .check-box {
+          border-color: var(--text-primary);
         }
 
-        .habit-name {
-          font-size: 0.85rem;
-          color: var(--foreground);
+        .done .check-box {
+          background: var(--text-primary);
+          border-color: var(--text-primary);
+          color: var(--bg-deep);
         }
 
-        .habit-name.completed {
-          color: var(--muted);
+        .done .name {
+          color: var(--text-dim);
           text-decoration: line-through;
         }
+
+        .perfect-day {
+          margin-top: auto;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 0.65rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          color: var(--text-muted);
+        }
+
+        @media (max-width: 768px) {
+          .habit-card {
+            min-height: auto;
+            border-right: none;
+          }
+        }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }
