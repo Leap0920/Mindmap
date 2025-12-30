@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Plus, CheckCircle2, Circle, Trash2, Calendar, Hash, Search, Loader2, X } from 'lucide-react';
+import { Plus, CheckCircle2, Circle, Trash2, Calendar, Search, Loader2, X } from 'lucide-react';
 
 interface Todo {
     _id: string;
@@ -111,17 +111,14 @@ export default function TodoPage() {
         return matchesFilter && matchesSearch;
     });
 
-    const completedCount = todos.filter(t => t.completed).length;
-
     if (status === 'loading' || isLoading) {
         return (
             <div className="loading-screen">
-                <Loader2 size={32} className="animate-spin" />
-                <span>Loading tasks...</span>
+                <Loader2 size={32} className="spinner" />
                 <style jsx>{`
-          .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 1rem; color: var(--text-muted); }
+          .loading-screen { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
+          .spinner { animation: spin 1s linear infinite; color: #444; }
           @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-          .animate-spin { animation: spin 1s linear infinite; }
         `}</style>
             </div>
         );
@@ -131,32 +128,31 @@ export default function TodoPage() {
         <div className="todo-page">
             <header className="page-header">
                 <div className="title-area">
-                    <div className="status-badge">{todos.length} Tasks • {completedCount} Done</div>
-                    <h1 className="text-gradient">Task Matrix</h1>
-                    <p>Prioritize your focus and eliminate distractions.</p>
+                    <span className="breadcrumb">Workspace / Focus</span>
+                    <h1>Tasks</h1>
+                    <p>{todos.filter(t => !t.completed).length} pending actions.</p>
                 </div>
-                <button className="primary-btn" onClick={() => setShowModal(true)}>
+                <button className="add-btn" onClick={() => setShowModal(true)}>
                     <Plus size={18} />
-                    <span>New Task</span>
+                    <span>Next Task</span>
                 </button>
             </header>
 
-            <div className="todo-layout">
-                <aside className="todo-nav">
-                    <div className="search-bar glass-panel">
-                        <Search size={16} />
+            <div className="main-layout">
+                <aside className="filters">
+                    <div className="search-box">
+                        <Search size={14} className="search-icon" />
                         <input
                             type="text"
-                            placeholder="Filter tasks..."
+                            placeholder="Find..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
                         />
                     </div>
 
-                    <div className="nav-section">
-                        <span className="section-label">Category</span>
+                    <nav className="filter-nav">
                         <button
-                            className={`nav-btn ${filter === 'all' ? 'active' : ''}`}
+                            className={`filter-link ${filter === 'all' ? 'active' : ''}`}
                             onClick={() => setFilter('all')}
                         >
                             All Tasks
@@ -164,51 +160,41 @@ export default function TodoPage() {
                         {CATEGORIES.map(cat => (
                             <button
                                 key={cat}
-                                className={`nav-btn ${filter === cat ? 'active' : ''}`}
+                                className={`filter-link ${filter === cat ? 'active' : ''}`}
                                 onClick={() => setFilter(cat)}
                             >
-                                <Hash size={14} /> {cat}
+                                {cat}
                             </button>
                         ))}
-                    </div>
+                    </nav>
                 </aside>
 
-                <main className="todo-content">
+                <main className="content">
                     {filteredTodos.length === 0 ? (
-                        <div className="empty-state">
-                            <p>No tasks found.</p>
-                            <button className="primary-btn" onClick={() => setShowModal(true)}>
-                                <Plus size={18} /> Add your first task
-                            </button>
-                        </div>
+                        <div className="empty">Clear slate.</div>
                     ) : (
-                        <div className="todo-list">
+                        <div className="todo-stack">
                             {filteredTodos.map(todo => (
-                                <div
-                                    key={todo._id}
-                                    className={`todo-row premium-card ${todo.completed ? 'is-done' : ''}`}
-                                >
-                                    <div className="check-zone" onClick={() => toggleTodo(todo._id, todo.completed)}>
-                                        {todo.completed ? (
-                                            <CheckCircle2 size={24} className="check-success" />
-                                        ) : (
-                                            <Circle size={24} className="check-idle" />
-                                        )}
-                                    </div>
-                                    <div className="todo-info">
+                                <div key={todo._id} className={`todo-item ${todo.completed ? 'done' : ''}`}>
+                                    <button className="check-btn" onClick={() => toggleTodo(todo._id, todo.completed)}>
+                                        {todo.completed ? <CheckCircle2 size={20} /> : <Circle size={20} />}
+                                    </button>
+
+                                    <div className="todo-body">
                                         <h4>{todo.task}</h4>
-                                        <div className="meta-info">
-                                            <span className="category-tag">{todo.category}</span>
-                                            <span className={`priority-tag ${todo.priority.toLowerCase()}`}>{todo.priority}</span>
+                                        <div className="tags">
+                                            <span className="tag">{todo.category}</span>
+                                            <span className={`tag priority ${todo.priority.toLowerCase()}`}>{todo.priority}</span>
                                             {todo.dueDate && (
-                                                <span className="due-tag">
-                                                    <Calendar size={12} /> {new Date(todo.dueDate).toLocaleDateString()}
+                                                <span className="tag">
+                                                    <Calendar size={10} /> {new Date(todo.dueDate).toLocaleDateString()}
                                                 </span>
                                             )}
                                         </div>
                                     </div>
+
                                     <button className="delete-btn" onClick={() => deleteTodo(todo._id)}>
-                                        <Trash2 size={18} />
+                                        <Trash2 size={16} />
                                     </button>
                                 </div>
                             ))}
@@ -221,55 +207,38 @@ export default function TodoPage() {
                 <div className="modal-overlay" onClick={() => setShowModal(false)}>
                     <div className="modal-box" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3>New Task</h3>
-                            <button className="close-btn" onClick={() => setShowModal(false)}><X size={20} /></button>
+                            <h3>Record Task</h3>
+                            <button onClick={() => setShowModal(false)}><X size={18} /></button>
                         </div>
 
-                        <div className="form-group">
-                            <label>Task</label>
+                        <div className="input-field">
+                            <label>Description</label>
                             <input
                                 type="text"
-                                placeholder="What needs to be done?"
                                 value={newTodo.task}
                                 onChange={e => setNewTodo({ ...newTodo, task: e.target.value })}
                                 autoFocus
                             />
                         </div>
 
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Category</label>
-                                <select
-                                    value={newTodo.category}
-                                    onChange={e => setNewTodo({ ...newTodo, category: e.target.value })}
-                                >
+                        <div className="grid-fields">
+                            <div className="input-field">
+                                <label>Project</label>
+                                <select value={newTodo.category} onChange={e => setNewTodo({ ...newTodo, category: e.target.value })}>
                                     {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                                 </select>
                             </div>
-                            <div className="form-group">
-                                <label>Priority</label>
-                                <select
-                                    value={newTodo.priority}
-                                    onChange={e => setNewTodo({ ...newTodo, priority: e.target.value as any })}
-                                >
+                            <div className="input-field">
+                                <label>Level</label>
+                                <select value={newTodo.priority} onChange={e => setNewTodo({ ...newTodo, priority: e.target.value as any })}>
                                     {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
                                 </select>
                             </div>
                         </div>
 
-                        <div className="form-group">
-                            <label>Due Date (Optional)</label>
-                            <input
-                                type="date"
-                                value={newTodo.dueDate}
-                                onChange={e => setNewTodo({ ...newTodo, dueDate: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="modal-actions">
-                            <button className="secondary-btn" onClick={() => setShowModal(false)}>Cancel</button>
-                            <button className="primary-btn" onClick={addTodo} disabled={isSaving}>
-                                {isSaving ? <Loader2 size={16} className="animate-spin" /> : 'Create Task'}
+                        <div className="modal-footer">
+                            <button className="save-btn" onClick={addTodo} disabled={isSaving}>
+                                {isSaving ? '...' : 'Commit'}
                             </button>
                         </div>
                     </div>
@@ -277,63 +246,65 @@ export default function TodoPage() {
             )}
 
             <style jsx>{`
-        .todo-page { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
-        .status-badge { font-size: 0.75rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
-        .page-header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .todo-page { max-width: 1000px; margin: 0 auto; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; }
+        .breadcrumb { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+        .page-header h1 { font-size: 2.5rem; font-weight: 700; margin: 0.25rem 0; }
         .page-header p { color: var(--text-muted); }
-        .primary-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: var(--text-primary); color: var(--bg-deep); font-weight: 600; border-radius: 10px; }
-        .primary-btn:hover { transform: translateY(-2px); }
-        .secondary-btn { padding: 0.75rem 1.25rem; background: transparent; border: 1px solid var(--border-main); color: var(--text-secondary); border-radius: 10px; font-weight: 500; }
-        .todo-layout { display: grid; grid-template-columns: 260px 1fr; gap: 2rem; }
-        .todo-nav { display: flex; flex-direction: column; gap: 1.5rem; }
-        .search-bar { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 10px; }
-        .search-bar input { flex: 1; background: none; border: none; color: var(--text-primary); }
-        .search-bar input::placeholder { color: var(--text-muted); }
-        .nav-section { display: flex; flex-direction: column; gap: 0.25rem; }
-        .section-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 0.5rem; padding: 0 0.5rem; }
-        .nav-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.75rem; border-radius: 8px; color: var(--text-secondary); font-size: 0.9rem; text-align: left; transition: all 0.15s; }
-        .nav-btn:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
-        .nav-btn.active { background: var(--accent-soft); color: var(--text-primary); font-weight: 600; }
-        .todo-content { min-height: 400px; }
-        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; gap: 1rem; color: var(--text-muted); }
-        .todo-list { display: flex; flex-direction: column; gap: 0.75rem; }
-        .todo-row { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; border-radius: 12px; transition: all 0.2s; }
-        .todo-row:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-        .todo-row.is-done { opacity: 0.6; }
-        .check-zone { cursor: pointer; flex-shrink: 0; }
-        .check-success { color: #4ade80; }
-        .check-idle { color: var(--text-dim); }
-        .todo-info { flex: 1; min-width: 0; }
-        .todo-info h4 { font-size: 1rem; font-weight: 500; margin-bottom: 0.5rem; }
-        .is-done .todo-info h4 { text-decoration: line-through; color: var(--text-muted); }
-        .meta-info { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-        .category-tag { font-size: 0.75rem; padding: 0.2rem 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px; color: var(--text-muted); }
-        .priority-tag { font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600; }
-        .priority-tag.high { background: rgba(239, 68, 68, 0.2); color: #f87171; }
-        .priority-tag.medium { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
-        .priority-tag.low { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
-        .due-tag { display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: var(--text-dim); }
-        .delete-btn { padding: 0.5rem; color: var(--text-dim); border-radius: 8px; transition: all 0.15s; }
-        .delete-btn:hover { color: #f87171; background: rgba(239, 68, 68, 0.1); }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-box { background: var(--bg-card); border: 1px solid var(--border-main); border-radius: 16px; padding: 1.5rem; width: 90%; max-width: 480px; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .modal-header h3 { font-size: 1.25rem; }
-        .close-btn { color: var(--text-muted); padding: 0.25rem; }
-        .form-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
-        .form-group label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); }
-        .form-group input, .form-group select { padding: 0.75rem 1rem; background: var(--bg-deep); border: 1px solid var(--border-main); border-radius: 10px; color: var(--text-primary); }
-        .form-group input:focus, .form-group select:focus { border-color: var(--border-bright); outline: none; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .animate-spin { animation: spin 1s linear infinite; }
-        @media (max-width: 768px) {
-          .todo-layout { grid-template-columns: 1fr; }
-          .todo-nav { display: none; }
-          .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+
+        .add-btn { background: #fff; color: #000; padding: 0.7rem 1.25rem; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+
+        .main-layout { display: grid; grid-template-columns: 240px 1fr; gap: 3rem; }
+        
+        .search-box { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0.8rem; background: #111; border: 1px solid var(--border-main); border-radius: 8px; margin-bottom: 1.5rem; }
+        .search-box input { background: none; border: none; font-size: 0.85rem; color: #fff; outline: none; width: 100%; }
+        .search-icon { color: var(--text-dim); }
+
+        .filter-nav { display: flex; flex-direction: column; gap: 0.25rem; }
+        .filter-link { text-align: left; padding: 0.6rem 0.8rem; border-radius: 6px; font-size: 0.9rem; color: var(--text-secondary); transition: all 0.2s; }
+        .filter-link:hover { background: rgba(255,255,255,0.03); color: #fff; }
+        .filter-link.active { background: #111; color: #fff; font-weight: 600; border-left: 2px solid #fff; border-radius: 0 6px 6px 0; }
+
+        .todo-stack { display: flex; flex-direction: column; gap: 0.75rem; }
+        .todo-item { display: flex; align-items: center; gap: 1rem; padding: 1.25rem; background: #0a0a0a; border: 1px solid var(--border-main); border-radius: 12px; transition: border-color 0.2s; }
+        .todo-item:hover { border-color: var(--border-bright); }
+        .todo-item.done { opacity: 0.5; }
+
+        .check-btn { color: var(--text-dim); transition: color 0.2s; }
+        .done .check-btn { color: #fff; }
+
+        .todo-body { flex: 1; }
+        .todo-body h4 { font-size: 1rem; font-weight: 500; margin-bottom: 0.4rem; }
+        .done h4 { text-decoration: line-through; color: var(--text-dim); }
+
+        .tags { display: flex; gap: 0.5rem; }
+        .tag { font-size: 0.7rem; color: var(--text-dim); background: #111; padding: 0.2rem 0.5rem; border-radius: 4px; display: flex; align-items: center; gap: 0.25rem; text-transform: uppercase; letter-spacing: 0.02em; }
+        
+        .tag.priority.high { color: #fff; background: #222; font-weight: 700; }
+        .tag.priority.medium { color: var(--text-muted); }
+        .tag.priority.low { color: var(--text-dim); }
+
+        .delete-btn { color: #333; transition: color 0.2s; }
+        .delete-btn:hover { color: #f44; }
+
+        .empty { text-align: center; padding-top: 5rem; color: var(--text-dim); font-size: 0.9rem; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-box { background: #111; border: 1px solid var(--border-main); padding: 2rem; border-radius: 12px; width: 440px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .input-field { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; }
+        .input-field label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+        .input-field input, .input-field select { background: #000; border: 1px solid var(--border-main); padding: 0.75rem 1rem; border-radius: 8px; color: #fff; outline: none; }
+        .grid-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .modal-footer { display: flex; justify-content: flex-end; margin-top: 1rem; }
+        .save-btn { background: #fff; color: #000; padding: 0.7rem 2rem; border-radius: 8px; font-weight: 700; }
+
+        @media (max-width: 800px) {
+          .main-layout { grid-template-columns: 1fr; }
+          .filters { display: none; }
+          .page-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
         }
       `}</style>
         </div>

@@ -1,40 +1,34 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  /* Colors - Pure Monochrome Palette */
-  --bg-deep: #050505;
+  /* Colors - Strictly Monochrome */
+  --bg-deep: #000000;
   --bg-main: #0a0a0a;
-  --bg-card: #121212;
-  --bg-glass: rgba(18, 18, 18, 0.7);
+  --bg-card: #111111;
+  --bg-glass: rgba(10, 10, 10, 0.8);
 
-  --border-dim: rgba(255, 255, 255, 0.05);
-  --border-main: rgba(255, 255, 255, 0.1);
-  --border-bright: rgba(255, 255, 255, 0.2);
+  --border-dim: rgba(255, 255, 255, 0.03);
+  --border-main: rgba(255, 255, 255, 0.08);
+  --border-bright: rgba(255, 255, 255, 0.15);
 
   --text-primary: #ffffff;
   --text-secondary: #a1a1a1;
-  --text-muted: #666666;
-  --text-dim: #444444;
+  --text-muted: #737373;
+  --text-dim: #404040;
 
   --accent: #ffffff;
-  --accent-soft: rgba(255, 255, 255, 0.1);
+  --accent-soft: rgba(255, 255, 255, 0.05);
 
   /* Layout */
-  --sidebar-width: 220px;
-  --sidebar-collapsed: 60px;
-  --border-radius-sm: 8px;
-  --border-radius-md: 12px;
-  --border-radius-lg: 20px;
-  --border-radius-xl: 32px;
+  --sidebar-width: 280px;
+  --sidebar-collapsed: 80px;
+  --border-radius-sm: 6px;
+  --border-radius-md: 10px;
+  --border-radius-lg: 16px;
 
-  /* Shadows & Effects */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 20px rgba(255, 255, 255, 0.05);
-
+  /* Transitions */
   --transition-fast: 0.15s ease;
-  --transition-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -42,7 +36,6 @@
   padding: 0;
   margin: 0;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 html,
@@ -54,14 +47,9 @@ body {
   height: 100%;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-weight: 700;
-  letter-spacing: -0.02em;
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
 button {
@@ -70,46 +58,14 @@ button {
   border: none;
   background: none;
   color: inherit;
-  transition: var(--transition-base);
 }
 
-input,
-textarea {
-  font-family: inherit;
-  outline: none;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg-deep);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border-main);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--border-bright);
-}
-
-/* UI Utility Classes */
+/* UI Helpers */
 .glass-panel {
   background: var(--bg-glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-main);
-  box-shadow: var(--shadow-md);
-}
-
-.hover-glow:hover {
-  box-shadow: var(--shadow-glow);
-  border-color: var(--border-bright);
-  transform: translateY(-2px);
 }
 
 .premium-card {
@@ -117,11 +73,27 @@ textarea {
   border: 1px solid var(--border-main);
   border-radius: var(--border-radius-lg);
   padding: 1.5rem;
-  transition: var(--transition-base);
 }
 
 .text-gradient {
-  background: linear-gradient(to bottom, #fff, #888);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #fff;
+  /* Removed gradient to keep it strictly minimal */
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #222;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #333;
 }

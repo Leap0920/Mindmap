@@ -11,11 +11,11 @@ import {
   Clock,
   Book,
   ArrowUpRight,
-  TrendingUp,
+  ChevronRight,
+  Loader2,
   Activity,
   Zap,
-  ChevronRight,
-  Loader2
+  LayoutDashboard
 } from 'lucide-react';
 
 interface DashStats {
@@ -36,14 +36,12 @@ export default function Home() {
   const today = new Date();
   const greeting = today.getHours() < 12 ? 'Good morning' : today.getHours() < 18 ? 'Good afternoon' : 'Good evening';
   const formattedDate = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-  const userName = session?.user?.name || session?.user?.email?.split('@')[0] || 'there';
+  const userName = session?.user?.name || session?.user?.email?.split('@')[0] || 'User';
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
-      return;
-    }
-    if (status === 'authenticated') {
+    } else if (status === 'authenticated') {
       fetchStats();
     }
   }, [status, router]);
@@ -68,14 +66,11 @@ export default function Home() {
       const todayStr = today.toISOString().split('T')[0];
       const todayHabits = habitsData.entries?.filter((e: any) => e.date === todayStr && e.completed).length || 0;
       const totalHabits = habitsData.habits?.length || 0;
-
       const completedTodos = todosData.todos?.filter((t: any) => t.completed).length || 0;
       const totalTodos = todosData.todos?.length || 0;
-
       const routineItems = routinesData.routines?.length || 0;
       const routineCompleted = routinesData.logs?.filter((l: any) => l.completed).length || 0;
       const routineProgress = routineItems > 0 ? Math.round((routineCompleted / routineItems) * 100) : 0;
-
       const booksReading = booksData.books?.filter((b: any) => b.status === 'reading').length || 0;
 
       setStats({
@@ -102,11 +97,11 @@ export default function Home() {
   if (status === 'loading') {
     return (
       <div className="loading-screen">
-        <Loader2 size={32} className="animate-spin" />
+        <Loader2 size={32} className="spinner" />
         <style jsx>{`
-          .loading-screen { display: flex; align-items: center; justify-content: center; min-height: 60vh; }
+          .loading-screen { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
+          .spinner { animation: spin 1s linear infinite; color: #444; }
           @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-          .animate-spin { animation: spin 1s linear infinite; }
         `}</style>
       </div>
     );
@@ -115,56 +110,52 @@ export default function Home() {
   return (
     <div className="dashboard">
       <header className="dash-header">
-        <div className="welcome-text">
-          <div className="date-pill">{formattedDate}</div>
-          <h1 className="text-gradient">{greeting}, {userName}.</h1>
-          <p>What are we building today?</p>
+        <div className="welcome">
+          <span className="date">{formattedDate}</span>
+          <h1>{greeting}, {userName}.</h1>
         </div>
-        <div className="action-buttons">
-          <Link href="/todo" className="secondary-btn">View Tasks</Link>
-          <Link href="/habit" className="primary-btn">Track Habits</Link>
+        <div className="header-actions">
+          <Link href="/habit" className="outline-btn">Track Habits</Link>
+          <Link href="/todo" className="solid-btn">Tasks</Link>
         </div>
       </header>
 
       <section className="stats-grid">
-        <div className="stat-card glass-panel hover-glow">
-          <div className="stat-icon-box"><Zap size={20} /></div>
-          <div className="stat-content">
-            <span className="stat-label">Habits Today</span>
-            <span className="stat-value">{isLoading ? '—' : `${stats?.habitsToday}/${stats?.totalHabits}`}</span>
-            <span className="stat-detail">{stats?.habitsToday === stats?.totalHabits && stats?.totalHabits! > 0 ? 'Perfect Day! 🔥' : 'Keep pushing'}</span>
+        <div className="stat-card">
+          <div className="stat-info">
+            <span className="label">Habits Today</span>
+            <span className="value">{isLoading ? '—' : `${stats?.habitsToday}/${stats?.totalHabits}`}</span>
           </div>
+          <Zap size={20} className="stat-icon" />
         </div>
-        <div className="stat-card glass-panel hover-glow">
-          <div className="stat-icon-box"><TrendingUp size={20} /></div>
-          <div className="stat-content">
-            <span className="stat-label">Task Progress</span>
-            <span className="stat-value">{isLoading ? '—' : `${stats?.completedTodos}/${stats?.totalTodos}`}</span>
-            <span className="stat-detail">{stats?.totalTodos ? `${Math.round((stats?.completedTodos! / stats?.totalTodos!) * 100)}% complete` : 'Add some tasks'}</span>
+        <div className="stat-card">
+          <div className="stat-info">
+            <span className="label">Tasks Completed</span>
+            <span className="value">{isLoading ? '—' : `${stats?.completedTodos}/${stats?.totalTodos}`}</span>
           </div>
+          <CheckSquare size={20} className="stat-icon" />
         </div>
-        <div className="stat-card glass-panel hover-glow">
-          <div className="stat-icon-box"><Activity size={20} /></div>
-          <div className="stat-content">
-            <span className="stat-label">Daily Routine</span>
-            <span className="stat-value">{isLoading ? '—' : `${stats?.routineProgress}%`}</span>
-            <span className="stat-detail">{stats?.booksReading ? `${stats.booksReading} books in progress` : 'Start your day'}</span>
+        <div className="stat-card">
+          <div className="stat-info">
+            <span className="label">Routine Progress</span>
+            <span className="value">{isLoading ? '—' : `${stats?.routineProgress}%`}</span>
           </div>
+          <Activity size={20} className="stat-icon" />
         </div>
       </section>
 
-      <div className="main-grid">
-        <section className="category-section">
-          <h2>Your Ecosystem</h2>
-          <div className="category-grid">
+      <div className="content-grid">
+        <section className="categories">
+          <h2>Quick Access</h2>
+          <div className="grid">
             {categories.map((cat, i) => (
-              <Link href={cat.href} key={i} className="category-card premium-card hover-glow">
-                <div className="card-top">
-                  <cat.icon size={24} className="text-muted" />
-                  <ArrowUpRight size={18} className="arrow" />
+              <Link href={cat.href} key={i} className="cat-card">
+                <div className="cat-header">
+                  <cat.icon size={20} />
+                  <ArrowUpRight size={16} className="arrow" />
                 </div>
                 <h3>{cat.title}</h3>
-                <div className="item-list">
+                <div className="cat-items">
                   {cat.items.map(item => <span key={item}>{item}</span>)}
                 </div>
               </Link>
@@ -172,18 +163,18 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="recent-activity premium-card glass-panel">
+        <section className="activity">
           <div className="section-header">
-            <h3>Recent Activity</h3>
-            <Link href="/history" className="view-all">View all <ChevronRight size={14} /></Link>
+            <h2>Recent Activity</h2>
+            <Link href="/history" className="view-all">History <ChevronRight size={14} /></Link>
           </div>
-          <div className="activity-list">
-            {[1, 2, 3, 4].map(idx => (
-              <div key={idx} className="activity-item">
-                <div className="activity-dot" />
-                <div className="activity-info">
-                  <p>Completed <strong>Reading</strong> habit</p>
-                  <span>2 hours ago</span>
+          <div className="list">
+            {[1, 2, 3].map(idx => (
+              <div key={idx} className="list-item">
+                <div className="dot" />
+                <div className="info">
+                  <p>System activity logged</p>
+                  <span>Recently</span>
                 </div>
               </div>
             ))}
@@ -193,243 +184,204 @@ export default function Home() {
 
       <style jsx>{`
         .dashboard {
-          max-width: 1200px;
+          max-width: 1000px;
           margin: 0 auto;
-          animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+          animation: fadeIn 0.4s ease-out;
         }
 
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
 
         .dash-header {
           display: flex;
           justify-content: space-between;
           align-items: flex-end;
-          margin-bottom: 4rem;
+          margin-bottom: 3.5rem;
         }
 
-        .date-pill {
-          display: inline-block;
-          background: var(--accent-soft);
-          color: var(--text-primary);
-          padding: 0.4rem 1rem;
-          border-radius: 100px;
-          font-size: 0.8rem;
-          font-weight: 700;
-          margin-bottom: 1.5rem;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-
-        .welcome-text h1 {
-          font-size: 4rem;
+        .welcome .date {
+          display: block;
+          font-size: 0.85rem;
+          color: var(--text-muted);
           margin-bottom: 0.5rem;
-          letter-spacing: -0.04em;
+          font-weight: 500;
         }
 
-        .welcome-text p {
-          font-size: 1.25rem;
-          color: var(--text-secondary);
-        }
-
-        .action-buttons {
-          display: flex;
-          gap: 1rem;
-        }
-
-        .primary-btn {
-          background: var(--text-primary);
-          color: var(--bg-deep);
-          padding: 0.9rem 1.75rem;
-          border-radius: 12px;
+        .welcome h1 {
+          font-size: 2.5rem;
           font-weight: 700;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          text-decoration: none;
+          letter-spacing: -0.03em;
         }
 
-        .secondary-btn {
-          background: rgba(255,255,255,0.05);
-          padding: 0.9rem 1.75rem;
-          border-radius: 12px;
-          border: 1px solid var(--border-main);
-          font-weight: 600;
-          text-decoration: none;
+        .header-actions {
           display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--text-primary);
+          gap: 0.75rem;
+        }
+
+        .solid-btn {
+          background: #fff;
+          color: #000;
+          padding: 0.6rem 1.25rem;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 0.9rem;
+        }
+
+        .outline-btn {
+          border: 1px solid var(--border-main);
+          color: var(--text-secondary);
+          padding: 0.6rem 1.25rem;
+          border-radius: 8px;
+          font-weight: 500;
+          font-size: 0.9rem;
+        }
+
+        .outline-btn:hover {
+          background: rgba(255, 255, 255, 0.03);
+          color: #fff;
         }
 
         .stats-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 1.5rem;
-          margin-bottom: 4rem;
+          gap: 1.25rem;
+          margin-bottom: 3.5rem;
         }
 
         .stat-card {
-          padding: 2rem;
-          border-radius: var(--border-radius-lg);
-          display: flex;
-          gap: 1.5rem;
-          align-items: center;
-        }
-
-        .stat-icon-box {
-          width: 52px;
-          height: 52px;
-          background: var(--bg-deep);
+          background: var(--bg-card);
           border: 1px solid var(--border-main);
-          border-radius: 14px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--text-primary);
-        }
-
-        .stat-content {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .stat-label {
-          font-size: 0.85rem;
-          color: var(--text-muted);
-          font-weight: 600;
-        }
-
-        .stat-value {
-          font-size: 1.75rem;
-          font-weight: 800;
-        }
-
-        .stat-detail {
-          font-size: 0.75rem;
-          font-weight: 700;
-          color: #00ff88;
-        }
-
-        .main-grid {
-          display: grid;
-          grid-template-columns: 1fr 340px;
-          gap: 3rem;
-        }
-
-        .category-section h2 {
-          font-size: 1.5rem;
-          margin-bottom: 2rem;
-        }
-
-        .category-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-          gap: 1.5rem;
-        }
-
-        .category-card {
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-          min-height: 220px;
-        }
-
-        .card-top {
+          padding: 1.5rem;
+          border-radius: 12px;
           display: flex;
           justify-content: space-between;
           align-items: center;
         }
 
-        .arrow {
+        .stat-info .label {
+          display: block;
+          font-size: 0.8rem;
+          color: var(--text-muted);
+          margin-bottom: 0.25rem;
+        }
+
+        .stat-info .value {
+          font-size: 1.5rem;
+          font-weight: 700;
+        }
+
+        .stat-icon {
           color: var(--text-dim);
-          transition: var(--transition-base);
         }
 
-        .category-card:hover .arrow {
-          transform: translate(3px, -3px);
-          color: var(--text-primary);
+        .content-grid {
+          display: grid;
+          grid-template-columns: 1fr 300px;
+          gap: 3rem;
         }
 
-        .category-card h3 {
-          font-size: 1.25rem;
-          font-weight: 800;
+        .categories h2, .activity h2 {
+          font-size: 1.1rem;
+          font-weight: 700;
+          margin-bottom: 1.5rem;
+          color: var(--text-secondary);
         }
 
-        .item-list {
+        .grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 1.25rem;
+        }
+
+        .cat-card {
+          background: var(--bg-card);
+          border: 1px solid var(--border-main);
+          padding: 1.5rem;
+          border-radius: 12px;
+          transition: border-color 0.2s;
+        }
+
+        .cat-card:hover {
+          border-color: var(--border-bright);
+        }
+
+        .cat-header {
           display: flex;
-          flex-wrap: wrap;
-          gap: 0.5rem;
-        }
-
-        .item-list span {
-          background: rgba(255,255,255,0.03);
-          border: 1px solid var(--border-dim);
-          padding: 0.25rem 0.6rem;
-          border-radius: 6px;
-          font-size: 0.75rem;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1.25rem;
           color: var(--text-muted);
         }
 
-        .recent-activity {
-          padding: 2rem;
+        .cat-card h3 {
+          font-size: 1rem;
+          font-weight: 700;
+          margin-bottom: 0.75rem;
+        }
+
+        .cat-items {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4rem;
+        }
+
+        .cat-items span {
+          font-size: 0.7rem;
+          color: var(--text-dim);
+          background: rgba(255, 255, 255, 0.02);
+          padding: 0.2rem 0.5rem;
+          border-radius: 4px;
         }
 
         .section-header {
           display: flex;
           justify-content: space-between;
-          align-items: center;
-          margin-bottom: 2rem;
+          align-items: baseline;
         }
 
         .view-all {
-          font-size: 0.85rem;
-          color: var(--text-muted);
+          font-size: 0.8rem;
+          color: var(--text-dim);
           display: flex;
           align-items: center;
-          gap: 0.25rem;
+          gap: 0.2rem;
         }
 
-        .activity-list {
+        .list {
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: 1.25rem;
         }
 
-        .activity-item {
+        .list-item {
           display: flex;
-          gap: 1rem;
+          gap: 0.85rem;
         }
 
-        .activity-dot {
-          width: 8px;
-          height: 8px;
-          background: var(--border-bright);
+        .dot {
+          width: 6px;
+          height: 6px;
+          background: #333;
           border-radius: 50%;
           margin-top: 6px;
         }
 
-        .activity-info p {
-          font-size: 0.95rem;
+        .info p {
+          font-size: 0.9rem;
+          font-weight: 500;
         }
 
-        .activity-info span {
-          font-size: 0.8rem;
+        .info span {
+          font-size: 0.75rem;
           color: var(--text-dim);
         }
 
-        @media (max-width: 1100px) {
+        @media (max-width: 900px) {
           .stats-grid { grid-template-columns: 1fr; }
-          .main-grid { grid-template-columns: 1fr; }
-          .welcome-text h1 { font-size: 3rem; }
-        }
-
-        @media (max-width: 768px) {
-          .dash-header { flex-direction: column; align-items: flex-start; gap: 2rem; }
-          .action-buttons { width: 100%; }
-          .action-buttons button { flex: 1; }
+          .content-grid { grid-template-columns: 1fr; }
+          .dash-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
         }
       `}</style>
     </div>

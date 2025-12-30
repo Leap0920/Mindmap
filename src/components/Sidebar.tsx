@@ -109,7 +109,7 @@ export default function Sidebar() {
                                 <span className="user-name">{session?.user?.name || 'User'}</span>
                                 <span className="user-email">{session?.user?.email || 'user@example.com'}</span>
                             </div>
-                            <button className="logout-btn" onClick={handleSignOut} title="Sign Out">
+                            <button className="logout-btn-icon" onClick={handleSignOut} title="Sign Out">
                                 <LogOut size={16} />
                             </button>
                         </div>
@@ -120,8 +120,8 @@ export default function Sidebar() {
                     .sidebar {
                         width: var(--sidebar-width);
                         height: 100vh;
-                        background: #0f0f0f;
-                        border-right: 1px solid #1a1a1a;
+                        background: #0a0a0a;
+                        border-right: 1px solid #141414;
                         position: fixed;
                         left: 0;
                         top: 0;
@@ -133,7 +133,7 @@ export default function Sidebar() {
                         display: flex;
                         flex-direction: column;
                         height: 100%;
-                        padding: 2.5rem 1.25rem;
+                        padding: 2rem 1rem;
                     }
 
                     .brand {
@@ -141,7 +141,7 @@ export default function Sidebar() {
                         align-items: center;
                         gap: 0.85rem;
                         padding: 0 0.5rem;
-                        margin-bottom: 3rem;
+                        margin-bottom: 2.5rem;
                     }
 
                     .brand-logo {
@@ -162,18 +162,18 @@ export default function Sidebar() {
                         flex: 1;
                         display: flex;
                         flex-direction: column;
-                        gap: 0.5rem;
+                        gap: 0.25rem;
                     }
 
                     .nav-item {
                         display: flex;
                         align-items: center;
-                        gap: 1rem;
-                        padding: 0.85rem 1rem;
+                        gap: 1.25rem;
+                        padding: 0.8rem 1rem;
                         color: #888;
                         text-decoration: none;
-                        border-radius: 12px;
-                        font-weight: 600;
+                        border-radius: 10px;
+                        font-weight: 500;
                         font-size: 1rem;
                         transition: all 0.2s ease;
                     }
@@ -186,6 +186,7 @@ export default function Sidebar() {
                     .nav-item.active {
                         color: #fff;
                         background: #1a1a1a;
+                        font-weight: 700;
                     }
 
                     .sidebar-footer {
@@ -194,7 +195,7 @@ export default function Sidebar() {
 
                     .divider {
                         height: 1px;
-                        background: #1a1a1a;
+                        background: #141414;
                         margin-bottom: 1.5rem;
                         width: 100%;
                     }
@@ -208,16 +209,16 @@ export default function Sidebar() {
                     }
 
                     .avatar {
-                        width: 42px;
-                        height: 42px;
-                        background: #2a2a2a;
+                        width: 36px;
+                        height: 36px;
+                        background: #1a1a1a;
                         border-radius: 50%;
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         color: #fff;
                         font-weight: 700;
-                        font-size: 1rem;
+                        font-size: 0.85rem;
                         flex-shrink: 0;
                     }
 
@@ -230,8 +231,8 @@ export default function Sidebar() {
 
                     .user-name {
                         color: #fff;
-                        font-size: 0.95rem;
-                        font-weight: 700;
+                        font-size: 0.9rem;
+                        font-weight: 600;
                         white-space: nowrap;
                         overflow: hidden;
                         text-overflow: ellipsis;
@@ -239,18 +240,21 @@ export default function Sidebar() {
 
                     .user-email {
                         color: #666;
-                        font-size: 0.75rem;
+                        font-size: 0.7rem;
                         white-space: nowrap;
                         overflow: hidden;
                         text-overflow: ellipsis;
                     }
 
-                    .logout-btn {
+                    .logout-btn-icon {
                         color: #444;
+                        background: none;
+                        border: none;
+                        cursor: pointer;
                         transition: color 0.2s;
                     }
 
-                    .logout-btn:hover {
+                    .logout-btn-icon:hover {
                         color: #f87171;
                     }
 

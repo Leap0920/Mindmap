@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Clock, User as UserIcon, MapPin, Plus, X, Loader2, Trash2 } from 'lucide-react';
+import { Clock, User as UserIcon, MapPin, Plus, X, Loader2, Trash2, CalendarDays } from 'lucide-react';
 
 interface Schedule {
     _id: string;
@@ -16,7 +16,7 @@ interface Schedule {
 }
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-const COLORS = ['#ffffff', '#f87171', '#fbbf24', '#4ade80', '#60a5fa', '#a78bfa'];
+const COLORS = ['#ffffff', '#a3a3a3', '#737373', '#404040', '#262626', '#171717'];
 
 export default function SchedulePage() {
     const { data: session, status } = useSession();
@@ -108,12 +108,11 @@ export default function SchedulePage() {
     if (status === 'loading' || isLoading) {
         return (
             <div className="loading-screen">
-                <Loader2 size={32} className="animate-spin" />
-                <span>Loading schedule...</span>
+                <Loader2 size={32} className="spinner" />
                 <style jsx>{`
-          .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 1rem; color: var(--text-muted); }
+          .loading-screen { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
+          .spinner { animation: spin 1s linear infinite; color: #444; }
           @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-          .animate-spin { animation: spin 1s linear infinite; }
         `}</style>
             </div>
         );
@@ -123,44 +122,37 @@ export default function SchedulePage() {
         <div className="schedule-page">
             <header className="page-header">
                 <div className="title-area">
-                    <h1 className="text-gradient">School Schedule</h1>
-                    <p>Your weekly class timetable</p>
+                    <span className="breadcrumb">Academic / Time Management</span>
+                    <h1>Schedule</h1>
+                    <p>Optimizing your weekly classes.</p>
                 </div>
-                <button className="primary-btn" onClick={() => setShowModal(true)}>
-                    <Plus size={18} /><span>Add Class</span>
+                <button className="add-btn" onClick={() => setShowModal(true)}>
+                    <Plus size={18} />
+                    <span>Record Class</span>
                 </button>
             </header>
 
-            <div className="schedule-grid">
+            <div className="grid">
                 {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
-                    <div key={day} className="day-column">
-                        <h3>{day}</h3>
-                        <div className="class-cards">
+                    <div key={day} className="column">
+                        <div className="col-header">
+                            <span className="day-name">{day}</span>
+                            <span className="count">{getClassesForDay(day).length}</span>
+                        </div>
+                        <div className="cards">
                             {getClassesForDay(day).length === 0 ? (
-                                <div className="empty-slot">No classes</div>
+                                <div className="empty">Void</div>
                             ) : (
                                 getClassesForDay(day).map(cls => (
-                                    <div key={cls._id} className="class-card glass-panel" style={{ borderLeftColor: cls.color }}>
-                                        <div className="card-header">
-                                            <span className="time"><Clock size={12} /> {cls.time}</span>
-                                            <button className="delete-btn" onClick={() => deleteSchedule(cls._id)}>
-                                                <Trash2 size={14} />
-                                            </button>
+                                    <div key={cls._id} className="card" style={{ borderLeft: `2px solid ${cls.color}` }}>
+                                        <div className="card-top">
+                                            <span className="time">{cls.time}</span>
+                                            <button className="del" onClick={() => deleteSchedule(cls._id)}><X size={12} /></button>
                                         </div>
                                         <h4>{cls.subject}</h4>
-                                        <div className="class-meta">
-                                            {cls.teacher && (
-                                                <div className="meta-item">
-                                                    <UserIcon size={12} />
-                                                    <span>{cls.teacher}</span>
-                                                </div>
-                                            )}
-                                            {cls.room && (
-                                                <div className="meta-item">
-                                                    <MapPin size={12} />
-                                                    <span>{cls.room}</span>
-                                                </div>
-                                            )}
+                                        <div className="meta">
+                                            {cls.room && <span className="tag">{cls.room}</span>}
+                                            {cls.teacher && <span className="tag">{cls.teacher}</span>}
                                         </div>
                                     </div>
                                 ))
@@ -173,88 +165,59 @@ export default function SchedulePage() {
             {showModal && (
                 <div className="modal-overlay" onClick={() => setShowModal(false)}>
                     <div className="modal-box" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3>Add New Class</h3>
-                            <button className="close-btn" onClick={() => setShowModal(false)}><X size={20} /></button>
-                        </div>
-
-                        <div className="form-group">
-                            <label>Subject *</label>
+                        <h3>Initialize Class</h3>
+                        <div className="fields">
+                            <label>Subject</label>
                             <input
-                                type="text"
-                                placeholder="e.g., Advanced Mathematics"
+                                placeholder="Mathematics..."
                                 value={newSchedule.subject}
                                 onChange={e => setNewSchedule({ ...newSchedule, subject: e.target.value })}
                                 autoFocus
                             />
-                        </div>
 
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Teacher</label>
-                                <input
-                                    type="text"
-                                    placeholder="Dr. Smith"
-                                    value={newSchedule.teacher}
-                                    onChange={e => setNewSchedule({ ...newSchedule, teacher: e.target.value })}
-                                />
+                            <div className="row">
+                                <div className="field">
+                                    <label>Instructor</label>
+                                    <input value={newSchedule.teacher} onChange={e => setNewSchedule({ ...newSchedule, teacher: e.target.value })} />
+                                </div>
+                                <div className="field">
+                                    <label>Location</label>
+                                    <input value={newSchedule.room} onChange={e => setNewSchedule({ ...newSchedule, room: e.target.value })} />
+                                </div>
                             </div>
-                            <div className="form-group">
-                                <label>Room</label>
-                                <input
-                                    type="text"
-                                    placeholder="B-204"
-                                    value={newSchedule.room}
-                                    onChange={e => setNewSchedule({ ...newSchedule, room: e.target.value })}
-                                />
-                            </div>
-                        </div>
 
-                        <div className="form-group">
-                            <label>Time *</label>
-                            <input
-                                type="text"
-                                placeholder="08:00 - 09:30"
-                                value={newSchedule.time}
-                                onChange={e => setNewSchedule({ ...newSchedule, time: e.target.value })}
-                            />
-                        </div>
+                            <label>Time Block</label>
+                            <input placeholder="09:00 - 10:30" value={newSchedule.time} onChange={e => setNewSchedule({ ...newSchedule, time: e.target.value })} />
 
-                        <div className="form-group">
-                            <label>Days *</label>
-                            <div className="days-selector">
+                            <label>Days</label>
+                            <div className="day-chips">
                                 {DAYS.map(day => (
                                     <button
                                         key={day}
-                                        type="button"
-                                        className={`day-btn ${newSchedule.days.includes(day) ? 'active' : ''}`}
+                                        className={`chip ${newSchedule.days.includes(day) ? 'active' : ''}`}
                                         onClick={() => toggleDay(day)}
                                     >
                                         {day}
                                     </button>
                                 ))}
                             </div>
-                        </div>
 
-                        <div className="form-group">
-                            <label>Color</label>
-                            <div className="color-picker">
-                                {COLORS.map(color => (
+                            <label>Designation</label>
+                            <div className="color-selector">
+                                {COLORS.map(c => (
                                     <button
-                                        key={color}
-                                        type="button"
-                                        className={`color-btn ${newSchedule.color === color ? 'active' : ''}`}
-                                        style={{ background: color }}
-                                        onClick={() => setNewSchedule({ ...newSchedule, color })}
+                                        key={c}
+                                        className={`color-dot ${newSchedule.color === c ? 'active' : ''}`}
+                                        style={{ background: c }}
+                                        onClick={() => setNewSchedule({ ...newSchedule, color: c })}
                                     />
                                 ))}
                             </div>
                         </div>
 
-                        <div className="modal-actions">
-                            <button className="secondary-btn" onClick={() => setShowModal(false)}>Cancel</button>
-                            <button className="primary-btn" onClick={addSchedule} disabled={isSaving}>
-                                {isSaving ? <Loader2 size={16} className="animate-spin" /> : 'Add Class'}
+                        <div className="modal-footer">
+                            <button className="save-btn" onClick={addSchedule} disabled={isSaving}>
+                                {isSaving ? '...' : 'Commit Class'}
                             </button>
                         </div>
                     </div>
@@ -262,49 +225,56 @@ export default function SchedulePage() {
             )}
 
             <style jsx>{`
-        .schedule-page { max-width: 1400px; margin: 0 auto; animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; }
-        .page-header h1 { font-size: 2.5rem; margin-bottom: 0.25rem; }
+        .schedule-page { max-width: 1200px; margin: 0 auto; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3.5rem; }
+        .breadcrumb { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+        .page-header h1 { font-size: 2.5rem; font-weight: 700; margin: 0.25rem 0; }
         .page-header p { color: var(--text-muted); }
-        .primary-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: var(--text-primary); color: var(--bg-deep); font-weight: 600; border-radius: 10px; }
-        .primary-btn:hover { transform: translateY(-2px); }
-        .secondary-btn { padding: 0.75rem 1.25rem; background: transparent; border: 1px solid var(--border-main); color: var(--text-secondary); border-radius: 10px; font-weight: 500; }
-        .schedule-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; }
-        .day-column h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 1rem; text-align: center; font-weight: 700; }
-        .class-cards { display: flex; flex-direction: column; gap: 0.75rem; min-height: 200px; }
-        .empty-slot { text-align: center; padding: 2rem 1rem; color: var(--text-dim); font-size: 0.85rem; border: 1px dashed var(--border-dim); border-radius: 12px; }
-        .class-card { padding: 1rem; border-radius: 12px; border-left: 3px solid; transition: transform 0.2s; }
-        .class-card:hover { transform: translateY(-4px); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-        .time { display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: var(--text-dim); }
-        .delete-btn { color: var(--text-dim); padding: 0.25rem; opacity: 0; transition: opacity 0.2s; }
-        .class-card:hover .delete-btn { opacity: 1; }
-        .delete-btn:hover { color: #f87171; }
-        .class-card h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; }
-        .class-meta { display: flex; flex-direction: column; gap: 0.25rem; }
-        .meta-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--text-muted); }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-box { background: var(--bg-card); border: 1px solid var(--border-main); border-radius: 16px; padding: 1.5rem; width: 90%; max-width: 480px; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .modal-header h3 { font-size: 1.25rem; }
-        .close-btn { color: var(--text-muted); padding: 0.25rem; }
-        .form-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
-        .form-group label { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); }
-        .form-group input { padding: 0.75rem 1rem; background: var(--bg-deep); border: 1px solid var(--border-main); border-radius: 10px; color: var(--text-primary); }
-        .form-group input:focus { border-color: var(--border-bright); outline: none; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .days-selector { display: flex; gap: 0.5rem; }
-        .day-btn { padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--border-main); color: var(--text-muted); transition: all 0.15s; }
-        .day-btn.active { background: var(--text-primary); color: var(--bg-deep); border-color: transparent; }
-        .color-picker { display: flex; gap: 0.5rem; }
-        .color-btn { width: 28px; height: 28px; border-radius: 8px; border: 2px solid transparent; transition: transform 0.15s; }
-        .color-btn.active { border-color: var(--text-primary); transform: scale(1.1); }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .animate-spin { animation: spin 1s linear infinite; }
-        @media (max-width: 900px) { .schedule-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 600px) { .schedule-grid { grid-template-columns: 1fr; } .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; } }
+
+        .add-btn { background: #fff; color: #000; padding: 0.7rem 1.25rem; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.5rem; }
+        .column { display: flex; flex-direction: column; gap: 1.25rem; }
+        .col-header { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-dim); padding-bottom: 0.75rem; margin-bottom: 0.5rem; }
+        .day-name { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); }
+        .count { font-size: 0.75rem; color: var(--text-dim); }
+
+        .cards { display: flex; flex-direction: column; gap: 0.75rem; }
+        .card { background: #0a0a0a; border: 1px solid var(--border-main); padding: 1rem; border-radius: 8px; transition: border-color 0.2s; }
+        .card:hover { border-color: var(--border-bright); }
+        .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .time { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
+        .del { color: var(--text-dim); opacity: 0; transition: opacity 0.2s; }
+        .card:hover .del { opacity: 1; }
+        
+        .card h4 { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.6rem; line-height: 1.4; }
+        .meta { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        .tag { font-size: 0.65rem; color: var(--text-dim); background: #111; padding: 0.15rem 0.4rem; border-radius: 4px; }
+        .empty { text-align: center; font-size: 0.75rem; color: #222; padding: 3rem 0; text-transform: uppercase; letter-spacing: 2px; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-box { background: #111; border: 1px solid var(--border-main); padding: 2rem; border-radius: 12px; width: 440px; }
+        .fields { display: flex; flex-direction: column; gap: 0.75rem; }
+        .fields label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-top: 0.5rem; }
+        .fields input { background: #000; border: 1px solid var(--border-main); padding: 0.75rem 1rem; border-radius: 8px; color: #fff; outline: none; font-size: 0.9rem; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .field { display: flex; flex-direction: column; gap: 0.5rem; }
+
+        .day-chips { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        .chip { background: #000; border: 1px solid var(--border-main); padding: 0.4rem 0.6rem; border-radius: 6px; font-size: 0.75rem; color: var(--text-muted); transition: all 0.2s; }
+        .chip.active { background: #fff; color: #000; border-color: #fff; font-weight: 700; }
+
+        .color-selector { display: flex; gap: 0.6rem; margin-top: 0.25rem; }
+        .color-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; transition: transform 0.2s; }
+        .color-dot.active { border-color: #fff; transform: scale(1.1); }
+
+        .modal-footer { display: flex; justify-content: flex-end; margin-top: 2rem; }
+        .save-btn { background: #fff; color: #000; padding: 0.7rem 2rem; border-radius: 8px; font-weight: 700; }
+
+        @media (max-width: 1000px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .page-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; } }
       `}</style>
         </div>
     );

@@ -158,23 +158,11 @@ export default function HabitPage() {
     if (status === 'loading' || isLoading) {
         return (
             <div className="loading-screen">
-                <Loader2 size={32} className="animate-spin" />
-                <span>Loading habits...</span>
+                <Loader2 size={32} className="spinner" />
                 <style jsx>{`
-          .loading-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 60vh;
-            gap: 1rem;
-            color: var(--text-muted);
-          }
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          .animate-spin { animation: spin 1s linear infinite; }
+          .loading-screen { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
+          .spinner { animation: spin 1s linear infinite; color: #444; }
+          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         `}</style>
             </div>
         );
@@ -184,9 +172,9 @@ export default function HabitPage() {
         <div className="habit-page">
             <header className="page-header">
                 <div className="title-section">
-                    <div className="breadcrumb">Workspace / Productivity</div>
-                    <h1 className="text-gradient">Habit Journey</h1>
-                    <p>Small steps lead to big change.</p>
+                    <span className="breadcrumb">Productivity / Habits</span>
+                    <h1>Journey</h1>
+                    <p>Small consistent steps.</p>
                 </div>
 
                 <div className="header-actions">
@@ -199,7 +187,6 @@ export default function HabitPage() {
 
             {definitions.length > 0 && (
                 <div className="habit-definitions">
-                    <span className="def-label">Tracking:</span>
                     {definitions.map(def => (
                         <div key={def._id} className="habit-tag">
                             <span>{def.name}</span>
@@ -209,17 +196,16 @@ export default function HabitPage() {
                 </div>
             )}
 
-            <section className="calendar-container glass-panel">
+            <section className="calendar-container">
                 <div className="calendar-toolbar">
                     <div className="month-picker">
-                        <button className="nav-btn" onClick={() => changeMonth(-1)}><ChevronLeft size={20} /></button>
+                        <button className="nav-btn" onClick={() => changeMonth(-1)}><ChevronLeft size={18} /></button>
                         <div className="current-month">
-                            <CalIcon size={18} className="text-muted" />
                             <span>{monthName} {currentYear}</span>
                         </div>
-                        <button className="nav-btn" onClick={() => changeMonth(1)}><ChevronRight size={20} /></button>
+                        <button className="nav-btn" onClick={() => changeMonth(1)}><ChevronRight size={18} /></button>
                     </div>
-                    <button className="secondary-btn" onClick={goToToday}>Today</button>
+                    <button className="today-btn" onClick={goToToday}>Today</button>
                 </div>
 
                 <div className="weekday-header">
@@ -232,43 +218,28 @@ export default function HabitPage() {
                     {Array.from({ length: daysInMonth }).map((_, i) => {
                         const cellDate = new Date(currentYear, currentDate.getMonth(), i + 1);
                         const isToday = cellDate.toDateString() === today.toDateString();
-                        const isWeekend = cellDate.getDay() === 0 || cellDate.getDay() === 6;
                         const allCompleted = definitions.length > 0 && definitions.every(def => getHabitStatus(cellDate, def._id));
 
                         return (
-                            <div key={i} className={`habit-card ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}`}>
-                                <div className="card-top">
-                                    <div className="day-info">
-                                        <span className="num">{i + 1}</span>
-                                        <span className="label">{cellDate.toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                                    </div>
-                                    {isToday && <div className="today-badge">Today</div>}
+                            <div key={i} className={`day-card ${isToday ? 'is-today' : ''}`}>
+                                <div className="card-header">
+                                    <span className="day-num">{i + 1}</span>
+                                    {allCompleted && definitions.length > 0 && <Flame size={12} className="flame-icon" />}
                                 </div>
 
-                                <div className="habit-items">
+                                <div className="habit-dots">
                                     {definitions.map(def => {
                                         const completed = getHabitStatus(cellDate, def._id);
                                         return (
                                             <div
                                                 key={def._id}
-                                                className={`habit-row ${completed ? 'done' : ''}`}
+                                                className={`habit-dot ${completed ? 'done' : ''}`}
                                                 onClick={() => toggleHabit(cellDate, def._id, completed)}
-                                            >
-                                                <div className="check-box">
-                                                    {completed && <Check size={10} strokeWidth={4} />}
-                                                </div>
-                                                <span className="name">{def.name}</span>
-                                            </div>
+                                                title={def.name}
+                                            />
                                         );
                                     })}
                                 </div>
-
-                                {allCompleted && definitions.length > 0 && (
-                                    <div className="perfect-day">
-                                        <Flame size={12} fill="currentColor" />
-                                        <span>Perfect</span>
-                                    </div>
-                                )}
                             </div>
                         );
                     })}
@@ -278,18 +249,18 @@ export default function HabitPage() {
             {showModal && (
                 <div className="modal-overlay" onClick={() => setShowModal(false)}>
                     <div className="modal-box" onClick={e => e.stopPropagation()}>
-                        <h3>Add New Habit</h3>
+                        <h3>New Habit</h3>
                         <input
                             type="text"
-                            placeholder="e.g., Reading, Exercise, Meditation"
+                            placeholder="Habit name..."
                             value={newHabitName}
                             onChange={e => setNewHabitName(e.target.value)}
                             autoFocus
                         />
                         <div className="modal-actions">
-                            <button className="secondary-btn" onClick={() => setShowModal(false)}>Cancel</button>
-                            <button className="primary-btn" onClick={addHabit} disabled={isSaving}>
-                                {isSaving ? <Loader2 size={16} className="animate-spin" /> : 'Add Habit'}
+                            <button className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
+                            <button className="confirm-btn" onClick={addHabit} disabled={isSaving}>
+                                {isSaving ? '...' : 'Create'}
                             </button>
                         </div>
                     </div>
@@ -297,64 +268,51 @@ export default function HabitPage() {
             )}
 
             <style jsx>{`
-        .habit-page { animation: fadeIn 0.5s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
-        .breadcrumb { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
-        .page-header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
-        .page-header p { color: var(--text-muted); }
-        .header-actions { display: flex; gap: 0.75rem; }
-        .primary-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: var(--text-primary); color: var(--bg-deep); font-weight: 600; border-radius: 10px; }
-        .primary-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,255,255,0.1); }
-        .secondary-btn { padding: 0.6rem 1rem; background: transparent; border: 1px solid var(--border-main); color: var(--text-secondary); border-radius: 8px; font-weight: 500; }
-        .secondary-btn:hover { background: rgba(255,255,255,0.05); }
-        .habit-definitions { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        .def-label { font-size: 0.85rem; color: var(--text-muted); }
-        .habit-tag { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-main); border-radius: 20px; font-size: 0.85rem; }
-        .habit-tag button { display: flex; padding: 2px; color: var(--text-dim); transition: color 0.2s; }
-        .habit-tag button:hover { color: #ff4444; }
-        .calendar-container { padding: 1.5rem; border-radius: 16px; }
+        .habit-page { max-width: 1000px; margin: 0 auto; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem; }
+        .breadcrumb { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+        .page-header h1 { font-size: 2.5rem; font-weight: 700; margin: 0.25rem 0; }
+        .page-header p { color: var(--text-muted); font-size: 0.95rem; }
+
+        .primary-btn { background: #fff; color: #000; padding: 0.7rem 1.25rem; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+        
+        .habit-definitions { display: flex; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap; }
+        .habit-tag { background: #111; border: 1px solid var(--border-main); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.85rem; display: flex; align-items: center; gap: 0.6rem; color: var(--text-secondary); }
+        .habit-tag button { color: var(--text-dim); }
+        .habit-tag button:hover { color: #fff; }
+
+        .calendar-container { background: #000; border: 1px solid var(--border-main); border-radius: 12px; padding: 1.5rem; }
         .calendar-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .month-picker { display: flex; align-items: center; gap: 1rem; }
-        .nav-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 8px; color: var(--text-secondary); background: rgba(255,255,255,0.05); }
-        .nav-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
-        .current-month { display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem; font-weight: 600; }
-        .weekday-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; margin-bottom: 0.5rem; }
-        .weekday { text-align: center; font-size: 0.75rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; padding: 0.5rem; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; border: 1px solid var(--border-dim); border-radius: 12px; overflow: hidden; }
-        .habit-card { padding: 1rem; min-height: 140px; display: flex; flex-direction: column; gap: 0.75rem; background: var(--bg-deep); border-bottom: 1px solid var(--border-dim); border-right: 1px solid var(--border-dim); transition: background 0.2s; }
-        .habit-card:hover { background: rgba(255,255,255,0.02); }
-        .today { background: rgba(255,255,255,0.03); box-shadow: inset 0 0 0 1px var(--border-main); }
-        .weekend .num { color: var(--text-dim); }
-        .card-top { display: flex; justify-content: space-between; align-items: flex-start; }
-        .day-info { display: flex; flex-direction: column; }
-        .day-info .num { font-size: 1.25rem; font-weight: 700; line-height: 1; }
-        .day-info .label { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
-        .today-badge { font-size: 0.6rem; font-weight: 700; padding: 0.15rem 0.4rem; background: var(--text-primary); color: var(--bg-deep); border-radius: 4px; text-transform: uppercase; }
-        .habit-items { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-        .habit-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem; border-radius: 6px; cursor: pointer; transition: background 0.15s; }
-        .habit-row:hover { background: rgba(255,255,255,0.05); }
-        .check-box { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--border-bright); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .habit-row.done .check-box { background: var(--text-primary); border-color: var(--text-primary); color: var(--bg-deep); }
-        .habit-row .name { font-size: 0.75rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .habit-row.done .name { text-decoration: line-through; color: var(--text-dim); }
-        .perfect-day { display: flex; align-items: center; gap: 0.25rem; font-size: 0.65rem; font-weight: 700; color: #fbbf24; margin-top: auto; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-box { background: var(--bg-card); border: 1px solid var(--border-main); border-radius: 16px; padding: 2rem; width: 90%; max-width: 400px; }
-        .modal-box h3 { font-size: 1.25rem; margin-bottom: 1rem; }
-        .modal-box input { width: 100%; padding: 0.75rem 1rem; background: var(--bg-deep); border: 1px solid var(--border-main); border-radius: 10px; color: var(--text-primary); margin-bottom: 1.5rem; }
-        .modal-box input:focus { border-color: var(--border-bright); outline: none; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .animate-spin { animation: spin 1s linear infinite; }
-        @media (max-width: 900px) {
-          .calendar-grid { grid-template-columns: repeat(4, 1fr); }
-          .weekday-header { display: none; }
-        }
-        @media (max-width: 600px) {
-          .calendar-grid { grid-template-columns: repeat(2, 1fr); }
-          .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
-        }
+        .month-picker { display: flex; align-items: center; gap: 1.25rem; }
+        .nav-btn { color: var(--text-muted); }
+        .current-month { font-weight: 600; font-size: 1rem; }
+        .today-btn { font-size: 0.85rem; color: var(--text-muted); border: 1px solid var(--border-main); padding: 0.4rem 0.75rem; border-radius: 6px; }
+
+        .weekday-header { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 1rem; }
+        .weekday { text-align: center; font-size: 0.7rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; }
+
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--border-dim); border: 1px solid var(--border-dim); border-radius: 8px; overflow: hidden; }
+        .day-card { background: #000; min-height: 100px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.75rem; }
+        .day-card.is-today { background: #070707; }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: center; }
+        .day-num { font-size: 0.9rem; font-weight: 500; color: var(--text-muted); }
+        .is-today .day-num { color: #fff; font-weight: 700; }
+        .flame-icon { color: #fff; opacity: 0.5; }
+
+        .habit-dots { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; align-content: flex-start; }
+        .habit-dot { width: 100%; height: 6px; background: #111; border-radius: 2px; cursor: pointer; transition: background 0.2s; }
+        .habit-dot.done { background: #fff; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-box { background: #111; border: 1px solid var(--border-main); padding: 2rem; border-radius: 12px; width: 340px; }
+        .modal-box h3 { margin-bottom: 1.25rem; font-size: 1.1rem; }
+        .modal-box input { width: 100%; background: #000; border: 1px solid var(--border-main); padding: 0.75rem 1rem; border-radius: 8px; color: #fff; margin-bottom: 1.5rem; outline: none; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; }
+        .cancel-btn { color: var(--text-dim); font-size: 0.9rem; }
+        .confirm-btn { background: #fff; color: #000; padding: 0.5rem 1.25rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem; }
       `}</style>
         </div>
     );

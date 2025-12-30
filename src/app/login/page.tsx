@@ -4,213 +4,133 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setIsLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
 
-        try {
-            const result = await signIn('credentials', {
-                email,
-                password,
-                redirect: false,
-            });
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
 
-            if (result?.error) {
-                setError(result.error);
-            } else {
-                router.push('/');
-                router.refresh();
-            }
-        } catch (err) {
-            setError('An unexpected error occurred');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+      if (result?.error) {
+        setError('Invalid credentials');
+      } else {
+        router.push('/');
+        router.refresh();
+      }
+    } catch (err) {
+      setError('System error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    return (
-        <div className="login-screen">
-            <div className="login-content">
-                <div className="login-visual">
-                    <div className="ornament-blur" />
-                    <div className="logo-vignette">M</div>
-                    <div className="visual-text">
-                        <h2>Your Personal Productivity Space</h2>
-                        <p>Track habits, manage tasks, and organize your life with elegance.</p>
-                    </div>
-                </div>
+  return (
+    <div className="login-screen">
+      <div className="login-content">
+        <div className="login-box">
+          <header className="login-header">
+            <h1>Mindmap</h1>
+            <p>Access your workspace.</p>
+          </header>
 
-                <div className="login-box glass-panel">
-                    <header className="login-header">
-                        <h1 className="text-gradient">Welcome back</h1>
-                        <p>Access your private mindmap workspace.</p>
-                    </header>
+          {error && (
+            <div className="error-banner">
+              <AlertCircle size={14} />
+              <span>{error}</span>
+            </div>
+          )}
 
-                    {error && (
-                        <div className="error-banner">
-                            <AlertCircle size={16} />
-                            <span>{error}</span>
-                        </div>
-                    )}
-
-                    <form className="login-form" onSubmit={handleSubmit}>
-                        <div className="input-group">
-                            <label>Email</label>
-                            <input
-                                type="email"
-                                placeholder="email@vault.io"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                disabled={isLoading}
-                            />
-                        </div>
-
-                        <div className="input-group">
-                            <div className="label-row">
-                                <label>Password</label>
-                            </div>
-                            <input
-                                type="password"
-                                placeholder="••••••••••••"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                disabled={isLoading}
-                            />
-                        </div>
-
-                        <button type="submit" className="login-btn" disabled={isLoading}>
-                            {isLoading ? (
-                                <>
-                                    <Loader2 size={18} className="animate-spin" />
-                                    <span>Authenticating...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <span>Initialize Workspace</span>
-                                    <ArrowRight size={18} />
-                                </>
-                            )}
-                        </button>
-                    </form>
-
-                    <div className="divider">
-                        <span />
-                        <p>Protected by Mindmap Security</p>
-                        <span />
-                    </div>
-
-                    <footer className="login-footer">
-                        No account yet? <Link href="/signup">Create one</Link>
-                    </footer>
-                </div>
+          <form className="login-form" onSubmit={handleSubmit}>
+            <div className="field">
+              <label>Identification</label>
+              <input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+              />
             </div>
 
-            <style jsx>{`
+            <div className="field">
+              <label>Secret</label>
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            <button type="submit" className="login-btn" disabled={isLoading}>
+              {isLoading ? '...' : 'Unlock'}
+            </button>
+          </form>
+
+          <footer className="login-footer">
+            New entity? <Link href="/signup">Establish identity</Link>
+          </footer>
+        </div>
+      </div>
+
+      <style jsx>{`
         .login-screen {
           position: fixed;
           inset: 0;
-          background: var(--bg-deep);
+          background: #000;
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 2000;
-          overflow: hidden;
         }
 
         .login-content {
           width: 100%;
-          max-width: 1100px;
-          display: grid;
-          grid-template-columns: 1fr 460px;
-          align-items: center;
-          gap: 4rem;
+          max-width: 400px;
           padding: 2rem;
         }
 
-        .login-visual {
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          min-height: 400px;
-        }
-
-        .ornament-blur {
-          position: absolute;
-          width: 300px;
-          height: 300px;
-          background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-          border-radius: 50%;
-          filter: blur(60px);
-        }
-
-        .logo-vignette {
-          width: 120px;
-          height: 120px;
-          background: linear-gradient(135deg, #fff 0%, #666 100%);
-          color: var(--bg-deep);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 4rem;
-          font-weight: 900;
-          border-radius: 28px;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-          position: relative;
-          z-index: 1;
-        }
-
-        .visual-text {
-          text-align: center;
-          margin-top: 2rem;
-          position: relative;
-          z-index: 1;
-        }
-
-        .visual-text h2 {
-          font-size: 1.5rem;
-          font-weight: 700;
-          margin-bottom: 0.5rem;
-          background: linear-gradient(to right, #fff, #888);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .visual-text p {
-          color: var(--text-muted);
-          font-size: 0.95rem;
-        }
-
         .login-box {
-          padding: 3rem;
-          border-radius: 24px;
+          background: #000;
+          border: 1px solid #111;
+          padding: 3.5rem 2.5rem;
+          border-radius: 12px;
         }
 
         .login-header {
           text-align: center;
-          margin-bottom: 2rem;
+          margin-bottom: 3rem;
         }
 
         .login-header h1 {
-          font-size: 2.5rem;
+          font-size: 2rem;
+          font-weight: 800;
+          letter-spacing: -0.05em;
           margin-bottom: 0.5rem;
         }
 
         .login-header p {
-          color: var(--text-muted);
+          color: #555;
+          font-size: 0.85rem;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
         }
 
         .error-banner {
@@ -218,147 +138,73 @@ export default function LoginPage() {
           align-items: center;
           gap: 0.5rem;
           padding: 0.75rem 1rem;
-          background: rgba(255, 68, 68, 0.1);
-          border: 1px solid rgba(255, 68, 68, 0.2);
-          border-radius: 10px;
-          color: #ff6b6b;
-          font-size: 0.85rem;
-          margin-bottom: 1.5rem;
+          background: #070000;
+          border: 1px solid #200;
+          border-radius: 8px;
+          color: #f44;
+          font-size: 0.8rem;
+          margin-bottom: 2rem;
         }
 
         .login-form {
           display: flex;
           flex-direction: column;
-          gap: 1.25rem;
+          gap: 1.5rem;
         }
 
-        .input-group {
+        .field {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
+          gap: 0.6rem;
         }
 
-        .input-group label {
-          font-size: 0.85rem;
-          font-weight: 600;
-          color: var(--text-secondary);
+        .field label {
+          font-size: 0.7rem;
+          font-weight: 700;
+          color: #333;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
         }
 
-        .label-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .input-group input {
-          padding: 0.9rem 1rem;
-          background: var(--bg-deep);
-          border: 1px solid var(--border-main);
-          border-radius: 12px;
-          color: var(--text-primary);
+        .field input {
+          background: #000;
+          border: 1px solid #1a1a1a;
+          padding: 0.85rem 1rem;
+          border-radius: 8px;
+          color: #fff;
           font-size: 0.95rem;
-          transition: var(--transition-fast);
+          outline: none;
+          transition: border-color 0.2s;
         }
 
-        .input-group input:focus {
-          border-color: var(--border-bright);
-          box-shadow: 0 0 0 3px rgba(255,255,255,0.05);
-        }
-
-        .input-group input:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
+        .field input:focus {
+          border-color: #444;
         }
 
         .login-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.75rem;
-          width: 100%;
+          background: #fff;
+          color: #000;
           padding: 1rem;
-          background: linear-gradient(135deg, #fff 0%, #ccc 100%);
-          color: var(--bg-deep);
-          font-size: 1rem;
-          font-weight: 700;
-          border-radius: 12px;
-          margin-top: 0.5rem;
-          transition: var(--transition-base);
-        }
-
-        .login-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(255,255,255,0.1);
-        }
-
-        .login-btn:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-        }
-
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
-
-        .divider {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          margin: 2rem 0;
-        }
-
-        .divider span {
-          flex: 1;
-          height: 1px;
-          background: var(--border-dim);
-        }
-
-        .divider p {
-          font-size: 0.75rem;
-          color: var(--text-dim);
-          white-space: nowrap;
+          border-radius: 8px;
+          font-weight: 800;
+          font-size: 0.9rem;
+          margin-top: 1rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
         }
 
         .login-footer {
+          margin-top: 2.5rem;
           text-align: center;
-          font-size: 0.9rem;
-          color: var(--text-muted);
+          font-size: 0.85rem;
+          color: #444;
         }
 
         .login-footer a {
-          color: var(--text-primary);
-          font-weight: 600;
-          text-decoration: none;
-        }
-
-        .login-footer a:hover {
-          text-decoration: underline;
-        }
-
-        @media (max-width: 900px) {
-          .login-content {
-            grid-template-columns: 1fr;
-            max-width: 460px;
-          }
-          .login-visual {
-            display: none;
-          }
-        }
-
-        @media (max-width: 500px) {
-          .login-box {
-            padding: 2rem 1.5rem;
-          }
-          .login-header h1 {
-            font-size: 2rem;
-          }
+          color: #fff;
+          font-weight: 700;
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }
