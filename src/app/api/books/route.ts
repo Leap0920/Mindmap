@@ -87,63 +87,83 @@ export async function PATCH(request: NextRequest) {
 
         await dbConnect();
         const userId = (session.user as any).id;
-        const { id, action, ...data } = await request.json();
+        const body = await request.json();
+        const { id, action, ...data } = body;
 
-        let book;
-
-        if (action === "addQuote") {
-            book = await Book.findOneAndUpdate(
-                { _id: id, userId },
-                { $push: { quotes: data.quote } },
-                { new: true }
-            );
-        } else if (action === "removeQuote") {
-            book = await Book.findOneAndUpdate(
-                { _id: id, userId },
-                { $pull: { quotes: { _id: data.quoteId } } },
-                { new: true }
-            );
-        } else if (action === "toggleFavorite") {
-            const currentBook = await Book.findOne({ _id: id, userId });
-            book = await Book.findOneAndUpdate(
-                { _id: id, userId },
-                { isFavorite: !currentBook?.isFavorite },
-                { new: true }
-            );
-        } else {
-            // Regular update
-            const updates: any = {};
-
-            if (data.status !== undefined) updates.status = data.status;
-            if (data.notes !== undefined) updates.notes = data.notes;
-            if (data.title !== undefined) updates.title = data.title;
-            if (data.author !== undefined) updates.author = data.author;
-            if (data.category !== undefined) updates.category = data.category;
-            if (data.totalPages !== undefined) updates.totalPages = data.totalPages;
-            if (data.description !== undefined) updates.description = data.description;
-
-            if (updates.status === "reading") {
-                updates.startDate = new Date();
-            }
-            if (updates.status === "completed") {
-                updates.finishDate = new Date();
-            }
-
-            book = await Book.findOneAndUpdate(
-                { _id: id, userId },
-                updates,
-                { new: true }
-            );
+        if (!id) {
+            console.error("PATCH request missing book ID");
+            return NextResponse.json({ error: "Book ID is required" }, { status: 400 });
         }
 
+        console.log(`[PATCH] Action: ${action || 'default'} | Book: ${id} | User: ${userId}`);
+
+        // Find existing book and verify ownership
+        const book = await Book.findOne({ _id: id, userId });
+
         if (!book) {
-            return NextResponse.json({ error: "Book not found" }, { status: 404 });
+            console.error(`[PATCH] Book NOT found for id: ${id} and userId: ${userId}`);
+            // Security check: does it exist at all?
+            const exists = await Book.findById(id);
+            if (!exists) {
+                return NextResponse.json({ error: "Book does not exist in our records" }, { status: 404 });
+            } else {
+                return NextResponse.json({ error: "Security check: Ownership mismatch" }, { status: 403 });
+            }
+        }
+
+        if (action === "addQuote") {
+            const quoteData = data.quote;
+            if (!quoteData || !quoteData.text) {
+                return NextResponse.json({ error: "Passage text cannot be empty" }, { status: 400 });
+            }
+
+            console.log(`[PATCH] Adding quote to book ${id}`);
+            book.quotes.push({
+                text: quoteData.text,
+                page: quoteData.page,
+                chapter: quoteData.chapter,
+                createdAt: new Date()
+            });
+            await book.save();
+            console.log("[PATCH] Successfully saved book with new quote");
+        } else if (action === "removeQuote") {
+            console.log(`[PATCH] Removing quote ${data.quoteId} from book ${id}`);
+            book.quotes = book.quotes.filter((q: any) => q._id.toString() !== data.quoteId);
+            await book.save();
+        } else if (action === "toggleFavorite") {
+            book.isFavorite = !book.isFavorite;
+            await book.save();
+        } else {
+            // Regular updates
+            console.log(`[PATCH] Performing standard update for book ${id}`);
+            if (data.status !== undefined) book.status = data.status;
+            if (data.notes !== undefined) book.notes = data.notes;
+            if (data.title !== undefined) book.title = data.title;
+            if (data.author !== undefined) book.author = data.author;
+            if (data.category !== undefined) book.category = data.category;
+            if (data.totalPages !== undefined) book.totalPages = data.totalPages;
+            if (data.description !== undefined) book.description = data.description;
+            if (data.tags !== undefined) book.tags = data.tags;
+            if (data.startDate !== undefined) book.startDate = data.startDate;
+            if (data.finishDate !== undefined) book.finishDate = data.finishDate;
+
+            if (book.status === "reading" && !book.startDate) {
+                book.startDate = new Date();
+            }
+            if (book.status === "completed" && !book.finishDate) {
+                book.finishDate = new Date();
+            }
+
+            await book.save();
         }
 
         return NextResponse.json({ book });
-    } catch (error) {
-        console.error("Error updating book:", error);
-        return NextResponse.json({ error: "Failed to update book" }, { status: 500 });
+    } catch (error: any) {
+        console.error("[PATCH ERROR]", error);
+        return NextResponse.json({
+            error: error.message || "An unexpected error occurred while saving",
+            details: error.stack
+        }, { status: 500 });
     }
 }
 
