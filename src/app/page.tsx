@@ -297,8 +297,7 @@ export default function Home() {
         .dashboard-content {
           position: relative;
           z-index: 1;
-          max-width: 1400px;
-          margin: 0 auto;
+          width: 100%;
           padding: 3rem 4rem;
           animation: pageReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }

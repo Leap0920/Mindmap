@@ -600,7 +600,7 @@ export default function TodoPage() {
             )}
 
             <style jsx>{`
-        .todo-page { max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); color: #fff; position: relative; }
+        .todo-page { width: 100%; padding: 4rem 2.5rem; animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); color: #fff; position: relative; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .page-header { margin-bottom: 3.5rem; display: flex; flex-direction: column; align-items: flex-start; }

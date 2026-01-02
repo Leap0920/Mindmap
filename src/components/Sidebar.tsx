@@ -197,7 +197,7 @@ export default function Sidebar() {
 
             <style jsx>{`
                 .modern-sidebar {
-                    width: var(--sidebar-width);
+                    width: 280px;
                     height: 100vh;
                     position: fixed;
                     left: 0;
@@ -206,7 +206,11 @@ export default function Sidebar() {
                     background: #000;
                     border-right: 1px solid rgba(255,255,255,0.05);
                     transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+                    transform: translateX(-100%);
+                    box-shadow: 40px 0 100px rgba(0,0,0,0.8);
                 }
+
+                .modern-sidebar.revealed { transform: translateX(0); }
 
                 .sidebar-inner {
                     display: flex;
@@ -216,7 +220,7 @@ export default function Sidebar() {
                     background: radial-gradient(circle at 0% 0%, rgba(20,20,20,1) 0%, rgba(0,0,0,1) 100%);
                 }
 
-                .sidebar-header { display: flex; align-items: center; margin-bottom: 3.5rem; padding: 0 0.5rem; }
+                .sidebar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3.5rem; padding: 0 0.5rem; }
 
                 .brand-suite {
                     display: flex;
@@ -408,7 +412,8 @@ export default function Sidebar() {
                 .pod-btn.exit:hover { color: #ff4444; background: rgba(255,68,68,0.1); }
 
                 .mobile-top-navbar {
-                    display: none;
+                    display: flex;
+                    align-items: center;
                     position: fixed;
                     top: 0;
                     left: 0;
@@ -429,6 +434,7 @@ export default function Sidebar() {
                     display: flex;
                     align-items: center;
                     justify-content: center;
+                    cursor: pointer;
                 }
 
                 .mobile-brand {
@@ -443,11 +449,12 @@ export default function Sidebar() {
                 .mobile-spacer { flex: 1; }
 
                 .sidebar-close-btn {
-                    display: none;
+                    display: block;
                     color: #444;
                     padding: 0.5rem;
                     margin-right: -0.5rem;
                     transition: all 0.2s;
+                    cursor: pointer;
                 }
 
                 .sidebar-close-btn:hover { color: #fff; }
@@ -462,21 +469,6 @@ export default function Sidebar() {
                 }
 
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-                @media (max-width: 1024px) {
-                    .mobile-top-navbar { 
-                        display: flex; 
-                        align-items: center; 
-                    }
-                    .sidebar-close-btn { display: block; }
-                    .sidebar-header { justify-content: space-between; }
-                    .modern-sidebar {
-                        transform: translateX(-100%);
-                        width: 280px;
-                        box-shadow: 40px 0 100px rgba(0,0,0,0.8);
-                    }
-                    .modern-sidebar.revealed { transform: translateX(0); }
-                }
 
                 .logout-modal-overlay {
                     position: fixed;
