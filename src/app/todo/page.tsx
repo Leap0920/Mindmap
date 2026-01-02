@@ -600,7 +600,7 @@ export default function TodoPage() {
             )}
 
             <style jsx>{`
-        .todo-page { max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); color: #fff; }
+        .todo-page { max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); color: #fff; position: relative; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .page-header { margin-bottom: 3.5rem; display: flex; flex-direction: column; align-items: flex-start; }
@@ -787,15 +787,20 @@ export default function TodoPage() {
         }
 
         @media (max-width: 768px) {
-          .todo-page { padding: 2rem 1.25rem; }
-          .page-header h1 { font-size: 2rem; }
-          .breadcrumb { letter-spacing: 0.2rem; }
-          .main-layout { gap: 2.5rem; }
-          .todo-item { padding: 1.25rem; gap: 1rem; }
-          .todo-body h4 { font-size: 0.95rem; }
+          .todo-page { padding: 1.5rem 0.75rem; max-width: 100%; margin: 0; }
+          .page-header h1 { font-size: 2.25rem; text-align: left; width: 100%; }
+          .page-header p { margin-top: 0.5rem; font-size: 0.75rem; text-align: left; width: 100%; }
+          .breadcrumb { letter-spacing: 0.2rem; margin-bottom: 0.75rem; text-align: left; width: 100%; }
+          .main-layout { gap: 2rem; display: block; }
+          .filters { margin-bottom: 2rem; }
+          .todo-item { padding: 1rem; gap: 0.75rem; border-radius: 12px; }
+          .todo-body h4 { font-size: 0.95rem; margin-bottom: 0.25rem; }
           .modal-box { width: 95%; padding: 2.5rem 1.5rem; border-radius: 24px; }
           .grid-fields { grid-template-columns: 1fr; }
           .detail-sidebar { width: 100%; right: 0; left: 0; bottom: 0; top: auto; height: 85vh; border-radius: 24px 24px 0 0; }
+          .header-main { align-items: flex-start; }
+          .add-btn { width: 100%; justify-content: center; margin-top: 1rem; }
+        }
           .detail-header { padding: 2rem 2rem 1rem; }
           .detail-content { padding: 0 2rem 2rem; }
           .detail-title-input { font-size: 1.5rem; }
