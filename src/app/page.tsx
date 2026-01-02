@@ -394,7 +394,7 @@ export default function Home() {
         }
 
         .main-greeting {
-          font-size: 3rem;
+          font-size: 3.5rem;
           font-weight: 800;
           letter-spacing: -0.04em;
           background: linear-gradient(180deg, #fff 0%, #a1a1a1 100%);
@@ -418,7 +418,7 @@ export default function Home() {
         }
 
         .hero-intro {
-          font-size: 1.1rem;
+          font-size: 1.25rem;
           color: #888;
           font-weight: 400;
         }
@@ -461,7 +461,7 @@ export default function Home() {
         }
 
         .stat-value {
-          font-size: 1.75rem;
+          font-size: 2.25rem;
           font-weight: 700;
           color: #fff;
         }
@@ -569,7 +569,7 @@ export default function Home() {
         }
 
         .card-name {
-          font-size: 1rem;
+          font-size: 1.125rem;
           font-weight: 600;
           color: #fff;
         }
@@ -823,10 +823,10 @@ export default function Home() {
             padding: 1rem 0.75rem;
           }
           .main-greeting {
-            font-size: 1.5rem;
+            font-size: 2rem;
           }
           .date-badge {
-            font-size: 0.65rem;
+            font-size: 0.75rem;
           }
           .hero-banner {
             min-height: 260px;

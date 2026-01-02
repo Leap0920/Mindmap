@@ -311,7 +311,7 @@ export default function Sidebar() {
                     }
 
                     .link-icon { color: #555; transition: all 0.3s; }
-                    .link-label { font-size: 0.875rem; font-weight: 600; color: #666; transition: all 0.3s; }
+                    .link-label { font-size: 1rem; font-weight: 600; color: #666; transition: all 0.3s; }
 
                     .sidebar-link:hover .link-label { color: #aaa; }
                     .sidebar-link:hover .link-icon { color: #aaa; transform: translateX(2px); }
@@ -370,10 +370,10 @@ export default function Sidebar() {
 
                     @keyframes shimmer { 100% { left: 100%; } }
 
-                    .avatar-text { color: #000; font-weight: 900; font-size: 0.8125rem; }
+                    .avatar-text { color: #000; font-weight: 900; font-size: 1rem; }
 
                     .pod-meta { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-                    .pod-user { color: #fff; font-size: 0.8125rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                    .pod-user { color: #fff; font-size: 1rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
                     .pod-status { color: #333; font-size: 0.625rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
 
                     .pod-actions { display: flex; gap: 4px; }
@@ -425,7 +425,7 @@ export default function Sidebar() {
                         .menu-trigger { display: block; }
                         .modern-sidebar {
                             transform: translateX(-100%);
-                            width: 300px;
+                            width: 280px;
                             box-shadow: 40px 0 100px rgba(0,0,0,0.8);
                         }
                         .modern-sidebar.revealed { transform: translateX(0); }
